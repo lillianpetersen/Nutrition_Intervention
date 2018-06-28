@@ -13,54 +13,17 @@ import matplotlib as mpl
 from matplotlib.patches import Polygon
 import matplotlib.cm as cm
 import random
+import shapefile
+from shapely.geometry import shape, Point
+import matplotlib.patches as patches
 
-###############################################
-# Functions
-###############################################
-def stdDev(x):
-    '''function to compute standard deviation'''
-    xAvg=np.mean(x)
-    xOut=0.
-    for k in range(len(x)):
-        xOut=xOut+(x[k]-xAvg)**2
-    xOut=xOut/(k+1)
-    xOut=sqrt(xOut)
-    return xOut
-
-def Variance(x):
-    '''function to compute the variance (std dev squared)'''
-    xAvg=np.mean(x)
-    xOut=0.
-    for k in range(len(x)):
-        xOut=xOut+(x[k]-xAvg)**2
-    xOut=xOut/(k+1)
-    return xOut
-
-def SumOfSquares(x):
-    '''function to compute the sum of squares'''
-    xOut=0.
-    for k in range(len(x)):
-        xOut=xOut+x[k]**2
-    return xOut
-
-def corr(x,y):
-    ''' function to find the correlation of two arrays'''
-    xAvg=np.mean(x)
-    Avgy=np.mean(y)
-    rxy=0.
-    n=min(len(x),len(y))
-    for k in range(n):
-        rxy=rxy+(x[k]-xAvg)*(y[k]-Avgy)
-    rxy=rxy/(k+1)
-    stdDevx=stdDev(x)
-    stdDevy=stdDev(y)
-    rxy=rxy/(stdDevx*stdDevy)
-    return rxy
-
-###############################################
+def checkIfInPolygon(lon, lat,polygon):
+	point = Point(lon, lat)
+	return polygon.contains(point)
 
 wddata='/Users/lilllianpetersen/iiasa/data/'
 wdfigs='/Users/lilllianpetersen/iiasa/figs/'
+wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
 
 f=open(wddata+'Africa_conflictss.csv','r')
 
@@ -156,10 +119,32 @@ plt.plot(fatalitiesAll,'*')
 plt.title('Fatalities in All African Conflicts since 1997')
 plt.savefig(wdfigs+'fatalitiesAll.pdf')
 
+################### Read in Ethipia Shape Files ########################
+r = shapefile.Reader(wddata+'night_light_ethiopia/2017/2013/Ethiopia_regions_2014/Ethiopia_regions_2014.shp')
+rCountry = shapefile.Reader(wddata+'night_light_ethiopia/2017/2013/Ethiopia_regions_2014/ETH_outline.shp')
+# Read in Regions
+for i in range(len(r.shapes())):
+	vars()['shapes'+str(i)] = r.shapes()[i]
+	vars()['shape_points'+str(i)]=vars()['shapes'+str(i)].points
+	vars()['polygon'+str(i)]=patches.Polygon(vars()['shape_points'+str(i)])
+	vars()['points'+str(i)]=np.array(vars()['shape_points'+str(i)])
+
+	plt.plot(vars()['points'+str(i)][:,0],vars()['points'+str(i)][:,1],'.')
+	plt.savefig(wdfigs+'regions',dpi=600)
+
+# Entire Country
+shapeC=rCountry.shapes()[0]
+shape_pointsC=shapeC.points
+polygonC=patches.Polygon(shape_pointsC)
+pointsC=np.array(shape_pointsC)
+########################################################################
+
+########################## Plot Fatalities #############################
+#m = Basemap(llcrnrlon=-20,llcrnrlat=-38,urcrnrlon=54,urcrnrlat=41, projection='lcc',lon_0=23.5,lat_0=3.5)
 plt.clf()
-m = Basemap(llcrnrlon=-20,llcrnrlat=-38,urcrnrlon=54,urcrnrlat=41, projection='lcc',lon_0=23.5,lat_0=3.5)
+m = Basemap(llcrnrlon=33,llcrnrlat=2.5,urcrnrlon=48.5,urcrnrlat=15.5, projection='lcc',lon_0=40.49,lat_0=9.145,resolution='i')
 m.drawcountries()
-m.drawcoastlines()
+m.drawcoastlines(linewidth=2)
 #m.fillcontinents(color='white',lake_color='black',zorder=0)
 
 latAllForPlot=np.zeros(shape=(fatalitiesOver100+1))
@@ -168,21 +153,49 @@ fatalitiesAllScaled=np.zeros(shape=(fatalitiesAll.shape))
 i=-1
 for k in range(len(latAll)):
 	fatalitiesAllScaled[k]=((fatalitiesAll[k]-np.amin(fatalitiesAll))/(np.amax(fatalitiesAll)-np.amin(fatalitiesAll)))*(300-1)+1
-	#if fatalitiesAll[k]>=88:
-	#	i+=1
-	#	latAllForPlot[i]=latAll[k]
-	#	lonAllForPlot[i]=lonAll[k]
+
 x,y = m(lonAll, latAll)
 m.scatter(x,y,s=fatalitiesAllScaled,c=fatalitiesAll,cmap=cm.gist_heat_r,alpha=0.7,norm=colors.LogNorm())
-plt.title('African Fatalities from Conflicts, 1997-Today')
 plt.colorbar()
+for i in range(len(r.shapes())):
+	x,y=m(vars()['points'+str(i)][:,0],vars()['points'+str(i)][:,1])
+	m.plot(x,y,linestyle='-')
+plt.title('African Fatalities from Conflicts, 1997-Today')
 
-plt.savefig(wdfigs+'africa_fatalities',dpi=700)
+#plt.savefig(wdfigs+'africa_fatalities',dpi=700)
+plt.savefig(wdfigs+'ethiopia_fatalities',dpi=700)
+########################################################################
 
+################ Divide Ethiopia Conflicts into Regions ################
 
+lonLatMask=np.ones(shape=(len(r.shapes()),latAll.shape[0]),dtype=bool)
+lonLatMaskSimple=np.ones(shape=(latAll.shape[0]),dtype=bool)
+lonLatNums=-1*np.ones(shape=(latAll.shape[0]))
+for i in range(len(latAll)):
+	if countriesAll[i]=='Ethiopia':
+		lonLatMaskSimple[i]=False
+		for k in range(len(r.shapes())):
+			if checkIfInPolygon(lonAll[i],latAll[i],vars()['polygon'+str(k)])[0]==True:
+				lonLatMask[k,i]=False
+				lonLatNums[i]=k
+				break
+		if lonLatNums[i]==-1:
+			lonLatMask[:,i]=True
+			lonLatMaskSimple[i]=True
 
-
-
+#np.save(wdvars+'regionMaskforNightLights',regionMask)
+lonAllM=np.ma.compressed(np.ma.masked_array(lonAll,lonLatMaskSimple))
+latAllM=np.ma.compressed(np.ma.masked_array(latAll,lonLatMaskSimple))
+lonLatNumsM=np.ma.compressed(np.ma.masked_array(lonLatNums,lonLatMaskSimple))
+fatalitiesAllScaledM=np.ma.compressed(np.ma.masked_array(fatalitiesAllScaled,lonLatMaskSimple))
+plt.clf()
+plt.scatter(lonAllM,latAllM,s=fatalitiesAllScaled,c=lonLatNumsM,cmap=cm.nipy_spectral)
+for i in range(len(r.shapes())):
+	plt.plot(vars()['points'+str(i)][:,0],vars()['points'+str(i)][:,1],linestyle='-',c='k',linewidth=.5)
+plt.title('Ethiopian Conflicts by Region')
+plt.colorbar()
+plt.axes().set_aspect('equal', 'datalim')
+plt.savefig(wdfigs+'testMask',dpi=700)
 
 
 

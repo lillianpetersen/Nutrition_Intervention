@@ -97,6 +97,7 @@ for line in fdata:
 	for i in range(len(indexids)):
 		if i!=3 and i!=4:
 			vars()[indexids[i]][k]=float(line[charecterBegin[i]:charecterEnd[i]])
+	exit()
 
 	rururb[k]=rururb[k]-1 # 0=rural, 1=urban
 	region[k]=region[k]-1 #0='Tigray', 1='Afar', 2='Amhara', 3='Oromiya', 4='Somale', 5='Benishangul-Gumuz', 6='SNNPRG', 7='Harari', 8='Addis Ababa', 9='Dire Dawa'

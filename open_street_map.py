@@ -13,79 +13,106 @@ from matplotlib.patches import Polygon
 import random
 import matplotlib.cm as cm
 import matplotlib.colors as colors
+import shapefile
+from shapely.geometry import shape, Point
+import matplotlib.patches as patches
+from math import sqrt
 
-###############################################
-# Functions
-###############################################
-def stdDev(x):
-    '''function to compute standard deviation'''
-    xAvg=np.mean(x)
-    xOut=0.
-    for k in range(len(x)):
-        xOut=xOut+(x[k]-xAvg)**2
-    xOut=xOut/(k+1)
-    xOut=math.sqrt(xOut)
-    return xOut
-
-def Variance(x):
-    '''function to compute the variance (std dev squared)'''
-    xAvg=np.mean(x)
-    xOut=0.
-    for k in range(len(x)):
-        xOut=xOut+(x[k]-xAvg)**2
-    xOut=xOut/(k+1)
-    return xOut
-
-def SumOfSquares(x):
-    '''function to compute the sum of squares'''
-    xOut=0.
-    for k in range(len(x)):
-        xOut=xOut+x[k]**2
-    return xOut
-
-def corr(x,y):
-    ''' function to find the correlation of two arrays'''
-    xAvg=np.mean(x)
-    Avgy=np.mean(y)
-    rxy=0.
-    n=min(len(x),len(y))
-    for k in range(n):
-        rxy=rxy+(x[k]-xAvg)*(y[k]-Avgy)
-    rxy=rxy/(k+1)
-    stdDevx=stdDev(x)
-    stdDevy=stdDev(y)
-    rxy=rxy/(stdDevx*stdDevy)
-    return rxy
-
-###############################################
+def checkIfInPolygon(lon, lat,polygons):
+	i=-1
+	done=False
+	for polygon in polygons:
+		i+=1
+		point = Point(lon, lat)
+		if polygon.contains(point)[0]==True:
+			done=True
+			return i
+		else:
+			continue
+	if done==False:
+		return -1
 
 wddata='/Users/lilllianpetersen/iiasa/data/'
 wdfigs='/Users/lilllianpetersen/iiasa/figs/'
+wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
 plt.clf()
 
 OpenStreetMap=False
 Rivers=False
 Flights=True
 
+################## Ethiopian Regions ##################
+plt.clf()
+r = shapefile.Reader(wddata+'night_light_ethiopia/2017/2013/Ethiopia_regions_2014/Ethiopia_regions_2014.shp')
+rCountry = shapefile.Reader(wddata+'night_light_ethiopia/2017/2013/Ethiopia_regions_2014/ETH_outline.shp')
+
+# Read in Regions
+polygons=[]
+for i in range(len(r.shapes())):
+	vars()['shapes'+str(i)] = r.shapes()[i]
+	vars()['shape_points'+str(i)]=vars()['shapes'+str(i)].points
+	vars()['polygon'+str(i)]=patches.Polygon(vars()['shape_points'+str(i)])
+	polygons.append(vars()['polygon'+str(i)])
+	vars()['points'+str(i)]=np.array(vars()['shape_points'+str(i)])
+
+	plt.plot(vars()['points'+str(i)][:,0],vars()['points'+str(i)][:,1],'.')
+	plt.savefig(wdfigs+'regions',dpi=600)
+
+# Entire Country
+shapeC=rCountry.shapes()[0]
+shape_pointsC=shapeC.points
+polygonC=patches.Polygon(shape_pointsC)
+pointsC=np.array(shape_pointsC)
+
 ################## Ethiopia OpenStreetMap ##################
 if OpenStreetMap:
+	rRoads = shapefile.Reader(wddata+'ethiopia-openstreetmap/gis_osm_roads_free_1.shp')
+	shapes=rRoads.shapes()
+
+	distanceD=np.zeros(shape=(len(r.shapes())))
+	s=-1
+	for shape in rRoads.shapes():
+		s+=1
+		print s
+		shape_points=shape.points
+		points=np.array(shape_points)
+		for i in range(len(points)):
+			if i==0:
+				region=checkIfInPolygon(points[i,0],points[i,1],polygons)
+				if region==-1:
+					break
+				continue
+			if checkIfInPolygon(points[i,0],points[i,1],polygons)==region:
+				dis=sqrt((points[i,0]-points[i-1,0])**2+(points[i,1]-points[i-1,1])**2)
+				distanceD[region]+=dis
+			else:
+				region=checkIfInPolygon(points[i,0],points[i,1],polygons)
+				if region==-1:
+					break
+				continue
+	miles=distanceD*69
+	exit()
+
 	# Ethiopia lat lons
-	map = Basemap(llcrnrlon=33,llcrnrlat=2.5,urcrnrlon=48.5,urcrnrlat=15.5, projection='lcc',lon_0=40.49,lat_0=9.145)
+	plt.clf()
+	map = Basemap(llcrnrlon=33,llcrnrlat=2.5,urcrnrlon=48.5,urcrnrlat=15.5, projection='lcc',lon_0=40.49,lat_0=9.145,resolution='i')
+	map.drawcoastlines(linewidth=1.5)
+	map.drawcountries()
 	
 	map.readshapefile(wddata+'ethiopia-openstreetmap/gis_osm_roads_free_1', name='roads', drawbounds=True)
 	
 	ax = plt.gca()
 	plt.title('Ethiopian Roads from Open Street Map')
-	plt.yticks([])
-	plt.xticks([])
 	
 	plt.savefig(wdfigs+'openstreetmap_ethiopia',dpi=700)
+	exit()
 
 ################## Africa Rivers ##################
 
 if Rivers:
 	plt.clf()
-	map = Basemap(llcrnrlon=-20,llcrnrlat=-38,urcrnrlon=54,urcrnrlat=41, projection='lcc',lon_0=23.5,lat_0=3.5)
+	#map = Basemap(llcrnrlon=-20,llcrnrlat=-38,urcrnrlon=54,urcrnrlat=41, projection='lcc',lon_0=23.5,lat_0=3.5)
+	map = Basemap(llcrnrlon=33,llcrnrlat=2.5,urcrnrlon=48.5,urcrnrlat=15.5, projection='lcc',lon_0=40.49,lat_0=9.145)
 	
 	map.drawcountries()
 	map.drawcoastlines()
@@ -95,12 +122,12 @@ if Rivers:
 	#map.readshapefile(wddata+'rivers_africa/hydrobasins_africa', name='rivers', drawbounds=True, color='b')
 	
 	ax = plt.gca()
-	plt.title('Africa Rivers')
+	plt.title('Ethiopian Rivers')
 	plt.yticks([])
 	plt.xticks([])
 	
-	plt.savefig(wdfigs+'africa_rivers.pdf')
-	#plt.savefig(wdfigs+'africa_rivers_basins',dpi=700)
+	#plt.savefig(wdfigs+'africa_rivers.pdf')
+	plt.savefig(wdfigs+'ethiopian_rivers',dpi=700)
 
 ################## Africa Flights ##################
 
@@ -118,23 +145,33 @@ if Flights:
 	############### Get airport lon lats ###############
 	f=open(wddata+'Global_Flight_Data_Monthly/Airports_2010.csv')
 	
+	eth=[]
 	airportCode=[]
 	city=[]
 	stateCode=[]
 	countryCode=[]
 	country=[]
-	lon=np.zeros(shape=(3632))
-	lat=np.zeros(shape=(3632))
+	#lon=np.zeros(shape=(3632))
+	#lat=np.zeros(shape=(3632))
+	lon=np.zeros(shape=(17))
+	lat=np.zeros(shape=(17))
 	airportToLonLat={}
+	airportToCountry={}
 	airportCodetoNum={}
-	i=-2
+	k=-2
+	i=-1
 	for line in f:
-		i+=1
+		k+=1
 		tmp=line.split(',')
 		tmp[5]=tmp[5][:-2]
-		
-		if i==-1:
+		if k==-1:
 			continue
+
+		countryCodetmp=tmp[3]
+		countrytmp=countryCodetoName[countryCodetmp]
+		if countrytmp!='Ethiopia':
+			continue
+		i+=1
 
 		airportCode.append(tmp[0])
 		airportCodetoNum[airportCode[i]]=i
@@ -145,7 +182,8 @@ if Flights:
 		lon[i]=float(tmp[4])
 		lat[i]=float(tmp[5])
 		airportToLonLat[airportCode[i]]=str(lon[i])+','+str(lat[i])
-
+		airportToCountry[airportCode[i]]=country[i]
+		eth.append(airportCode[i])
 	############### Monthly Airport Use ###############
 
 	f=open(wddata+'Global_Flight_Data_Monthly/Prediction_Monthly.csv')
@@ -155,14 +193,20 @@ if Flights:
 	month=np.zeros(shape=(383048),dtype=int)
 	numFlights=np.zeros(shape=(383048),dtype=int)
 	errors=np.zeros(shape=(383048,2),dtype=int) # lower then upper
-	i=-2
+	k=-2
+	i=-1
 	for line in f:
-		i+=1
+		k+=1
 		tmp=line.split(',')
 
-		if i==-1:
+		if k==-1:
 			continue
 
+		try:
+			airportToCountry[tmp[0]]
+		except:
+			continue
+		i+=1
 		origin.append(tmp[0])
 		dest.append(tmp[1])
 		month[i]=int(tmp[2])-1
@@ -179,13 +223,14 @@ if Flights:
 			
 	plt.clf()
 	#m = Basemap(llcrnrlon=-20,llcrnrlat=-38,urcrnrlon=54,urcrnrlat=41, projection='lcc',lon_0=23.5,lat_0=3.5)
-	m = Basemap(projection='mill',llcrnrlat=-75,urcrnrlat=82,llcrnrlon=-180,urcrnrlon=180,lon_0=0)
+	m = Basemap(llcrnrlon=33,llcrnrlat=2.5,urcrnrlon=48.5,urcrnrlat=15.5, projection='lcc',lon_0=40.49,lat_0=9.145,resolution='i')
+	#m = Basemap(projection='mill',llcrnrlat=-75,urcrnrlat=82,llcrnrlon=-180,urcrnrlon=180,lon_0=0)
 	m.drawcountries()
 	m.drawcoastlines()
 
 	flightsScaled=np.zeros(shape=(flightsByAirport.shape))
-	for k in range(len(lat)):
-		flightsScaled[k]=((flightsByAirport[k]-np.amin(flightsByAirport))/(np.amax(flightsByAirport)-np.amin(flightsByAirport)))*(20-.05)+.05
+	for k in range(len(flightsByAirport)):
+		flightsScaled[k]=((flightsByAirport[k]-0)/(np.amax(flightsByAirport)-0))*(35-5)+5
 
 	x,y = m(lon, lat)
 	m.scatter(x,y,s=flightsScaled,c=flightsByAirport,cmap=cm.Blues,alpha=1,norm=colors.LogNorm())
