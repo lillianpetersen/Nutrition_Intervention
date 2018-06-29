@@ -83,12 +83,25 @@ for line in fdescription:
 for i in range(len(indexids)):
 	if indexids[i]=='region' or indexids[i]=='hid_p' or indexids[i]=='rururb':
 		vars()[indexids[i]]=np.zeros(shape=(21595),dtype=int)
+		print indexids[i]
 	else:
 		vars()[indexids[i]]=np.zeros(shape=(21595))
+		print indexids[i]
 
-totalExp=np.zeros(shape=(10,2,4672))
-totalExpMask=np.ones(shape=(10,2,4672))
-totalExpAvgDev=np.zeros(shape=(10,2,2))
+totalExp=np.zeros(shape=(11,2,4672))
+totalExpMask=np.ones(shape=(11,2,4672))
+totalExpDev=np.zeros(shape=(11,2))
+avgExpRU=np.zeros(shape=(11,2))
+avgExp=np.zeros(shape=(11))
+regions=np.load(wdvars+'regions.npy')
+regionNametoIndex={}
+regionNames=['Tigray', 'Afar', 'Amhara', 'Oromia', 'Somali', 'Benishangul-Gumuz', 'SNNP', 'Harari', 'Addis Ababa', 'Dire Dawa']
+
+i=-1
+for reg in regions:
+	i+=1
+	regionNametoIndex[reg]=i
+
 k=-1
 n=-1
 for line in fdata:
@@ -97,50 +110,156 @@ for line in fdata:
 	for i in range(len(indexids)):
 		if i!=3 and i!=4:
 			vars()[indexids[i]][k]=float(line[charecterBegin[i]:charecterEnd[i]])
-	exit()
 
 	rururb[k]=rururb[k]-1 # 0=rural, 1=urban
-	region[k]=region[k]-1 #0='Tigray', 1='Afar', 2='Amhara', 3='Oromiya', 4='Somale', 5='Benishangul-Gumuz', 6='SNNPRG', 7='Harari', 8='Addis Ababa', 9='Dire Dawa'
+	region[k]=region[k]-1 # Local numbering system
+	regionName=regionNames[region[k]]
+	## switch to my global numbering system ##
 	if region[k]!=region[k-1]:
 		n=0
-	totalExp[region[k],rururb[k],n]=hhexp_n[k]
-	if totalExp[region[k],rururb[k],n]!=0:
-		totalExpMask[region[k],rururb[k],n]=0 # 0=good
+	ireg=regionNametoIndex[regionName]
+
+	totalExp[ireg,rururb[k],n]=hhexp_n[k]
+	if totalExp[ireg,rururb[k],n]!=0:
+		totalExpMask[ireg,rururb[k],n]=0 # 0=good
 
 totalExp=np.ma.masked_array(totalExp,totalExpMask)
 
-regionNames=['Tigray', 'Afar', 'Amhara', 'Oromiya', 'Somale', 'BG', 'SNNPRG', 'Harari', 'Addis Ababa', 'Dire Dawa']
-
-for r in range(10):
+perUrban=np.load(wdvars+'percentUrban.npy')
+perUrban=perUrban/100.
+perRural=1-perUrban
+for r in range(11):
 	for ru in range(2):
-		totalExpAvgDev[r,ru,0]=np.ma.mean(totalExp[r,ru])
-		totalExpAvgDev[r,ru,1]=np.ma.std(totalExp[r,ru])
+		avgExpRU[r,ru]=np.ma.mean(totalExp[r,ru])
+		totalExpDev[r,ru]=np.ma.std(totalExp[r,ru])
 
-fig, ax = plt.subplots()
-ax1 = ax.twinx()
+avgExp[:]=(avgExpRU[:,0]*perRural)+(avgExpRU[:,1]*perUrban)
+
+np.save(wdvars+'avgExpRURuralUrban',avgExpRU)
+
+
+Mask=np.zeros(shape=(roadsByArea.shape),dtype=bool)
+for i in range(len(roadsByArea)):
+	if np.isnan(roadsByArea[i])==True or np.isnan(avgExpRU[i,0])==True:
+		Mask[i]=True 
+
+plt.clf()
+fig, ax = plt.subplots(figsize=(12, 6))
 ax.grid(True)
 
-x=np.arange(10)-.18
-ydata=np.ma.compressed(totalExpAvgDev[:,1,0])
-ax.bar(x,ydata,width=.35,color='g',label='urban')
+x=np.arange(10)
+ydata1=np.ma.compressed(np.ma.masked_array(avgExpRU[:,1],Mask))
+ydata2=np.ma.compressed(np.ma.masked_array(avgExpRU[:,0],Mask))
+ydata3=np.ma.compressed(np.ma.masked_array(avgExp[:],Mask))
+ax.bar(x-.26,ydata1,width=.25,color='g',label='urban')
+ax.bar(x,ydata2,width=.25,color='b',label='rural')
+ax.bar(x+.26,ydata3,width=.25,color='k',label='total')
+
 ax.legend(loc='upper left')
+#
+#x=np.arange(11)+.18
+#ydata=np.ma.compressed(avgExpRU[:,0])
+#ax1.bar(x,ydata,.35,color='b',label='rural')
+#ax1.legend(loc='upper right')
 
-x=np.arange(10)+.18
-ydata=np.ma.compressed(totalExpAvgDev[:,0,0])
-ax1.bar(x,ydata,.35,color='b',label='rural')
-ax1.legend(loc='upper right')
-
-plt.xticks(np.arange(10),regionNames)
+plt.xticks(np.arange(11),regions[np.invert(Mask)])
 for tick in ax.get_xticklabels():
-	    tick.set_rotation(30)
-ax1.set_ylim([0,13000])
-ax.set_ylim([0,13000])
-ax1.set_yticks([])
+	    tick.set_rotation(20)
+#ax1.set_ylim([0,13000])
+ax.set_ylim([4000,13000])
+#ax1.set_yticks([])
 ax.set_ylabel('Average Household Expenditures, Local Currency')
 
 plt.title('Ethiopian Average Household Expenditures by Region')
-plt.savefig(wdfigs+'eth_household_expenditures.pdf')
+plt.savefig(wdfigs+'eth_household_expenditures_new.pdf')
 
+###########################################################
+# Correlations
+###########################################################
+
+###### Roads ######
+roadsByArea=np.load(wdvars+'roadsByArea.npy')
+
+Mask=np.zeros(shape=(roadsByArea.shape),dtype=bool)
+for i in range(len(roadsByArea)):
+	if np.isnan(roadsByArea[i])==True or np.isnan(avgExpRU[i,0])==True:
+		Mask[i]=True 
 	
+Mask[0]=True
+roadsByAreaM=np.ma.compressed(np.ma.masked_array(roadsByArea,Mask))
+avgExpM=np.ma.compressed(np.ma.masked_array(avgExp[:],Mask))
+
+corrRoads=corr(roadsByAreaM,avgExpM)
+slope,bInt=np.polyfit(roadsByAreaM,avgExpM,1)
+yfit=slope*roadsByAreaM+bInt
+
+plt.clf()
+plt.plot(roadsByAreaM,avgExpM,'*b',roadsByAreaM,yfit,'-g')
+plt.xlabel('km of roads/sq. km')
+plt.ylabel('Average Household Expenditures')
+plt.title('Roads and Household Expenditures, Corr = '+str(round(corrRoads,2)))
+plt.savefig(wdfigs+'roads_expenditures',dpi=700)
+
+###### Flights ######
+flightsByRegion=np.load(wdvars+'flightsByRegion.npy')
+flightsByArea=np.load(wdvars+'flightsByArea.npy')
+airportsByRegion=np.load(wdvars+'airportsByRegion.npy')
+airportsByArea=np.load(wdvars+'airportsByArea.npy')
+Mask[0]=True
+flightsByRegionM=np.ma.compressed(np.ma.masked_array(flightsByRegion,Mask))
+flightsByAreaM=np.ma.compressed(np.ma.masked_array(flightsByArea,Mask))
+airportsByRegionM=np.ma.compressed(np.ma.masked_array(airportsByRegion,Mask))
+airportsByAreaM=np.ma.compressed(np.ma.masked_array(airportsByArea,Mask))
+avgExpM=np.ma.compressed(np.ma.masked_array(avgExp[:],Mask))
+
+x=flightsByRegionM
+corrFlights=corr(x,avgExpM)
+slope,bInt=np.polyfit(x,avgExpM,1)
+yfit=slope*x+bInt
+plt.clf()
+plt.plot(x,avgExpM,'*b',x,yfit,'-g')
+plt.xlabel('Number of Originating Flights')
+plt.ylabel('Average Household Expenditures')
+plt.title('Flights and Household Expenditures, Corr = '+str(round(corrFlights,2)))
+plt.savefig(wdfigs+'flights_expenditures',dpi=700)
+
+x=flightsByAreaM
+corrFlights=corr(x,avgExpM)
+slope,bInt=np.polyfit(x,avgExpM,1)
+yfit=slope*x+bInt
+plt.clf()
+plt.plot(x,avgExpM,'*b',x,yfit,'-g')
+plt.xlabel('Number of Originating Flights by Area')
+plt.ylabel('Average Household Expenditures')
+plt.title('Flights by Area and Household Expenditures, Corr = '+str(round(corrFlights,2)))
+plt.savefig(wdfigs+'flights_area_expenditures',dpi=700)
+
+
+x=airportsByRegionM
+corrFlights=corr(x,avgExpM)
+slope,bInt=np.polyfit(x,avgExpM,1)
+yfit=slope*x+bInt
+plt.clf()
+plt.plot(x,avgExpM,'*b',x,yfit,'-g')
+plt.xlabel('Number of Airports')
+plt.ylabel('Average Household Expenditures')
+plt.title('Airports and Household Expenditures, Corr = '+str(round(corrFlights,2)))
+plt.savefig(wdfigs+'airports_expenditures',dpi=700)
+
+x=airportsByAreaM
+corrFlights=corr(x,avgExpM)
+slope,bInt=np.polyfit(x,avgExpM,1)
+yfit=slope*x+bInt
+plt.clf()
+plt.plot(x,avgExpM,'*b',x,yfit,'-g')
+plt.xlabel('Number of Airports by Area')
+plt.ylabel('Average Household Expenditures')
+plt.title('Airports by Area and Household Expenditures, Corr = '+str(round(corrFlights,2)))
+plt.savefig(wdfigs+'airports_area_expenditures',dpi=700)
+
+
+
+
+
 
 

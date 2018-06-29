@@ -56,7 +56,7 @@ for i in range(len(r.shapes())):
 	vars()['points'+str(i)]=np.array(vars()['shape_points'+str(i)])
 
 	plt.plot(vars()['points'+str(i)][:,0],vars()['points'+str(i)][:,1],'.')
-	plt.savefig(wdfigs+'regions',dpi=600)
+	plt.savefig(wdfigs+'regions'+str(i),dpi=600)
 
 # Entire Country
 shapeC=rCountry.shapes()[0]
@@ -64,33 +64,57 @@ shape_pointsC=shapeC.points
 polygonC=patches.Polygon(shape_pointsC)
 pointsC=np.array(shape_pointsC)
 
+##### Read in Ethiopia Regions Land Masses #######
+f = open(wddata+'ethiopia_land_area.csv','r')
+regions=[]
+area=np.zeros(shape=(11))
+perUrban=np.zeros(shape=(11))
+i=-2
+for line in f:
+	i+=1
+	if i==-1:
+		continue
+	tmp=line.split(',')
+	regions.append(tmp[0])
+	area[i]=float(tmp[2])
+	perUrban[i]=float(tmp[6])
+np.save(wdvars+'regions',regions)
+np.save(wdvars+'percentUrban',perUrban)
+
 ################## Ethiopia OpenStreetMap ##################
 if OpenStreetMap:
+	
+
+	####### Calculate km of roads in each region #######
 	rRoads = shapefile.Reader(wddata+'ethiopia-openstreetmap/gis_osm_roads_free_1.shp')
 	shapes=rRoads.shapes()
 
-	distanceD=np.zeros(shape=(len(r.shapes())))
-	s=-1
-	for shape in rRoads.shapes():
-		s+=1
-		print s
-		shape_points=shape.points
-		points=np.array(shape_points)
-		for i in range(len(points)):
-			if i==0:
-				region=checkIfInPolygon(points[i,0],points[i,1],polygons)
-				if region==-1:
-					break
-				continue
-			if checkIfInPolygon(points[i,0],points[i,1],polygons)==region:
-				dis=sqrt((points[i,0]-points[i-1,0])**2+(points[i,1]-points[i-1,1])**2)
-				distanceD[region]+=dis
-			else:
-				region=checkIfInPolygon(points[i,0],points[i,1],polygons)
-				if region==-1:
-					break
-				continue
-	miles=distanceD*69
+	distanceD=np.load(wdvars+'roadDistanceByRegionDegrees')
+	#distanceD=np.zeros(shape=(len(r.shapes())))
+	#s=-1
+	#for shape in rRoads.shapes():
+	#	s+=1
+	#	print s
+	#	shape_points=shape.points
+	#	points=np.array(shape_points)
+	#	for i in range(len(points)):
+	#		if i==0:
+	#			region=checkIfInPolygon(points[i,0],points[i,1],polygons)
+	#			if region==-1:
+	#				break
+	#			continue
+	#		if checkIfInPolygon(points[i,0],points[i,1],polygons)==region:
+	#			dis=sqrt((points[i,0]-points[i-1,0])**2+(points[i,1]-points[i-1,1])**2)
+	#			distanceD[region]+=dis
+	#		else:
+	#			region=checkIfInPolygon(points[i,0],points[i,1],polygons)
+	#			if region==-1:
+	#				break
+	#			continue
+	#np.save(wdvars+'roadDistanceByRegionDegrees',distanceD)
+	kilometers=distanceD*111
+	roadsByArea=kilometers/area
+	np.save(wdvars+'roadsByArea',roadsByArea)
 	exit()
 
 	# Ethiopia lat lons
@@ -184,7 +208,7 @@ if Flights:
 		airportToLonLat[airportCode[i]]=str(lon[i])+','+str(lat[i])
 		airportToCountry[airportCode[i]]=country[i]
 		eth.append(airportCode[i])
-	############### Monthly Airport Use ###############
+	############### Monthly Airport Use ##############
 
 	f=open(wddata+'Global_Flight_Data_Monthly/Prediction_Monthly.csv')
 	
@@ -240,6 +264,25 @@ if Flights:
 
 	plt.savefig(wdfigs+'world_flights',dpi=700)
 
+	
+	airportRegions=np.zeros(shape=(len(flightsByAirport)))
+	flightsByRegion=np.zeros(shape=(len(r.shapes())))
+	airportsByRegion=np.zeros(shape=(len(r.shapes())))
+	for k in range(len(flightsByAirport)):
+		region=checkIfInPolygon(lon[k],lat[k],polygons)
+		if region==-1:
+			break
+		airportRegions[k]=region
+		flightsByRegion[region]+=flightsByAirport[k]
+		airportsByRegion[region]+=1
+
+	flightsByArea=flightsByRegion/area
+	airportsByArea=airportsByRegion/area
+
+	np.save(wdvars+'flightsByRegion',flightsByRegion)
+	np.save(wdvars+'flightsByArea',flightsByArea)
+	np.save(wdvars+'airportsByRegion',airportsByRegion)
+	np.save(wdvars+'airportsByArea',airportsByArea)
 
 
 
