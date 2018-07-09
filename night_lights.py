@@ -39,8 +39,9 @@ minx = gt[0]
 miny = gt[3] + width*gt[4] + height*gt[5] 
 maxx = gt[0] + width*gt[1] + height*gt[2]
 maxy = gt[3] 
+exit()
 
-pixelsize=0.004491576420598
+pixelsize=gt[-1]
 ethMask=np.ones(shape=(width,height))
 lat=np.ones(shape=(height))
 lon=np.ones(shape=(width))
