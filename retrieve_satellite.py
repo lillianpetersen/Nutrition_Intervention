@@ -207,6 +207,12 @@ wddata='/Users/lilllianpetersen/iiasa/data/'
 wdfigs='/Users/lilllianpetersen/iiasa/figs/'
 wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
 
+Landsat=False
+MODIS=True
+if Landsat:
+	print 'Landsat'
+if MODIS:
+	print 'MODIS'
 start='2017-01-01'
 end='2018-01-03'
 nyears=1
@@ -214,7 +220,10 @@ nmonths=12
 makePlots=True
 print 'makePlots=',makePlots
 padding = 0
-res=30
+if Landsat:
+	res=30
+if MODIS:
+	res=120
 pixels=2048
 
 plt.clf()
@@ -243,29 +252,29 @@ tileLat=np.zeros(shape=(len(dltiles),5))
 
 	
 country='Nigeria'
-dltile=dltiles[200]
+dltile=dltiles[10]
 print '\n\n'
 print country
 
-images= dl.metadata.search(
-	#products='5151d2825f5e29ff129f86d834946363ff3f7e57:modis:09:CREFL_v2_test',
-	#products='modis:09:CREFL',
-	products=['landsat:LC08:PRE:TOAR','sentinel-2:L1C'],
-	#products='landsat:LC08:PRE:TOAR',
-	start_time=start,
-	end_time=end,
-	#cloud_fraction=.8,
-	geom=dltile['geometry'],
-	limit=10000,
-	)
-images= dl.metadata.search(
-	products='landsat:LC08:PRE:TOAR',
-	start_time=start,
-	end_time=end,
-	#cloud_fraction=.8,
-	geom=dltile['geometry'],
-	limit=10000,
-	)
+if Landsat:
+	images= dl.metadata.search(
+		products=['landsat:LC08:PRE:TOAR','sentinel-2:L1C'],
+		start_time=start,
+		end_time=end,
+		geom=dltile['geometry'],
+		limit=10000,
+		)
+
+if MODIS:
+	images= dl.metadata.search(
+		#products='5151d2825f5e29ff129f86d834946363ff3f7e57:modis:09:CREFL_v2_test',
+		products='modis:09:CREFL',
+		start_time=start,
+		end_time=end,
+		#cloud_fraction=.8,
+		geom=dltile['geometry'],
+		limit=10000,
+		)
 
 lat=dltile['geometry']['coordinates'][0][0][0]
 lon=dltile['geometry']['coordinates'][0][0][1]
@@ -290,7 +299,10 @@ sortIndex=np.argsort(plotYear)
 
 #band_info=dl.metadata.bands(products='landsat:LT05:PRE:TOAR')
 #band_info=dl.metadata.bands(products='5151d2825f5e29ff129f86d834946363ff3f7e57:modis:09:CREFL_v2_test')
-band_info=dl.metadata.bands(products='sentinel-2:L1C')
+if Landsat:
+	band_info=dl.metadata.bands(products='sentinel-2:L1C')
+if MODIS:
+	band_info=dl.metadata.bands(products='modis:09:CREFL')
 
 sName='Nigeria'
 cName='tile0'
@@ -358,31 +370,50 @@ for j in sortIndex:
 
 
 	# get the scene id
-	#scene = images['features'][indexSorted[j]]['key']
-	#scene = images['features'][j]['key']
 	scene = images['features'][j]['id']
-	print scene
+	#print scene
 
 	#######################
 	# Get cloud data	  #
 	#######################
 
 	try:
-		r00 = band_info[band_info_index['blue']]['data_range'][0]
-		r01 = band_info[band_info_index['blue']]['data_range'][1]
-		r10 = band_info[band_info_index['blue']]['physical_range'][0]
-		r11 = band_info[band_info_index['blue']]['physical_range'][1]
-		# L1 is blue, L3 is red, L4 is nir, and L5 is swir1
-		cloudData, meta = dl.raster.ndarray(
-			scene,
-			resolution=dltile['properties']['resolution'],
-			bounds=dltile['properties']['outputBounds'],
-			srs=dltile['properties']['cs_code'],
-			bands=['blue', 'red', 'nir', 'swir1','alpha'],
-			#scales=[[default_range[0], default_range[1], data_range[0], data_range[1]]],
-			scales=[[r00,r01,r10,r11],[r00,r01,r10,r11],[r00,r01,r10,r11],[r00,r01,r10,r11],[0, 255, 0., 1.]],
-			data_type='Float32',
-			)
+		if Landsat:
+			r00 = band_info[band_info_index['blue']]['data_range'][0]
+			r01 = band_info[band_info_index['blue']]['data_range'][1]
+			r10 = band_info[band_info_index['blue']]['physical_range'][0]
+			r11 = band_info[band_info_index['blue']]['physical_range'][1]
+			# L1 is blue, L3 is red, L4 is nir, and L5 is swir1
+			cloudData, meta = dl.raster.ndarray(
+				scene,
+				resolution=dltile['properties']['resolution'],
+				bounds=dltile['properties']['outputBounds'],
+				srs=dltile['properties']['cs_code'],
+				bands=['blue', 'red', 'nir', 'swir1','alpha'],
+				#scales=[[default_range[0], default_range[1], data_range[0], data_range[1]]],
+				scales=[[r00,r01,r10,r11],[r00,r01,r10,r11],[r00,r01,r10,r11],[r00,r01,r10,r11],[0, 255, 0., 1.]],
+				data_type='Float32',
+				)
+		if MODIS:
+			cloudData, meta = dl.raster.ndarray(
+				scene,
+				resolution=dltile['properties']['resolution'],
+				bounds=dltile['properties']['outputBounds'],
+				srs=dltile['properties']['cs_code'],
+				bands=['visual_cloud_mask', 'alpha'],
+				scales=[[0,1,0,1]],
+				data_type='Float32'
+				)
+			
+			alpha, meta = dl.raster.ndarray(
+				scene,
+				resolution=dltile['properties']['resolution'],
+				bounds=dltile['properties']['outputBounds'],
+				srs=dltile['properties']['cs_code'],
+				bands=['alpha'],
+				#scales=[[0,1,0,1]],
+				data_type='Byte'
+				)
 	except:
 		print('cloudMask: %s could not be retreived' % scene)
 		k-=1
@@ -390,16 +421,22 @@ for j in sortIndex:
 		continue 
 
 	
-	maskForAlpha=cloudData[:,:,4]
-	maskForAlpha=1-(maskForAlpha/255)
+	if Landsat:
+		maskForAlpha=cloudData[:,:,4]
+		maskForAlpha=1-(maskForAlpha/255)
+	
+		cloudMaskFull=ltk_cloud_mask(cloudData[:,:,:])
+		clouds=cloudMaskFull==4
+		cloudMask=np.zeros(shape=(cloudMaskFull.shape))
+		cloudMask[clouds]=1
+		cloudMask[np.array(1-clouds,dtype=bool)]=0
+		cloudMask=ndimage.binary_dilation(cloudMask,iterations=3)
+		cloudMask=np.ma.masked_array(cloudMask,maskForAlpha)
 
-	ltkCloudMaskFull=ltk_cloud_mask(cloudData[:,:,:])
-	clouds=ltkCloudMaskFull==4
-	ltkCloudMask=np.zeros(shape=(ltkCloudMaskFull.shape))
-	ltkCloudMask[clouds]=1
-	ltkCloudMask[np.array(1-clouds,dtype=bool)]=0
-	ltkCloudMask=ndimage.binary_dilation(ltkCloudMask,iterations=3)
-	ltkCloudMask=np.ma.masked_array(ltkCloudMask,maskForAlpha)
+	if MODIS:
+		maskForAlpha=cloudData[:,:,1]
+		#maskForAlpha=1-(maskForAlpha/255)
+		cloudMask=cloudData[:,:,0]
 
 	###############################################
 	# Test for bad days
@@ -410,8 +447,8 @@ for j in sortIndex:
 		continue
 	
 	# take out days with too many clouds
-	if np.sum(ltkCloudMask)>0.95*(np.sum(1-maskForAlpha)):
-		print 'clouds: continued', np.round(np.sum(ltkCloudMask)/(np.sum(1-maskForAlpha)),3)
+	if np.sum(cloudMask)>0.95*(np.sum(1-maskForAlpha)):
+		print 'clouds: continued', np.round(np.sum(cloudMask)/(np.sum(1-maskForAlpha)),3)
 		continue		
 
 	if np.amin(maskForAlpha)==1:
@@ -425,8 +462,6 @@ for j in sortIndex:
 	# time
 	############################################### 
 
-	#date=str(images['features'][j]['id'][64:74]) # MODIS test
-	#date=str(images['features'][j]['id'][20:30]) # old MODIS
 	date=str(images['features'][j]['properties']['acquired'][0:10]) # Landsat
 	year=int(date[0:4])
 	if k==0:
@@ -439,7 +474,7 @@ for j in sortIndex:
 	plotYear[y,m,d]=year+dayOfYear/365.0
 
 	time2=time.time()
-	print date, k, np.round(np.sum(ltkCloudMask)/(pixels*pixels),3), d, np.round(time2-time1,1),'sec'
+	print date, k, np.round(np.sum(cloudMask)/(pixels*pixels),3), d, np.round(time2-time1,1),'sec'
 	sys.stdout.flush()
 	time1=time.time()
 
@@ -452,7 +487,7 @@ for j in sortIndex:
 			os.makedirs(wdfigs+sName+'/'+cName)
 		plt.clf()
 		plt.figure(figsize=[10,10])
-		plt.imshow(ltkCloudMask, cmap='gray', vmin=0, vmax=1)
+		plt.imshow(cloudMask, cmap='gray', vmin=0, vmax=1)
 		plt.colorbar()
 		plt.title('Cloud Mask: '+cName+', '+sName+', '+str(date), fontsize=20)
 		#cb = plt.colorbar()
@@ -486,22 +521,37 @@ for j in sortIndex:
 	###############################################
 
 	try:
-		arrNDVI, meta = dl.raster.ndarray(
-			scene,
-			resolution=dltile['properties']['resolution'],
-			bounds=dltile['properties']['outputBounds'],
-			srs=dltile['properties']['cs_code'],
-			bands=['nir', 'red'],
-			scales=[[r00,r01,r10,r11],[r00,r01,r10,r11]],
-			data_type='Float32',
-			)
+		if Landsat:
+			arrNDVI, meta = dl.raster.ndarray(
+				scene,
+				resolution=dltile['properties']['resolution'],
+				bounds=dltile['properties']['outputBounds'],
+				srs=dltile['properties']['cs_code'],
+				bands=['nir', 'red'],
+				scales=[[r00,r01,r10,r11],[r00,r01,r10,r11]],
+				data_type='Float32',
+				)
+			ndvi=(arrNDVI[:,:,0]-arrNDVI[:,:,1])/(arrNDVI[:,:,0]+arrNDVI[:,:,1])
+
+		if MODIS:
+			default_range= band_info[band_info_index['ndvi']]['default_range']
+			physical_range = band_info[band_info_index['ndvi']]['physical_range']
+			ndvi, meta = dl.raster.ndarray(
+				scene,
+				resolution=dltile['properties']['resolution'],
+				bounds=dltile['properties']['outputBounds'],
+				srs=dltile['properties']['cs_code'],
+				bands=['ndvi'],
+				#scales=[[default_range[0], default_range[1], physical_range[0], physical_range[1]]],
+				#scales=[[0,16383,-1.0,1.0]],
+				data_type='Float32',
+				)
+
 	except:
 		print('ndvi: %s could not be retreived' % scene)
 		continue
 
-	ndvi=(arrNDVI[:,:,0]-arrNDVI[:,:,1])/(arrNDVI[:,:,0]+arrNDVI[:,:,1])
-
-	Mask[d,:,:]=maskForAlpha+ltkCloudMask
+	Mask[d,:,:]=maskForAlpha+cloudMask
 	Mask[d,:,:]=Mask[d,:,:]>=1 # if either mask is true, mask is true
 	
 	if np.amin(Mask[d])==1:
