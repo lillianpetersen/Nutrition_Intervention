@@ -864,8 +864,9 @@ plt.xlabel('DistToRoadsP - TRoadDensity + DistToCity')
 plt.savefig(wdfigs+'index1_and_pov125',dpi=700)
 '''
 
-########## Night Light Data ##########
-
+###########################################
+# Night Lights
+###########################################
 stableTif=TIFF.open(wddata+'nigeria_lights/nigeriaStable.tif',mode='r')
 avgVisTif=TIFF.open(wddata+'nigeria_lights/nigeriaAvgVis.tif',mode='r')
 
@@ -894,90 +895,49 @@ lonl=np.radians(lonl)
 lutAvgVis=RectSphereBivariateSpline(latl, lonl, avgVisSmall)
 lutStable=RectSphereBivariateSpline(latl, lonl, stableSmall)
 
-newLats=np.radians(latM)
+newLats=np.radians(latM[::-1])
 newLons=np.radians(lonM)
 newLats,newLons=np.meshgrid(newLats,newLons)
-avgVis=lutAvgVis.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonM),len(latM))).T
+avgVisO=lutAvgVis.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonM),len(latM))).T
 stable=lutStable.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonM),len(latM))).T
-exit()
 
-#lightMask0=latl>latM[0]
-#lightMask=np.zeros(shape=(stableSmall.shape))
-#lightMask[lightMask0,:]=1
-#latl=np.ma.masked_array(latl,lightMask[:,5000])
-#lonl=np.ma.masked_array(lonl,lightMask[5000,:])
-#latl=np.ma.compressed(latl)
-#lonl=np.ma.compressed(lonl)
-#stableM=stableSmall[~lightMask.all(axis=1),:]
-#avgVisM=avgVisSmall[~lightMask.all(axis=1),:]
+avgVis=np.log(avgVisO)
+avgVis[np.isnan(avgVis)]=0
+
+avgVis=(avgVis-np.amin(avgVis))/(np.amax(avgVis)-np.amin(avgVis))
+stable=(stable-np.amin(stable))/(np.amax(stable)-np.amin(stable))
+avgVis=np.clip(avgVis,0.94,1)
+avgVis=(avgVis-np.amin(avgVis))/(np.amax(avgVis)-np.amin(avgVis))
+
+avgVisS=moving_average_2d(avgVis,np.ones((5, 5)))
+avgVisS=np.ma.masked_array(avgVisS,imageMask2)
+avgVisS=(avgVisS-np.amin(avgVisS))/(np.amax(avgVisS)-np.amin(avgVisS))
+
+plt.clf()
+plt.imshow(avgVisS,cmap=cm.jet)
+plt.colorbar()
+plt.title('Avg Visual Lights Smoothed')
+plt.savefig(wdfigs+'nigeria_avgVisS',dpi=700)
 
 plt.clf()
 plt.imshow(stable,cmap=cm.jet)
 plt.colorbar()
+plt.title('Stable Lights')
 plt.savefig(wdfigs+'nigeria_stable_lights',dpi=700)
-plt.clf()
-plt.imshow(avgVis,cmap=cm.jet)
-plt.colorbar()
-plt.savefig(wdfigs+'nigeria_avgVis',dpi=700)
 
-#gridLights = np.zeros(shape=(len(lonl),len(latl),2))
-#for x in range(len(lonl)):
-#	gridLights[x,:,0]=lonl[x]
-#for y in range(len(latl)):
-#	gridLights[:,y,1]=latl[y]
-#
-#gridMid=createMidpointGrid(grid,pixelsize)
-#gridMidLights=createMidpointGrid(gridLights,pixelsizel)
-#
 #plt.clf()
-#plt.plot(np.ma.compressed(gridLights[:85,:85,0]),np.ma.compressed(gridLights[:85,:85,1]),'m*',markersize=2)
-#plt.plot(np.ma.compressed(grid[:10,:10,0]),np.ma.compressed(grid[:10,:10,1]),'b*')
-#plt.savefig(wdfigs+'grids',dpi=700)
+#plt.imshow(avgVis,cmap=cm.jet)
+#plt.colorbar()
+#plt.title('Avg Visual Lights')
+#plt.savefig(wdfigs+'nigeria_avgVis',dpi=700)
 #
-#
-#minDistLat=9999*np.ones(shape=(len(latl)))
-#iMinDistLat=np.zeros(shape=(len(latl)),dtype=int)
-#for nlat in range(len(latl)):
-#	lightlat=latl[nlat]
-#	for ilat in range(len(latM)):
-#		gridlat=latM[ilat]
-#		dist=abs(lightlat-gridlat)
-#		if dist<minDistLat[nlat]:
-#			minDistLat[nlat]=dist
-#			iMinDistLat[nlat]=ilat
-#
-#minDistLon=9999*np.ones(shape=(len(lonl)))
-#iMinDistLon=np.zeros(shape=(len(lonl)),dtype=int)
-#for nlon in range(len(lonl)):
-#	lightlon=lonl[nlon]
-#	for ilon in range(len(lonM)):
-#		gridlon=lonM[ilon]
-#		dist=abs(lightlon-gridlon)
-#		if dist<minDistLon[nlon]:
-#			minDistLon[nlon]=dist
-#			iMinDistLon[nlon]=ilon
-#
-#stable=np.zeros(shape=(len(latM),len(lonM)))
-#avgVis=np.zeros(shape=(len(latM),len(lonM)))
-#for nlat in range(len(latl)):
-#	for nlon in range(len(lonl)):
-#		stable[iMinDistLat[nlat],iMinDistLon[nlon]]+=stableSmall[nlat,nlon]
-#		avgVis[iMinDistLat[nlat],iMinDistLon[nlon]]+=avgVisSmall[nlat,nlon]
-#
-
-plt.clf()
-plt.imshow(stable,cmap=cm.jet)
-plt.colorbar()
-plt.savefig(wdfigs+'nigeria_stable_lights',dpi=700)
-
-plt.clf()
-plt.imshow(avgVis,cmap=cm.jet)
-plt.colorbar()
-plt.savefig(wdfigs+'nigeria_avgVis',dpi=700)
-		
+#avgVis=np.ma.masked_array(avgVis,imageMask2)
+stable=np.ma.masked_array(stable,imageMask2)
 
 
-
+###########################################
+# Make Index
+###########################################
 #### For all of Nigeria ####
 #cityDensity=closestDistDegM[:,:,0]+closestDistDegM[:,:,1]+closestDistDegM[:,:,2]
 #cityDensity=(cityDensity-np.amin(cityDensity))/(np.amax(cityDensity)-np.amin(cityDensity))
@@ -1033,7 +993,6 @@ except:
 	np.save(wdvars+'nigeria_popClosestDistSmoothed',popClosestDistSmoothed)
 dmin=np.amin(popClosestDistS)
 popClosestDistSS=(popClosestDistS-dmin)/(np.amax(popClosestDistS)-dmin)+0.01
-exit()
 
 index=popClosestDistM/closestDistM
 index=np.log(index)
@@ -1077,22 +1036,73 @@ plt.savefig(wdfigs+'indext1',dpi=700)
 
 #index1=distToPRoadsS-roadDensityS+closestDistS-popClosestDistSS
 #index1=2*indext+indext1
-index1=1.25*index+indext
+index1=1.25*index+indext-3*avgVisS
 index1=(index1-np.amin(index1))/(np.amax(index1)-np.amin(index1))
-index11=index1.filled(np.NaN)
-index1Filled=replace_nans(index11,3,0.5, 2, method='localmean')
-index1s=moving_average_2d(index1Filled,np.ones((5,5)))
-index1s=np.ma.masked_array(index1s,imageMask2)
-index1s=(index1s-np.amin(index1s))/(np.amax(index1s)-np.amin(index1s))
+#index11=index1.filled(np.NaN)
+#index1Filled=replace_nans(index11,3,0.5, 2, method='localmean')
+#index1s=moving_average_2d(index1Filled,np.ones((5,5)))
+#index1s=np.ma.masked_array(index1s,imageMask2)
+#index1s=(index1s-np.amin(index1s))/(np.amax(index1s)-np.amin(index1s))
 
+###########################################
+# Scale and find Corr
+###########################################
+scaleIndex=10.
+
+height,width=int(np.round(len(latM)/scaleIndex)),int(np.round(len(lonM)/scaleIndex))
+newLats,newLons=np.ones(shape=(height)),np.ones(shape=(width))
+pixelsizeNew=pixelsize*scaleIndex
+latMr=latM[::-1]
+for w in range(width):
+	newLons[w]=lonM[0]+w*pixelsizeNew
+for h in range(height):
+	newLats[h]=latMr[0]+h*pixelsizeNew
+
+gridNew = np.zeros(shape=(len(newLons),len(newLats),2))
+for x in range(len(newLons)):
+	gridNew[x,:,0]=newLons[x]
+for y in range(len(newLats)):
+	gridNew[:,y,1]=newLats[y]
+grid1=grid[:,::-1,:]
+
+## Plot old and new grid
+plt.clf()
+m=int(scaleIndex*3)
+plt.plot(np.ma.compressed(grid1[:m,:m,0]),np.ma.compressed(grid1[:m,:m,1]),'*k')
+plt.plot(np.ma.compressed(gridNew[:3,:3,0]),np.ma.compressed(gridNew[:3,:3,1]),'*r')
+plt.savefig(wdfigs+'old_new_grid.pdf')
+##
+
+oldLat,oldLon=np.radians(latM[::-1]),np.radians(lonM)
+lutIndex1=RectSphereBivariateSpline(oldLat, oldLon, index1)
+lutPov=RectSphereBivariateSpline(oldLat, oldLon, pov125)
+lutMask=RectSphereBivariateSpline(oldLat, oldLon, imageMask2)
+
+newLats,newLons=np.radians(newLats),np.radians(newLons)
+newLats,newLons=np.meshgrid(newLats,newLons)
+
+urbanIndex=lutIndex1.ev(newLats.ravel(),newLons.ravel()).reshape((width,height)).T
+pov125Course=lutPov.ev(newLats.ravel(),newLons.ravel()).reshape((width,height)).T
+maskCourse=lutMask.ev(newLats.ravel(),newLons.ravel()).reshape((width,height)).T
+maskCourse=np.array(np.round(maskCourse,0),dtype=bool)
+
+urbanIndex=np.ma.masked_array(urbanIndex,maskCourse)
+urbanIndex=(urbanIndex-np.amin(urbanIndex))/(np.amax(urbanIndex)-np.amin(urbanIndex))
+pov125Course=np.ma.masked_array(pov125Course,maskCourse)
 
 plt.clf()
-plt.imshow(index1s,cmap=cm.jet_r)
+plt.imshow(urbanIndex,cmap=cm.jet_r)
 plt.colorbar()
-#plt.title('DistToRoadsP - TRoadDensity + DistToCity - popCity')
 plt.title('Urban/Rural Index Based on Roads and Population')
-plt.savefig(wdfigs+'index1s',dpi=700)
-print corr(np.ma.compressed(index1s),np.ma.compressed(pov125))
+plt.savefig(wdfigs+'urbanIndex',dpi=700)
+
+plt.clf()
+plt.imshow(pov125Course,cmap=cm.jet_r)
+plt.colorbar()
+plt.title('Percent Under $1.25/Day')
+plt.savefig(wdfigs+'pov125Course',dpi=700)
+print corr(np.ma.compressed(urbanIndex),np.ma.compressed(pov125Course))
+
 x=np.ma.compressed(index1)
 ydata=np.ma.compressed(pov125)
 Corr=corr(x,ydata)
