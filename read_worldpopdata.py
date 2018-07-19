@@ -28,6 +28,7 @@ geolocator = Nominatim()
 import geopy.distance
 from scipy import ndimage
 from scipy.signal import convolve2d
+from sklearn import linear_model
 from scipy.interpolate import RectSphereBivariateSpline
 
 ###############################################
@@ -73,6 +74,10 @@ def corr(x,y):
     rxy=rxy/(stdDevx*stdDevy)
     return rxy
 
+def scale(var):
+	varScaled=(var-np.amin(var))/(np.amax(var)-np.amin(var))
+	return varScaled
+
 from itertools import compress
 class MaskableList(list):
     def __getitem__(self, index):
@@ -84,7 +89,7 @@ def checkIfInPolygon(lon, lat,polygon):
 	return polygon.contains(point)
 
 def findGridDataLays(shapePoints,grid):
-	''' Give it a list of points in a road, will return pixel of center of each segment'''
+	'''Convert Vector To Raster'''
 	midpointHits=np.zeros(shape=(3,len(shapePoints)-1,2))
 	griddedHits=np.zeros(shape=(len(grid[:,0]),len(grid[0,:])))
 	for i in range(len(shapePoints)-1):
@@ -94,12 +99,14 @@ def findGridDataLays(shapePoints,grid):
 			##### Find Grid Cell of Midpoint #####
 			linePoints=np.array([(x1,y1),((x1+x2)/2.,(y1+y2)/2.),(x2,y2)])
 		else:
-			dist=geopy.distance.distance([y1,x1],[y2,x2]).km
+			dist=geopy.distance.distance([y1,x1],[y2,x2]).km+1e-6
 			if dist>50:
 				continue
 			if x2<x1:
 				x=np.arange(x2,x1,abs(x2-x1)/(2*dist))
 			else:
+				if x2==x1:
+					x2=x1+1e-4
 				x=np.arange(x1,x2,abs(x2-x1)/(2*dist))
 			slope,bInt=np.polyfit([x1,x2],[y1,y2],1)
 			yfit=slope*np.array(x)+bInt
@@ -418,12 +425,12 @@ makePlots=False
 ##############################################
 # Read Poverty
 ##############################################
-countriesT=['Malawi','Nigeria','Uganda','Tanzania']
-countries=[]
-for c in countriesT:
-	countries.append(c.lower())
-countryAbb=['mwi','nga','uga','tza']
-years=['11','10','10','10']
+#countriesT=['Malawi','Nigeria','Uganda','Tanzania']
+#countries=[]
+#for c in countriesT:
+#	countries.append(c.lower())
+#countryAbb=['mwi','nga','uga','tza']
+#years=['11','10','10','10']
 
 #i=-1
 #for country in countries:
@@ -432,8 +439,8 @@ i=1 #country=Nigeria
 country='Nigeria'
 
 
-tif125 = TIFF.open(wddata+'poverty/'+country+'/'+countryAbb[i]+years[i]+'povcons125.tif',mode='r')
-ds=gdal.Open(wddata+'poverty/'+country+'/'+countryAbb[i]+years[i]+'povcons125.tif')
+tif125 = TIFF.open(wddata+'poverty/'+country+'/nga10povcons125.tif',mode='r')
+ds=gdal.Open(wddata+'poverty/'+country+'/nga10povcons125.tif')
 width = ds.RasterXSize
 height = ds.RasterYSize
 gt = ds.GetGeoTransform()
@@ -452,7 +459,6 @@ for h in range(height):
 	lat[h]=miny+h*pixelsize
 lat=lat[::-1] # reverse the order
 
-tif125 = TIFF.open(wddata+'poverty/'+country+'/'+countryAbb[i]+years[i]+'povcons125.tif',mode='r')
 pov125 = tif125.read_image()*100
 imageMask=pov125<0
 
@@ -542,8 +548,8 @@ maskCoarse=np.array(np.round(maskCoarse,0),dtype=bool)
 if makePlots:
 	plt.clf()
 	plt.imshow(pov125,cmap=cm.jet_r,vmin=0,vmax=100)
-	plt.yticks([])
-	plt.xticks([])
+	#plt.yticks([])
+	#plt.xticks([])
 	plt.title('Percent living under 1.25/day '+countriesT[i]+' 20'+years[i])
 	plt.colorbar()
 	plt.savefig(wdfigs+country+'_poverty_125',dpi=700)
@@ -575,36 +581,28 @@ if makePlots:
 ######################################################
 # Roads
 ######################################################
-country='nigeria'
-rRoads = shapefile.Reader(wddata+'openstreetmap/'+country+'/openstreetmap/nga_trs_roads_osm.shp')
-#rRoads = shapefile.Reader(wddata+'nigeria_roads/part/nga_trs_roads_osm_wfpschema_sep2016/nga_trs_roads_osm_wfpschema_sep2016.shp')
-
-records=rRoads.shapeRecords()
-records=MaskableList(records)
-roadType=[rec.record[6] for rec in records]
-
-maskP=np.array([rType=='primary' for rType in roadType])
-maskS=np.array([rType=='secondary' for rType in roadType])
-maskT=np.array([rType=='tertiary' for rType in roadType])
-
-records1=records[maskP]
-records2=records[maskS]
-records3=records[maskT]
-
-if makePlots:
-	plt.clf()
-	map = Basemap(llcrnrlon=lonM[0],llcrnrlat=np.amin(latM),urcrnrlon=lonM[-1],urcrnrlat=np.amax(latM), projection='lcc',lon_0=(lonM[-1]+lonM[0])/2,lat_0=(latM[-1]+latM[0])/2,resolution='i')
-	map.drawcoastlines(linewidth=1.5)
-	map.drawcountries()
-	map.readshapefile(wddata+'openstreetmap/nigeria/openstreetmap/nga_trs_roads_osm', name='roads', drawbounds=True)
-	ax = plt.gca()
-	plt.title('Nigerian Roads from Open Street Map')
-	plt.savefig(wdfigs+'openstreetmap_nigeria',dpi=700)
-
+print 'Roads'
 try:
 	roadDensity=np.load(wdvars+'nigeria_raodDensity.npy')
 except:
 	print 'calculating roadDensity: try command failed'
+
+	country='nigeria'
+	rRoads = shapefile.Reader(wddata+'openstreetmap/'+country+'/openstreetmap/nga_trs_roads_osm.shp')
+	#rRoads = shapefile.Reader(wddata+'nigeria_roads/part/nga_trs_roads_osm_wfpschema_sep2016/nga_trs_roads_osm_wfpschema_sep2016.shp')
+	
+	records=rRoads.shapeRecords()
+	records=MaskableList(records)
+	roadType=[rec.record[6] for rec in records]
+	
+	maskP=np.array([rType=='primary' for rType in roadType])
+	maskS=np.array([rType=='secondary' for rType in roadType])
+	maskT=np.array([rType=='tertiary' for rType in roadType])
+	
+	records1=records[maskP]
+	records2=records[maskS]
+	records3=records[maskT]
+
 	roadDensity=np.zeros(shape=(len(lonM),len(latM),3))
 	
 	for i in range(len(records1)):
@@ -633,59 +631,34 @@ except:
 	
 	np.save(wdvars+'nigeria_raodDensity',roadDensity)
 
-roadDensityM=np.swapaxes(roadDensity[:,:,:],0,1)
-roadDensityM=np.ma.masked_array(roadDensityM,imageMask3[:,:,:3])
+roadDensity=np.swapaxes(roadDensity[:,:,:],0,1)
+roadDensity=np.ma.masked_array(roadDensity,imageMask3[:,:,:3])
 
 if makePlots:
 	plt.clf()
-	#plt.imshow(roadDensity,cmap=cm.gist_heat_r)
-	plt.imshow(roadDensityM[:,:,0],cmap=cm.nipy_spectral_r)
-	plt.colorbar()
-	plt.title('km primary roads per square km in Nigeria')
-	plt.savefig(wdfigs+'nigeria_primary_road_density',dpi=800)
-	
+	map = Basemap(llcrnrlon=lonM[0],llcrnrlat=np.amin(latM),urcrnrlon=lonM[-1],urcrnrlat=np.amax(latM), projection='lcc',lon_0=(lonM[-1]+lonM[0])/2,lat_0=(latM[-1]+latM[0])/2,resolution='i')
+	map.drawcoastlines(linewidth=1.5)
+	map.drawcountries()
+	map.readshapefile(wddata+'openstreetmap/nigeria/openstreetmap/nga_trs_roads_osm', name='roads', drawbounds=True)
+	ax = plt.gca()
+	plt.title('Nigerian Roads from Open Street Map')
+	plt.savefig(wdfigs+'openstreetmap_nigeria',dpi=700)
 	plt.clf()
 	plt.figure(1,figsize=(3,4))
-	#plt.imshow(roadDensity,cmap=cm.gist_heat_r)
-	plt.imshow(roadDensityM[:,:,1],cmap=cm.nipy_spectral_r)
-	plt.colorbar()
-	plt.title('Nigeria: km secondary roads/km^2')
-	plt.savefig(wdfigs+'nigeria_secondary_road_density',dpi=800)
-	
-	plt.clf()
-	plt.figure(1,figsize=(3,4))
-	plt.imshow(roadDensityM[:,:,2],cmap=cm.nipy_spectral_r)
+	plt.imshow(roadDensity[:,:,2],cmap=cm.nipy_spectral_r)
 	plt.colorbar()
 	plt.title('Nigeria: km tertiary roads/km^2')
 	plt.savefig(wdfigs+'nigeria_tertiary_road_density',dpi=800)
 	
-	
 	plt.clf()
-	plt.figure(1,figsize=(3,4))
-	plt.imshow(roads0[:,:,0],cmap=cm.gist_heat_r)
-	plt.colorbar()
-	plt.title('Primary Roads Nigeria')
-	plt.savefig(wdfigs+'nigeria_primary_road_mask',dpi=600)
-	
-	plt.clf()
-	plt.figure(1,figsize=(3,4))
-	plt.imshow(roads0[:,:,1],cmap=cm.gist_heat_r)
-	plt.colorbar()
-	plt.title('Secondary Roads Nigeria')
-	plt.savefig(wdfigs+'nigeria_secondary_road_mask',dpi=600)
-	
-	plt.clf()
-	#plt.imshow(roadDensity,cmap=cm.gist_heat_r)
-	plt.imshow(roadDensityM[:,::-1],cmap=cm.nipy_spectral_r)
+	plt.imshow(roadDensity[:,::-1],cmap=cm.nipy_spectral_r)
 	plt.colorbar()
 	plt.xticks([])
 	plt.yticks([])
 	plt.title('Nigerian Roads')
 	plt.savefig(wdfigs+'nigeria_all_roads',dpi=800)
 
-##############################################
-# Dist To Roads
-##############################################
+###### Dist To Roads ######
 try:
 	distToRoads=np.load(wdvars+'nigeria_distToRoads.npy')
 	distToRoads=np.ma.masked_array(distToRoads,imageMask3[:,:,:3])
@@ -712,37 +685,11 @@ if makePlots:
 	plt.colorbar()
 	plt.savefig(wdfigs+'dist_to_primary_roads',dpi=700)
 
-############## Multivariate ##############
-#xMulti=np.zeros(shape=(k))
-#cropYield1=np.ma.masked_array(cropYield,anomMask[:,:,3])
-#ydata=np.ma.compressed(cropYield1)
-#
-#iMulti=-1
-#for m in range(5):
-#    iMulti+=1
-#    x=np.ma.compressed(ndviAnom[:,:,m])
-#    xMulti[:,iMulti]=x
-#
-#for m in range(5):
-#    iMulti+=1
-#    x=np.ma.compressed(eviAnom[:,:,m])
-#    xMulti[:,iMulti]=x
-#
-#for m in range(5):
-#    iMulti+=1
-#    x=np.ma.compressed(ndwiAnom[:,:,m])
-#    xMulti[:,iMulti]=x
-#from sklearn import linear_model
-#
-#clf=linear_model.LinearRegression()
-#clf.fit(xMulti,yMulti)
-#exit()
-
-#np.save(wdvars+'Illinois/xMulti',xMulti)
-#np.save(wdvars+'Illinois/ydataMulti',ydata)
 #############################################
 # Dist to Cities
 #############################################
+print 'Cities'
+###### City Population ######
 try:
 	cityPop=np.load(wdvars+'NigeriaCityPop.npy')
 	cityLonLat=np.load(wdvars+'NigeriaCityLonLat.npy')
@@ -765,79 +712,153 @@ except:
 	np.save(wdvars+'NigeriaCityPop',cityPop)
 	np.save(wdvars+'NigeriaCityLonLat',cityLonLat)
 
+###### Dist To Cities and Pop of Closest City ######
 try:
-	closestDistM=np.load(wdvars+'closestDist_to_nigerian_cities.npy')
-	iclosestDistM=np.load(wdvars+'iclosestDist_to_nigerian_cities.npy')
-	#closestDistDegM=np.load(wdvars+'closestDistDegM_to_nigerian_cities.npy')
+	closestDistCities=np.load(wdvars+'closestDist_to_nigerian_cities.npy')
+	iclosestDistCities=np.load(wdvars+'iclosestDist_to_nigerian_cities.npy')
+	popClosestDistCities=np.load(wdvars+'nigeria_popClosestDistCities.npy')
 except:
-	print 'calculating closestDistToRoads: try command failed'
-	closestDistM,iclosestDistM=findNearestCities(cityLonLat,gridMid,imageMask1)
-	np.save(wdvars+'closestDist_to_nigerian_cities',np.array(closestDistM))
-	np.save(wdvars+'iclosestDist_to_nigerian_cities',np.array(iclosestDistM))
+	print 'calculating closestDistCities: try command failed'
+	closestDistCities,iclosestDistCities=findNearest(cityLonLat,gridMid,imageMask1)
+	np.save(wdvars+'closestDist_to_nigerian_cities',np.array(closestDistCities))
+	np.save(wdvars+'iclosestDist_to_nigerian_cities',np.array(iclosestDistCities))
 
-plt.clf()
-plt.imshow(closestDistM,cmap=cm.viridis_r)
-plt.colorbar()
-plt.title('Distance to Nearest City')
-plt.savefig(wdfigs+'closestDist',dpi=700)
+	plt.clf()
+	plt.imshow(closestDistCities,cmap=cm.viridis_r)
+	plt.colorbar()
+	plt.title('Distance to Nearest City')
+	plt.savefig(wdfigs+'closestDist',dpi=700)
+	
+	popClosestDistCities=np.zeros(shape=(iclosestDistCities.shape))
+	for ilat in range(len(iclosestDistCities[:,0])):
+		for ilon in range(len(iclosestDistCities[0,:])):
+			if imageMask2[ilat,ilon]==False:
+				popClosestDistCities[ilat,ilon]=cityPop[int(iclosestDistCities[ilat,ilon])]
+	np.save(wdvars+'nigeria_popClosestDistCities.npy',popClosestDistCities)
 
-popClosestDist=np.zeros(shape=(iclosestDistM.shape))
-popClosestDistScaled=np.zeros(shape=(iclosestDistM.shape))
-for ilat in range(len(iclosestDistM[:,0])):
-	for ilon in range(len(iclosestDistM[0,:])):
-		if imageMask2[ilat,ilon]==False:
-			#popClosestDistScaled[ilat,ilon]=popScaled[int(iclosestDistM[ilat,ilon])]
-			popClosestDist[ilat,ilon]=cityPop[int(iclosestDistM[ilat,ilon])]
-popClosestDistM=np.ma.masked_array(popClosestDist,imageMask2)
+popClosestDistCities=np.ma.masked_array(popClosestDistCities,imageMask2)
+closestDistCities=np.ma.masked_array(closestDistCities,imageMask2)
+iclosestDistCities=np.ma.masked_array(iclosestDistCities,imageMask2)
+
+###### Smooth popClosestDistCities ######
+try:
+	popClosestDistCitiesS=np.load(wdvars+'nigeria_popClosestDistCitiesSmoothed.npy')
+	popClosestDistCitiesS=np.ma.masked_array(popClosestDistCitiesS,imageMask2)
+except:
+	print 'calculating popClosestDistCities Smoothed: try command failed'
+	popClosestDistCities1=popClosestDistCitiesCities.filled(np.NaN)
+	popClosestDistCitiesFilled = replace_nans(popClosestDistCities1, 10, 0.5, 2, method='localmean')
+	popClosestDistCitiesS=np.log(popClosestDistCitiesFilled)
+	popClosestDistCitiesS=moving_average_2d(popClosestDistCitiesS,np.ones((40, 40)))
+	popClosestDistCitiesS=np.ma.masked_array(popClosestDistCitiesS,imageMask2)
+	popClosestDistCitiesSmoothed=popClosestDistCitiesS
+	popClosestDistCitiesSmoothed[imageMask2==True]=0
+	popClosestDistCitiesSmoothed=np.array(popClosestDistCitiesSmoothed)
+	np.save(wdvars+'nigeria_popClosestDistCitiesSmoothed',popClosestDistCitiesSmoothed)
+popClosestDistCitiesS=scale(popClosestDistCitiesS)+0.01
+
+###### Pop closest city / distance ######
+popOverDistCities=np.log(popClosestDistCities/closestDistCities)
+popOverDistCities=scale(popOverDistCities)
+if makePlots:
+	plt.clf()
+	plt.imshow(popOverDistCities,cmap=cm.jet_r)
+	plt.title('Log of Population of Closest City / Distance')
+	plt.colorbar()
+	plt.savefig(wdfigs+'popOverDistCities',dpi=700)
 
 ###########################################
 # Night Lights
 ###########################################
-stableTif=TIFF.open(wddata+'nigeria_lights/nigeriaStable.tif',mode='r')
-avgVisTif=TIFF.open(wddata+'nigeria_lights/nigeriaAvgVis.tif',mode='r')
+print 'Night Lights'
+try:
+	stable=np.load(wdvars+'nigeria_stable.npy')
+	stableS=np.load(wdvars+'nigeria_stableSmoothed.npy')
+	avgVis=np.load(wdvars+'nigeria_avgVis.npy')
+	avgVisLog=np.load(wdvars+'nigeria_avgVisLog.npy')
+	avgVisLogS=np.load(wdvars+'nigeria_avgVisLogS.npy')
+except:
+	stableTif=TIFF.open(wddata+'nigeria_lights/nigeriaStable.tif',mode='r')
+	avgVisTif=TIFF.open(wddata+'nigeria_lights/nigeriaAvgVis.tif',mode='r')
+	
+	ds=gdal.Open(wddata+'nigeria_lights/nigeriaAvgVis.tif')
+	width = ds.RasterXSize
+	height = ds.RasterYSize
+	gt = ds.GetGeoTransform()
+	minx = gt[0]
+	miny = gt[3] + width*gt[4] + height*gt[5] 
+	maxx = gt[0] + width*gt[1] + height*gt[2]
+	maxy = gt[3] 
+	pixelsizel=abs(gt[-1])
+	
+	latl=np.ones(shape=(height))
+	lonl=np.ones(shape=(width))
+	for w in range(width):
+		lonl[w]=minx+w*pixelsizel
+	for h in range(height):
+		latl[h]=miny+h*pixelsizel
+	
+	stableSmall=stableTif.read_image()
+	avgVisSmall=avgVisTif.read_image()
+	
+	latl=np.radians(latl)
+	lonl=np.radians(lonl)
+	lutAvgVis=RectSphereBivariateSpline(latl, lonl, avgVisSmall)
+	lutStable=RectSphereBivariateSpline(latl, lonl, stableSmall)
+	
+	newLats=np.radians(latM[::-1])
+	newLons=np.radians(lonM)
+	newLats,newLons=np.meshgrid(newLats,newLons)
+	avgVisRaw=lutAvgVis.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonM),len(latM))).T
+	stableRaw=lutStable.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonM),len(latM))).T
+	
+	
+	avgVis=scale(avgVisRaw)
+	#try:
+	#	distToAvgVis=np.load(wdvars+'nigeria_distToAvgVis.npy')
+	#except:
+	#	avgVisDist=np.zeros(shape=(avgVis.shape))
+	#	avgVis0=np.swapaxes(avgVis,0,1)
+	#	avgVis0[avgVis0!=0]=1
+	#	avgVisPoints=gridMid[avgVis0[:,:]==1,:]
+	#	distToAvgVis,iclosest=findNearest(avgVisPoints,gridMid,imageMask1)
+	#	np.save(wdvars+'nigeria_distToAvgVis.npy',distToAvgVis)
+	#distToAvgVis=np.ma.masked_array(distToAvgVis,imageMask2)
+	
+	avgVisS=moving_average_2d(avgVis,np.ones((10, 10)))
+	
+	avgVisM=np.ma.masked_array(avgVis,imageMask2)
+	avgVisLog=np.log(avgVis)
+	avgVisLog[np.isnan(avgVisM)]=0
+	avgVisLog=np.clip(scale(avgVisLog),0.94,1)
+	avgVisLog=scale(avgVisLog)
+	avgVisLogS=moving_average_2d(avgVisLog,np.ones((5, 5)))
+	
+	stable=scale(stableRaw)
+	#try:
+	#	distToStable=np.load(wdvars+'nigeria_distToStable.npy')
+	#except:
+	#	stableDist=np.zeros(shape=(stable.shape))
+	#	stable0=np.swapaxes(stable,0,1)
+	#	stable0[stable0!=0]=1
+	#	stablePoints=gridMid[stable0[:,:]==1,:]
+	#	distToStable,iclosest=findNearest(stablePoints,gridMid,imageMask1)
+	#	np.save(wdvars+'nigeria_distToStable.npy',distToStable)
+	#distToStable=np.ma.masked_array(distToStable,imageMask2)
+	
+	stableS=moving_average_2d(stable,np.ones((10, 10)))
 
-ds=gdal.Open(wddata+'nigeria_lights/nigeriaAvgVis.tif')
-width = ds.RasterXSize
-height = ds.RasterYSize
-gt = ds.GetGeoTransform()
-minx = gt[0]
-miny = gt[3] + width*gt[4] + height*gt[5] 
-maxx = gt[0] + width*gt[1] + height*gt[2]
-maxy = gt[3] 
-pixelsizel=abs(gt[-1])
+	np.save(wdvars+'nigeria_stable.npy',stable)
+	np.save(wdvars+'nigeria_stableSmoothed.npy',stableS)
+	np.save(wdvars+'nigeria_avgVis.npy',avgVis)
+	np.save(wdvars+'nigeria_avgVisLog.npy',np.array(avgVisLog))
+	np.save(wdvars+'nigeria_avgVisLogS.npy',avgVisLogS)
 
-latl=np.ones(shape=(height))
-lonl=np.ones(shape=(width))
-for w in range(width):
-	lonl[w]=minx+w*pixelsizel
-for h in range(height):
-	latl[h]=miny+h*pixelsizel
-
-stableSmall=stableTif.read_image()
-avgVisSmall=avgVisTif.read_image()
-
-latl=np.radians(latl)
-lonl=np.radians(lonl)
-lutAvgVis=RectSphereBivariateSpline(latl, lonl, avgVisSmall)
-lutStable=RectSphereBivariateSpline(latl, lonl, stableSmall)
-
-newLats=np.radians(latM[::-1])
-newLons=np.radians(lonM)
-newLats,newLons=np.meshgrid(newLats,newLons)
-avgVisO=lutAvgVis.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonM),len(latM))).T
-stable=lutStable.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonM),len(latM))).T
-
-avgVis=np.log(avgVisO)
-avgVis[np.isnan(avgVis)]=0
-
-avgVis=(avgVis-np.amin(avgVis))/(np.amax(avgVis)-np.amin(avgVis))
-stable=(stable-np.amin(stable))/(np.amax(stable)-np.amin(stable))
-avgVis=np.clip(avgVis,0.94,1)
-avgVis=(avgVis-np.amin(avgVis))/(np.amax(avgVis)-np.amin(avgVis))
-
-avgVisS=moving_average_2d(avgVis,np.ones((5, 5)))
-avgVisS=np.ma.masked_array(avgVisS,imageMask2)
-avgVisS=(avgVisS-np.amin(avgVisS))/(np.amax(avgVisS)-np.amin(avgVisS))
+stable=scale(np.ma.masked_array(stable,imageMask2))
+stableS=scale(np.ma.masked_array(stableS,imageMask2))
+avgVis=scale(np.ma.masked_array(avgVis,imageMask2))
+avgVisLogS=scale(np.ma.masked_array(avgVisLogS,imageMask2))
+avgVisS=scale(np.ma.masked_array(avgVisS,imageMask2))
 
 if makePlots:
 	plt.clf()
@@ -847,7 +868,7 @@ if makePlots:
 	plt.savefig(wdfigs+'nigeria_avgVisS',dpi=700)
 	
 	plt.clf()
-	plt.imshow(stable,cmap=cm.jet)
+	plt.imshow(stableS,cmap=cm.jet)
 	plt.colorbar()
 	plt.title('Stable Lights')
 	plt.savefig(wdfigs+'nigeria_stable_lights',dpi=700)
@@ -858,104 +879,86 @@ if makePlots:
 	#plt.title('Avg Visual Lights')
 	#plt.savefig(wdfigs+'nigeria_avgVis',dpi=700)
 #
-#avgVis=np.ma.masked_array(avgVis,imageMask2)
-stable=np.ma.masked_array(stable,imageMask2)
 
 ###########################################
 # Rivers
 ###########################################
+print 'Rivers'
 #### Rivers ####
-rRivers = shapefile.Reader(wddata+'nigeria_landtype/nga_riverspolygon/nga_hyd_riverspolygon_dcw.shp')
-
-records=rRivers.shapeRecords()
-records=MaskableList(records)
-allYear=[rec.record[3] for rec in records]
-waterType=[rec.record[2] for rec in records]
-
-maskPermanent=np.array([rType=='Perennial/Permanent' for rType in allYear])
-maskNonPermanent=np.array([rType=='Non-Perennial/Intermittent/Fluctuating' for rType in allYear])
-maskInlandWater=np.array([rType=='Inland Water' for rType in waterType])
-maskFlood=np.array([rType=='Land Subject to Inundation' for rType in waterType])
-
-permanent=records[maskPermanent]
-nonPermanent=records[maskNonPermanent]
-inland=records[maskInlandWater]
-flood=records[maskFlood]
-
 try:
-	riverDensity=np.load(wdvars+'nigeria_riverDensity_res5x.npy')
+	riverHits=np.load(wdvars+'nigeria_riverHits.npy')
 except:
-	print 'calculating riverDensity: try command failed'
-	riverDensity=np.zeros(shape=(len(lonsCoarse),len(latsCoarse),4))
+	print 'calculating riverHits: try command failed'
+	rRivers = shapefile.Reader(wddata+'nigeria_landtype/nga_riverspolygon/nga_hyd_riverspolygon_dcw.shp')
+	
+	records=rRivers.shapeRecords()
+	records=MaskableList(records)
+	allYear=[rec.record[3] for rec in records]
+	waterType=[rec.record[2] for rec in records]
+	
+	maskPermanent=np.array([rType=='Perennial/Permanent' for rType in allYear])
+	maskNonPermanent=np.array([rType=='Non-Perennial/Intermittent/Fluctuating' for rType in allYear])
+	maskInlandWater=np.array([rType=='Inland Water' for rType in waterType])
+	maskFlood=np.array([rType=='Land Subject to Inundation' for rType in waterType])
+	
+	permanent=records[maskPermanent]
+	nonPermanent=records[maskNonPermanent]
+	inland=records[maskInlandWater]
+	flood=records[maskFlood]
+
+	riverHits=np.zeros(shape=(len(lonM),len(latM),4))
 	v=-1
+	itype=-1
 	for rtype in ['permanent','nonPermanent','inland','flood']:
+		itype+=1
 		v+=1
 		for i in range(len(vars()[rtype])):
 			shapePoints=vars()[rtype][i].shape.points
-			midpointHits,dist=findGridAndDistance(shapePoints,gridCoarse)
-			midpointHits=np.array(midpointHits,dtype=int)
-			for j in range(len(midpointHits)):
-				riverDensity[midpointHits[j,0]-1,midpointHits[j,1]-1,v]+=dist[j]
-		
-		np.save(wdvars+'nigeria_riverDensity_res5x',riverDensity)
+			riverHits[:,:,itype]=findGridDataLays(shapePoints,grid)
+	
+	np.save(wdvars+'nigeria_riverHits',riverHits)
 
-maskCoarse1=np.zeros(shape=(len(maskCoarse[:,0]),len(maskCoarse[0,:]),4))
-for i in range(4):
-	maskCoarse1[:,:,i]=maskCoarse
-riverDensityM=np.swapaxes(riverDensity[:,:,:],0,1)
-riverDensityM=riverDensityM[::-1,:,:]
-riverDensityM=np.ma.masked_array(riverDensityM,maskCoarse1)
-#riverDensityM=np.clip(riverDensityM,0,150)
+riverHits=np.swapaxes(riverHits[:,:,:],0,1)
+riverHits=np.ma.masked_array(riverHits,imageMask3[:,:,:4])
+#riverHits=np.clip(riverHits,0,150)
 
-v=-1
-for rtype in ['permanent','nonPermanent','inland','flood']:
-	v+=1
-	plt.clf()
-	if rtype=='permanent' or rtype=='inland':
-		maxx,maxy=np.where(riverDensityM[:,:,v]==np.amax(riverDensityM[:,:,v]))
-		maxx,maxy=int(maxx),int(maxy)
-		riverDensityM[maxx,maxy,v]=0
-	if makePlots:
-		#plt.imshow(riverDensityM[:,:,v],cmap=cm.gist_heat_r)
-		plt.imshow(riverDensityM[:,:,v],cmap=cm.nipy_spectral_r)
+try:
+	distToRivers=np.load(wdvars+'nigeria_distToRivers.npy')
+except:
+	print 'calculating distToRivers: try command failed'
+	rivers0=riverHits
+	rivers0=1*rivers0
+	rivers0=np.swapaxes(rivers0,0,1)
+	
+	#distToRivers=np.zeros(shape=(len(latM),len(lonM),4))
+	for iriver in range(1): #'permanent','nonPermanent','inland','flood'
+		riversMidPoints=gridMid[rivers0[:,:,iriver]==1,:]
+		distToRivers[:,:,iriver],iclosest=findNearest(riversMidPoints,gridMid,imageMask1)
+	np.save(wdvars+'nigeria_distToRivers',np.array(distToRivers))
+	
+distToRivers=np.ma.masked_array(distToRivers,imageMask3[:,:,:len(distToRivers[0,0,:])])
+
+if makePlots:
+	v=-1
+	for rtype in ['permanent','nonPermanent','inland','flood']:
+		v+=1
+		plt.clf()
+		#plt.imshow(riverHits[:,:,v],cmap=cm.gist_heat_r)
+		plt.imshow(riverHits[:,:,v],cmap=cm.nipy_spectral_r)
 		plt.colorbar()
 		plt.title(rtype+' River Density')
 		plt.savefig(wdfigs+'nigeria_'+rtype+'_river_density',dpi=700)
 
-rivers0=riverDensityM>0
-rivers0=1*rivers0
-maskCoarse2=np.zeros(shape=(len(maskCoarse[:,0]),len(maskCoarse[0,:]),4))
-for i in range(4):
-	maskCoarse2[:,:,i]=maskCoarse
-
-try:
-	distToRivers=np.load(wdvars+'nigeria_distToRivers.npy')
-	distToRivers=np.ma.masked_array(distToRivers,maskCoarse2)
-except:
-	print 'calculating distToRivers: try command failed'
-	distToRivers=1-rivers0 # river = 0
-	distToRivers[distToRivers==1]=9999.
-	
-	gridMidCoarse=createMidpointGrid(gridCoarse,pixelsizeNew)
-	gridMidCoarse1=np.swapaxes(gridMidCoarse,0,1)
-	maskCoarse1=np.swapaxes(maskCoarse,0,1)
-	distToRivers=np.zeros(shape=(len(latsCoarse),len(lonsCoarse),4))
-	for iriver in range(1,4): #'permanent','nonPermanent','inland','flood'
-		riversMidPoints=gridMidCoarse1[rivers0[:,:,iriver]==1,:]
-		distToRivers[:,:,iriver],iclosestRiver=findNearestCities(riversMidPoints,gridMidCoarse,maskCoarse1)
-	np.save(wdvars+'nigeria_distToRivers',np.array(distToRivers))
-
-distToRivers=np.ma.masked_array(distToRivers,maskCoarse2)
-
-plt.clf()
-plt.imshow(np.clip(distToRivers[:,:,1],0,60),cmap=cm.jet_r)
-plt.title('Dist To nonPermanent Rivers')
-plt.colorbar()
-plt.savefig(wdfigs+'dist_to_nonPermanent_Rivers',dpi=700)
+	plt.clf()
+	plt.imshow(np.clip(distToRivers[:,:,1],0,60),cmap=cm.jet_r)
+	plt.title('Dist To nonPermanent Rivers')
+	plt.colorbar()
+	plt.savefig(wdfigs+'dist_to_nonPermanent_Rivers',dpi=700)
 
 ###########################################
 # Coast Lines
 ###########################################
+print 'Coasts'
 try:
 	distToCoasts=np.load(wdvars+'nigeria_distToCoasts.npy')
 	coastLines=np.load(wdvars+'nigeria_coastLines.npy')
@@ -996,7 +999,7 @@ except:
 					coastLines[:,:,coastType]=findGridDataLays(pointsM,grid)
 	
 		coastsMidPoints=gridMid[coastLines[:,:,coastType]==1,:]
-		distToCoasts[:,:,coastType],iclosestCoast=findNearest(coastsMidPoints,gridMid,imageMask1)
+		distToCoasts[:,:,coastType],iclosest=findNearest(coastsMidPoints,gridMid,imageMask1)
 	
 		plt.clf()
 		plt.imshow(np.clip(distToCoasts[:,:,coastType],0,200))
@@ -1035,9 +1038,11 @@ if makePlots:
 	plt.gca().set_aspect('equal', adjustable='box')
 	plt.savefig(wdfigs+'test_coastlines.pdf')
 
+'''
 ###########################################
 # Land Classification
 ###########################################
+print 'Land Classification'
 landTypeTif=TIFF.open(wddata+'nigeria_landtype/nigeriaLandClassification.tif',mode='r')
 
 ds=gdal.Open(wddata+'nigeria_landtype/nigeriaLandClassification.tif')
@@ -1129,12 +1134,18 @@ plt.clf()
 plt.imshow(landCover,cmap=cm.gist_ncar,vmin=0,vmax=210)
 plt.colorbar()
 plt.savefig(wdfigs+'landCover',dpi=700)
-
+'''
 ###########################################
 # Trading Indicies
 ###########################################
+print 'Trade'
+countries=['Benin','Niger','Chad','Cameroon']
+countries=np.array(countries)
+countriesDict={'Benin':0,'Niger':1,'Chad':2,'Cameroon':3}
+
 f=open(wddata+'africa_trading_index/gdp_per_capita.csv','r')
 countryToGDP={}
+gdpPerCapita=np.zeros(shape=len(countries))
 i=-2
 for line in f:
 	i+=1
@@ -1147,10 +1158,11 @@ for line in f:
 		countryToGDP[tmp[0]]=float(tmp[y2010])
 	except:
 		continue
+	if (tmp[0]==countries).any():
+		gdpPerCapita[countriesDict[tmp[0]]]=tmp[y2010]
 
 f=open(wddata+'africa_trading_index/trading_across_borders_allyears.csv','r')
 trading=np.zeros(shape=(len(countries),2))
-countries=np.array(countries)
 i=-2
 for line in f:
 	i+=1
@@ -1159,64 +1171,91 @@ for line in f:
 	tmp=line.split(',')
 	if (tmp[0]==countries).any():
 		if tmp[1][2:]=='2010':
-			print tmp[0],tmp[6],tmp[9],float(tmp[6])/float(tmp[9])
+			#print tmp[0],tmp[6],tmp[9],float(tmp[6])/float(tmp[9])
 			trading[countriesDict[tmp[0]],:]=float(tmp[6]),float(tmp[9])
 	
 ######## Distance to Other Countries ######## 
-rCountry=shapefile.Reader(wddata+'africa_trading_index/african_countries_shape/Data/Africa.shp')
-
-records=rCountry.shapeRecords()
-records=MaskableList(records)
-countryID=[rec.record[3] for rec in records]
-
-countries=['Benin','Niger','Chad','Cameroon']
-countriesDict={'Benin':0,'Niger':1,'Chad':2,'Cameroon':3}
-plt.clf()
-borders=np.zeros(shape=(len(lonM),len(latM),len(countries)))
-k=-1
-for country in countries:
-	k+=1
-	vars()['mask'+country]=np.array([rType==country for rType in countryID])
+try:
+	borders=np.load(wdvars+'nigeria_borders.npy')
+	distToBorders=np.load(wdvars+'nigeria_distToBorders.npy')
+except:
+	print 'calculating borders: try command failed'
+	rCountry=shapefile.Reader(wddata+'africa_trading_index/african_countries_shape/Data/Africa.shp')
 	
-	vars()['records'+country]=np.array(records[vars()['mask'+country]])
-	points=np.array(vars()['records'+country][0].shape.points)
-
-	# lon mask
-	moreThanLon=lonM[0]<points[:,0]
-	lessThanLon=points[:,0]<lonM[-1]
-	lonMask=moreThanLon==lessThanLon
-	# lat mask
-	moreThanLat=latM[-1]<points[:,1]
-	lessThanLat=points[:,1]<latM[0]
-	latMask=moreThanLat==lessThanLat
-	# total mask
-	nigeriaMask=np.zeros(shape=(len(latMask)),dtype=bool)
-	for i in range(len(latMask)):
-		if latMask[i]==True and lonMask[i]==True:
-			nigeriaMask[i]=True
-	if np.sum(nigeriaMask)==0:
-		continue
+	records=rCountry.shapeRecords()
+	records=MaskableList(records)
+	countryID=[rec.record[3] for rec in records]
 	
-	pointsM=points[nigeriaMask]
+	plt.clf()
+	borders=np.zeros(shape=(len(lonM),len(latM),len(countries)))
+	k=-1
+	for country in countries:
+		k+=1
+		vars()['mask'+country]=np.array([rType==country for rType in countryID])
+		
+		vars()['records'+country]=np.array(records[vars()['mask'+country]])
+		points=np.array(vars()['records'+country][0].shape.points)
+	
+		# lon mask
+		moreThanLon=lonM[0]<points[:,0]
+		lessThanLon=points[:,0]<lonM[-1]
+		lonMask=moreThanLon==lessThanLon
+		# lat mask
+		moreThanLat=latM[-1]<points[:,1]
+		lessThanLat=points[:,1]<latM[0]
+		latMask=moreThanLat==lessThanLat
+		# total mask
+		nigeriaMask=np.zeros(shape=(len(latMask)),dtype=bool)
+		for i in range(len(latMask)):
+			if latMask[i]==True and lonMask[i]==True:
+				nigeriaMask[i]=True
+		if np.sum(nigeriaMask)==0:
+			continue
+		
+		pointsM=points[nigeriaMask]
+	
+		borders[:,:,k]=findGridDataLays(pointsM,grid)
+		np.save(wdvars+'nigeria_borders.npy',borders)
 
-	borders[:,:,k]=findGridDataLays(pointsM,grid)
-	plt.plot(points[:,0],points[:,1])
-plt.gca().set_aspect('equal', adjustable='box')
-plt.savefig(wdfigs+'nigeriatest.pdf')
+	distToBorders=np.zeros(shape=(len(latM),len(lonM),len(borders[0,0,:])))
+	for iborder in range(len(borders[0,0,:])):
+		bordersMidPoints=gridMid[borders[:,:,iborder]==1,:]
+		distToBorders[:,:,iborder],iclosest=findNearest(bordersMidPoints,gridMid,imageMask1)
+	
+		plt.clf()
+		plt.imshow(np.clip(distToBorders[:,:,iborder],0,300))
+		plt.colorbar()
+		plt.title('Distance to '+countries[iborder]+' Border, km (clipped)')
+		plt.gca().set_aspect('equal', adjustable='box')
+		plt.savefig(wdfigs+'distTo'+countries[iborder]+'Border',dpi=700)
+	
+	np.save(wdvars+'nigeria_distToBorders.npy',distToBorders)
+
+distToBorders=np.ma.masked_array(distToBorders,imageMask3[:,:,:4])
+distToBorders=np.clip(distToBorders,0,300)
+gdpPerCapitaDistAllCountries=scale(distToBorders*(-gdpPerCapita))
+tradeDistAllCountries=np.ma.zeros(shape=(len(latM),len(lonM),4,2))
+tradeDistAllCountries[:,:,:,0]=scale(distToBorders*(-trading[:,0]))
+tradeDistAllCountries[:,:,:,1]=scale(distToBorders*(-trading[:,1]))
+
+gdpPerCapitaDist=np.sum(gdpPerCapitaDistAllCountries,axis=-1)
+tradeDist=np.sum(tradeDistAllCountries,axis=-2)
+tradeDist=tradeDist[:,:,1]
 
 borders=np.swapaxes(borders,0,1)
 
-plt.clf()
-masktmp=borders==0
-bordersM=np.ma.masked_array(borders,masktmp)
-plt.imshow(bordersM[:,:,0],cmap=cm.binary,vmin=0,vmax=1)
-plt.imshow(bordersM[:,:,1],cmap=cm.binary,vmin=0,vmax=1)
-plt.imshow(bordersM[:,:,2],cmap=cm.binary,vmin=0,vmax=1)
-plt.imshow(bordersM[:,:,3],cmap=cm.binary,vmin=0,vmax=1)
-plt.colorbar()
-plt.savefig(wdfigs+'nigeria_borders',dpi=700)
 
 if makePlots:
+	plt.clf()
+	masktmp=borders==0
+	bordersM=np.ma.masked_array(borders,masktmp)
+	plt.imshow(bordersM[:,:,0],cmap=cm.binary,vmin=0,vmax=1)
+	plt.imshow(bordersM[:,:,1],cmap=cm.binary,vmin=0,vmax=1)
+	plt.imshow(bordersM[:,:,2],cmap=cm.binary,vmin=0,vmax=1)
+	plt.imshow(bordersM[:,:,3],cmap=cm.binary,vmin=0,vmax=1)
+	plt.colorbar()
+	plt.savefig(wdfigs+'nigeria_borders',dpi=700)
+
 	plt.clf()
 	map = Basemap(llcrnrlon=lonM[0],llcrnrlat=np.amin(latM),urcrnrlon=lonM[-1],urcrnrlat=np.amax(latM), projection='lcc',lon_0=(lonM[-1]+lonM[0])/2,lat_0=(latM[-1]+latM[0])/2,resolution='i')
 	map.readshapefile(wddata+'africa_trading_index/african_countries_shape/Data/Africa', name='countries', drawbounds=True)
@@ -1224,34 +1263,107 @@ if makePlots:
 	plt.title('Country Boundaries')
 	plt.savefig(wdfigs+'countries',dpi=700)
 
-
+	plt.clf()
+	plt.imshow(gdpPerCapitaDist,cmap=cm.jet)
+	plt.colorbar()
+	plt.title('GDP of Surrounding Countries and Dist Index')
+	plt.gca().set_aspect('equal', adjustable='box')
+	plt.savefig(wdfigs+'gdpPerCapitaDist',dpi=700)
+	
+	plt.clf()
+	plt.imshow(tradeDist,cmap=cm.jet)
+	plt.colorbar()
+	plt.title('Trade Ease with Surrounding Countries and Dist Index')
+	plt.gca().set_aspect('equal', adjustable='box')
+	plt.savefig(wdfigs+'tradeDist',dpi=700)
+	
+	bordersInfluence=gdpPerCapitaDist*tradeDist
+	plt.clf()
+	plt.imshow(bordersInfluence,cmap=cm.jet)
+	plt.colorbar()
+	plt.title('Influence of Borders (GDP and Ease of Trading)')
+	plt.gca().set_aspect('equal', adjustable='box')
+	plt.savefig(wdfigs+'bordersInfluence',dpi=700)
+	
+	#distToBordersC=distToBordersA
+	#distToBordersC[distToBordersC==1000]=0
+	#distToBordersBool=1-(distToBordersC==0)
+	#distToBordersCount=np.sum(distToBordersBool,axis=-1)
+	#distToBordersCount=np.sum(distToBordersC[distToBordersMask],axis=-1)
+	plt.clf()
+	plt.imshow(gdpPerCapitaDist,cmap=cm.jet_r)
+	plt.colorbar()
+	plt.title('gdpPerCapita Distance')
+	plt.gca().set_aspect('equal', adjustable='box')
+	plt.savefig(wdfigs+'gdpPerCapitaDist',dpi=700)
+	
+	plt.clf()
+	plt.imshow(tradingDist,cmap=cm.jet_r)
+	plt.colorbar()
+	plt.title('Trading and Distance')
+	plt.gca().set_aspect('equal', adjustable='box')
+	plt.savefig(wdfigs+'gdpPerCapitaDist',dpi=700)
+	
+exit()
 
 ###########################################
 # Make Index
 ###########################################
-#### For all of Nigeria ####
-#cityDensity=closestDistDegM[:,:,0]+closestDistDegM[:,:,1]+closestDistDegM[:,:,2]
-#cityDensity=(cityDensity-np.amin(cityDensity))/(np.amax(cityDensity)-np.amin(cityDensity))
-#plt.clf()
-#plt.imshow(cityDensity,cmap=cm.hot_r)
-#plt.title('city density')
-#plt.colorbar()
-#plt.savefig(wdfigs+'city_density',dpi=700)
-#
-#cityDensityPop=np.zeros(shape=(len(latM),len(lonM)))
-#for ilat in range(len(latM)):
-#	for ilon in range(len(lonM)):
-#		if imageMask2[ilat,ilon]==False:
-#			cityDensityPop[ilat,ilon]=cityPop[int(iclosestDistM[ilat,ilon,0])]+cityPop[int(iclosestDistM[ilat,ilon,1])]+cityPop[int(iclosestDistM[ilat,ilon,2])]
-#cityDensityPop=cityDensityPop/cityDensity
-#cityDensityPop=np.log(cityDensityPop)
-#cityDensityPopM=np.ma.masked_array(cityDensityPop,imageMask2)
-#plt.clf()
-#plt.imshow(cityDensityPopM,cmap=cm.hot_r)
-#plt.title('City Density by Population')
-#plt.colorbar()
-#plt.savefig(wdfigs+'city_density_by_pop',dpi=700)
+############ Multivariate ##############
+xMulti=np.ma.zeros(shape=(len(latM),len(lonM),26))
+ydata=np.ma.compressed(pov125)
+# roads
+xMulti[:,:,0:3]=roadDensity
+xMulti[:,:,3:6]=distToRoads
+# cities
+xMulti[:,:,6]=closestDistCities
+xMulti[:,:,7]=popClosestDistCities
+xMulti[:,:,8]=popClosestDistCitiesS
+xMulti[:,:,9]=popOverDistCities
+# lights
+xMulti[:,:,10]=stable
+xMulti[:,:,11]=stableS
+xMulti[:,:,12]=avgVis
+#xMulti[:,:,13]=avgVisLog
+xMulti[:,:,13]=avgVisLogS
+# rivers
+xMulti[:,:,14:18]=riverHits
+xMulti[:,:,18:22]=distToRivers
+# coasts
+xMulti[:,:,22:24]=distToCoasts
+# trading
+xMulti[:,:,24]=tradeDist
+xMulti[:,:,25]=gdpPerCapitaDist
 
+multiIndicies=['roadDensityP','roadDensityS','roadDensityT','distToRoadsP','distToRoadsS','distToRoadsT','closestDistCities','popClosestDistCities','popClosestDistCitiesS','popOverDistCities','stable','stableS','avgVis','avgVisLogS','riverHitsPermanent','riverHitsNonPermanent','riverHitsInland','riverHitsFlood','distToRiversPermanent','distToRiversNonPermanent','distToRiversHitsInland','distToRiversFlood','distToCoasts','distToInlandCoasts','tradeDist','gdpPerCapitaDist']
+multiIndicies=np.array(multiIndicies)
+
+xMultiC=np.zeros(shape=(len(np.ma.compressed(xMulti[:,:,0])),26))
+for i in range(len(xMulti[0,0,:])):
+	xMulti[:,:,i]=scale(xMulti[:,:,i])
+	xMultiC[:,i]=np.ma.compressed(xMulti[:,:,i])
+
+clf=linear_model.LinearRegression()
+clf.fit(xMultiC,ydata)
+corr=np.sqrt(clf.score(xMultiC,ydata))
+coef=clf.coef_
+sortedCoefIndex=np.argsort(abs(coef))
+
+povPred=xMulti[:,:,:]*coef
+povPred=np.sum(povPred,axis=-1)
+povPred=scale(povPred)
+
+plt.clf()
+plt.imshow(povPred,cmap=cm.jet_r)
+plt.colorbar()
+plt.title('Predicted Poverty')
+plt.savefig(wdfigs+'predPov',dpi=700)
+
+exit()
+
+#np.save(wdvars+'Illinois/xMulti',xMulti)
+#np.save(wdvars+'Illinois/ydataMulti',ydata)
+#### For all of Nigeria ####
 #distToPRoadsS=(distToRoads[:,:,0]-np.amin(distToRoads[:,:,0]))/(np.amax(distToRoads[:,:,0])-np.amin(distToRoads[:,:,0]))
 #distToSRoadsS=(distToRoads[:,:,1]-np.amin(distToRoads[:,:,1]))/(np.amax(distToRoads[:,:,1])-np.amin(distToRoads[:,:,1]))
 # Primary
@@ -1264,38 +1376,10 @@ distToSRoadsS=(distToRoadsClipped[:,:]-np.amin(distToRoadsClipped[:,:]))/(np.ama
 distToRoadsClipped=np.clip(distToRoads[:,:,2],0,3)
 distToTRoadsS=(distToRoadsClipped[:,:]-np.amin(distToRoadsClipped[:,:]))/(np.amax(distToRoadsClipped[:,:])-np.amin(distToRoadsClipped[:,:]))
 
-TroadDensityS=(roadDensityM[:,:,2]-np.amin(roadDensityM[:,:,2]))/(np.amax(roadDensityM[:,:,2])-np.amin(roadDensityM[:,:,2]))
-SroadDensityS=(roadDensityM[:,:,1]-np.amin(roadDensityM[:,:,1]))/(np.amax(roadDensityM[:,:,1])-np.amin(roadDensityM[:,:,1]))
-#roadDensityS=popClosestDistM/roadDensityS
-closestDistS=(closestDistM-0)/(np.amax(closestDistM)-0)
-#closestDistS=popClosestDistM/closestDistS
-try:
-	popClosestDistS=np.load(wdvars+'nigeria_popClosestDistSmoothed.npy')
-	popClosestDistS=np.ma.masked_array(popClosestDistS,imageMask2)
-except:
-	print 'calculating popClosestDist: try command failed'
-	popClosestDist1=popClosestDistM.filled(np.NaN)
-	popClosestDistFilled = replace_nans(popClosestDist1, 10, 0.5, 2, method='localmean')
-	popClosestDistS=np.log(popClosestDistFilled)
-	popClosestDistS=moving_average_2d(popClosestDistS,np.ones((40, 40)))
-	popClosestDistS=np.ma.masked_array(popClosestDistS,imageMask2)
-	popClosestDistSmoothed=popClosestDistS
-	popClosestDistSmoothed[imageMask2==True]=0
-	popClosestDistSmoothed=np.array(popClosestDistSmoothed)
-	np.save(wdvars+'nigeria_popClosestDistSmoothed',popClosestDistSmoothed)
-dmin=np.amin(popClosestDistS)
-popClosestDistSS=(popClosestDistS-dmin)/(np.amax(popClosestDistS)-dmin)+0.01
-
-index=popClosestDistM/closestDistM
-index=np.log(index)
-index=(index-np.amin(index))/(np.amax(index)-np.amin(index))
-index=1-index
-plt.clf()
-plt.imshow(index,cmap=cm.jet_r)
-plt.title('Population of Closest City / Distance')
-plt.colorbar()
-plt.savefig(wdfigs+'index',dpi=700)
-
+TroadDensityS=(roadDensity[:,:,2]-np.amin(roadDensity[:,:,2]))/(np.amax(roadDensity[:,:,2])-np.amin(roadDensity[:,:,2]))
+SroadDensityS=(roadDensity[:,:,1]-np.amin(roadDensity[:,:,1]))/(np.amax(roadDensity[:,:,1])-np.amin(roadDensity[:,:,1]))
+#roadDensityS=popclosestDistCities/roadDensityS
+closestDistS=(closestDistCities-0)/(np.amax(closestDistCities)-0)
 
 TroadDensityS1=TroadDensityS.filled(np.NaN)
 TroadDensityFilled=replace_nans(TroadDensityS1,2,0.5, 2, method='localmean')
@@ -1316,7 +1400,7 @@ plt.colorbar()
 plt.title('DistToRoadsP - TRoadDensity')
 plt.savefig(wdfigs+'indext',dpi=700)
 
-indext1=np.log(popClosestDistSS/closestDistS)
+indext1=np.log(popClosestDistCitiesS/closestDistS)
 indext1=(indext1-np.amin(indext1))/(np.amax(indext1)-np.amin(indext1))
 indext1=1-indext1
 #indext1=closestDistS
@@ -1326,7 +1410,7 @@ plt.colorbar()
 plt.title('popCity/DistToCity')
 plt.savefig(wdfigs+'indext1',dpi=700)
 
-#index1=distToPRoadsS-roadDensityS+closestDistS-popClosestDistSS
+#index1=distToPRoadsS-roadDensityS+closestDistS-popClosestDistCitiesS
 #index1=2*indext+indext1
 index1=1.25*index+indext-3*avgVisS
 index1=(index1-np.amin(index1))/(np.amax(index1)-np.amin(index1))
@@ -1379,7 +1463,7 @@ plt.plot(x,ydata,'.',markersize=0.0002)
 plt.plot(x,yfit)
 plt.title('Index1 and Pov125, Corr = '+str(round(Corr,2)))
 plt.ylabel('pov125')
-plt.xlabel('distToPRoads+distToSRoads-(TroadDensity+SroadDensity)+log(popClosestDistM/closestDistM)')
+plt.xlabel('distToPRoads+distToSRoads-(TroadDensity+SroadDensity)+log(popclosestDistCities/closestDistCities)')
 plt.savefig(wdfigs+'index1_and_pov125_nigeria',dpi=700)
 exit()
 
@@ -1389,19 +1473,20 @@ plt.imshow(index,cmap=cm.hot_r,norm=colors.LogNorm())
 plt.colorbar()
 plt.title('Rural Index by Cities')
 plt.savefig(wdfigs+'index',dpi=700)
+distToAvgVis=np.ma.masked_array(distToAvgVis,imageMask2)
 
 
 plt.clf()
-plt.imshow(iclosestDistM)
+plt.imshow(iclosestDistCities)
 plt.colorbar()
 plt.title('Nearest City')
 plt.savefig(wdfigs+'iclosestDist',dpi=700)
 
 plt.clf()
-plt.imshow(popClosestDistM)
+plt.imshow(popclosestDistCities)
 plt.colorbar()
 plt.title('Nearest City Population')
-plt.savefig(wdfigs+'popClosestDist',dpi=700)
+plt.savefig(wdfigs+'popClosestDistCities',dpi=700)
 
 #plt.clf()
 #map = Basemap(llcrnrlon=lonM[0],llcrnrlat=np.amin(latM),urcrnrlon=lonM[-1],urcrnrlat=np.amax(latM), projection='lcc',lon_0=(lonM[-1]+lonM[0])/2,lat_0=(latM[-1]+latM[0])/2,resolution='i')
