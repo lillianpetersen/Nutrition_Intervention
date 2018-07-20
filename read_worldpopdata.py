@@ -493,13 +493,13 @@ gridMid=createMidpointGrid(grid,pixelsize) # lon lat
 # Final Downscaled Grid
 ########################
 scaleIndex=5.
-height,width=int(np.round(len(latM)/scaleIndex)),int(np.round(len(lonM)/scaleIndex))
-newLats,newLons=np.ones(shape=(height)),np.ones(shape=(width))
+heightC,widthC=int(np.round(len(latM)/scaleIndex)),int(np.round(len(lonM)/scaleIndex))
+newLats,newLons=np.ones(shape=(heightC)),np.ones(shape=(widthC))
 pixelsizeCoarse=pixelsize*scaleIndex
 latMr=latM[::-1]
-for w in range(width):
+for w in range(widthC):
 	newLons[w]=lonM[0]+w*pixelsizeCoarse
-for h in range(height):
+for h in range(heightC):
 	newLats[h]=latMr[0]+h*pixelsizeCoarse
 latsCoarse,lonsCoarse=newLats,newLons
 
@@ -522,7 +522,7 @@ oldLat,oldLon=np.radians(latM[::-1]),np.radians(lonM)
 lutMask=RectSphereBivariateSpline(oldLat, oldLon, imageMask2)
 newLats,newLons=np.radians(newLats),np.radians(newLons)
 newLats,newLons=np.meshgrid(newLats,newLons)
-maskCoarse=lutMask.ev(newLats.ravel(),newLons.ravel()).reshape((width,height)).T
+maskCoarse=lutMask.ev(newLats.ravel(),newLons.ravel()).reshape((widthC,heightC)).T
 maskCoarse=np.array(np.round(maskCoarse,0),dtype=bool)
 
 
@@ -1345,9 +1345,12 @@ for i in range(len(xMulti[0,0,:])):
 
 clf=linear_model.LinearRegression()
 clf.fit(xMultiC,ydata)
-corr=np.sqrt(clf.score(xMultiC,ydata))
+Corr=np.sqrt(clf.score(xMultiC,ydata))
 coef=clf.coef_
 sortedCoefIndex=np.argsort(abs(coef))
+sortedCoefIndex=sortedCoefIndex[::-1]
+print multiIndicies[sortedCoefIndex]
+print coef[sortedCoefIndex]
 
 povPred=xMulti[:,:,:]*coef
 povPred=np.sum(povPred,axis=-1)
@@ -1356,8 +1359,35 @@ povPred=scale(povPred)
 plt.clf()
 plt.imshow(povPred,cmap=cm.jet_r)
 plt.colorbar()
+plt.yticks([])
+plt.xticks([])
 plt.title('Predicted Poverty')
 plt.savefig(wdfigs+'predPov',dpi=700)
+
+lutPovPred=RectSphereBivariateSpline(oldLat, oldLon, povPred)
+povPredC=lutPovPred.ev(newLats.ravel(),newLons.ravel()).reshape((widthC,heightC)).T
+povPredC=np.ma.masked_array(povPredC,maskCoarse)
+
+lutPov125=RectSphereBivariateSpline(oldLat, oldLon, np.array(pov125))
+pov125C=lutPov125.ev(newLats.ravel(),newLons.ravel()).reshape((widthC,heightC)).T
+pov125C=np.ma.masked_array(pov125C,maskCoarse)
+pov125C=np.ma.masked_array(pov125C,np.isnan(pov125C))
+
+plt.clf()
+plt.imshow(povPredC,cmap=cm.jet_r)
+plt.colorbar()
+plt.yticks([])
+plt.xticks([])
+plt.title('Predicted Poverty, 5km')
+plt.savefig(wdfigs+'predPov5',dpi=700)
+
+plt.clf()
+plt.imshow(pov125C,cmap=cm.jet_r)
+plt.colorbar()
+plt.yticks([])
+plt.xticks([])
+plt.title('Percent Living Under 1.25/day 2010, 5km')
+plt.savefig(wdfigs+'nigeria_pov125C',dpi=700)
 
 exit()
 
