@@ -90,7 +90,6 @@ def checkIfInPolygon(lon, lat,polygon):
 
 def findGridDataLays(shapePoints,grid):
 	'''Convert Vector To Raster'''
-	midpointHits=np.zeros(shape=(3,len(shapePoints)-1,2))
 	griddedHits=np.zeros(shape=(len(grid[:,0]),len(grid[0,:])))
 	for i in range(len(shapePoints)-1):
 		x1,y1=shapePoints[i]
@@ -168,6 +167,14 @@ def createMidpointGrid(grid,pixelsize):
 	return gridMid
 
 def findNearest(cityLonLat,gridMid,imageMask1):
+	'''Give it:
+	1. one dimentional lon lat data set
+	2. grid of the mid points of cells (aquire from createMidpointGrid)
+	3. mask for the grid in lon lat
+	Will return:
+	1. an array of the closest distance to one of the original lat lons (cityLonLat)
+	2. which index of cityLonLat is closest
+	'''
 	lenLon,lenLat=len(gridMid[:,0,0]),len(gridMid[0,:,0])
 	closestDist=10000*np.ones(shape=(lenLon,lenLat))
 	iclosestDist=np.zeros(shape=(lenLon,lenLat),dtype=int)
@@ -414,7 +421,7 @@ def moving_average_2d(data, window):
     # (boundary='symm').
     return convolve2d(data, window, mode='same', boundary='symm')
 
-###############################################
+################################################
 
 wddata='/Users/lilllianpetersen/iiasa/data/'
 wdfigs='/Users/lilllianpetersen/iiasa/figs/'
@@ -512,7 +519,8 @@ for y in range(len(newLats)):
 ## Plot old and new grid
 plt.clf()
 m=int(scaleIndex*3)
-plt.plot(np.ma.compressed(grid[:m,:m,0]),np.ma.compressed(grid[:m,:m,1]),'*k')
+s=1140
+plt.plot(np.ma.compressed(grid[:m,s:s+m,0]),np.ma.compressed(grid[:m,s:s+m,1]),'*k')
 plt.plot(np.ma.compressed(gridCoarse[:3,:3,0]),np.ma.compressed(gridCoarse[:3,:3,1]),'*r')
 plt.savefig(wdfigs+'old_new_grid.pdf')
 ##
@@ -548,9 +556,9 @@ maskCoarse=np.array(np.round(maskCoarse,0),dtype=bool)
 if makePlots:
 	plt.clf()
 	plt.imshow(pov125,cmap=cm.jet_r,vmin=0,vmax=100)
-	#plt.yticks([])
-	#plt.xticks([])
-	plt.title('Percent living under 1.25/day '+countriesT[i]+' 20'+years[i])
+	plt.yticks([])
+	plt.xticks([])
+	plt.title('Percent living under 1.25 US$/day '+country+' 2010')
 	plt.colorbar()
 	plt.savefig(wdfigs+country+'_poverty_125',dpi=700)
 	
@@ -578,6 +586,61 @@ if makePlots:
 	#plt.colorbar()
 	#plt.savefig(wdfigs+country+'_uncertainty125',dpi=700)
 
+##############################################
+# Gridded Population
+##############################################
+#tifpop=TIFF.open(wddata+'population/gpw-v4-population-density-rev10_2010_30_sec_tif/gpw_v4_population_density_rev10_2010_30_sec.tif',mode='r')
+ds=gdal.Open(wddata+'population/gpw-v4-population-density-rev10_2010_30_sec_tif/gpw_v4_population_density_rev10_2010_30_sec.tif')
+width1 = ds.RasterXSize
+height1 = ds.RasterYSize
+gt = ds.GetGeoTransform()
+minx = gt[0]
+miny = gt[3] + width1*gt[4] + height1*gt[5] 
+maxx = gt[0] + width1*gt[1] + height1*gt[2]
+maxy = gt[3] 
+pixelsize=abs(gt[-1])
+
+# lat and lon
+latp=np.ones(shape=(height1))
+lonp=np.ones(shape=(width1))
+for w in range(width1):
+	lonp[w]=minx+w*pixelsize
+for h in range(height1):
+	latp[h]=miny+h*pixelsize
+latp=latp[::-1] # reverse the order
+
+#worldPop=tifpop.read_image()
+worldPop=ds.ReadAsArray()
+pop=worldPop[latp<np.amax(latM)+pixelsize]
+latp=latp[latp<np.amax(latM)+pixelsize]
+pop=pop[latp>np.amin(latM)]
+latp=latp[latp>np.amin(latM)]
+
+pop=pop[:,lonp<np.amax(lonM)+pixelsize]
+lonp=lonp[lonp<np.amax(lonM)+pixelsize]
+pop=pop[:,lonp>np.amin(lonM)]
+lonp=lonp[lonp>np.amin(lonM)]
+
+gridp=np.zeros(shape=(len(lonp),len(latp),2))
+for x in range(len(lonp)):
+	gridp[x,:,0]=lonp[x]
+for y in range(len(latp)):
+	gridp[:,y,1]=latp[y]
+
+## Plot old and new grid
+plt.clf()
+plt.plot(np.ma.compressed(gridp[-8:,-8:,0]),np.ma.compressed(gridp[-8:,-8:,1]),'*k')
+plt.plot(np.ma.compressed(grid[-8:,-8:,0]),np.ma.compressed(grid[-8:,-8:,1]),'*r')
+plt.savefig(wdfigs+'old_new_grid.pdf')
+##
+	
+pop=np.ma.masked_array(pop,imageMask2)
+plt.clf()
+plt.imshow(pop,cmap=cm.jet,vmin=0,vmax=5000)
+plt.title('gridded population')
+plt.colorbar()
+plt.savefig(wdfigs+'pop',dpi=700)
+exit()
 ######################################################
 # Roads
 ######################################################
@@ -643,20 +706,28 @@ if makePlots:
 	ax = plt.gca()
 	plt.title('Nigerian Roads from Open Street Map')
 	plt.savefig(wdfigs+'openstreetmap_nigeria',dpi=700)
+
+	roadDensity1=np.array(roadDensity[:])
+	roadDensity1[roadDensity>0]=1
+	roadDensity1=np.ma.masked_array(roadDensity1,roadDensity==0)
 	plt.clf()
 	plt.figure(1,figsize=(3,4))
-	plt.imshow(roadDensity[:,:,2],cmap=cm.nipy_spectral_r)
-	plt.colorbar()
-	plt.title('Nigeria: km tertiary roads/km^2')
-	plt.savefig(wdfigs+'nigeria_tertiary_road_density',dpi=800)
-	
-	plt.clf()
-	plt.imshow(roadDensity[:,::-1],cmap=cm.nipy_spectral_r)
+	plt.imshow((roadDensity1!=0)[:,:,2],cmap=cm.YlGn)
+	plt.imshow((roadDensity1!=0)[:,:,1],cmap=cm.RdPu)
+	plt.imshow((roadDensity1!=0)[:,:,0],cmap=cm.binary)
 	plt.colorbar()
 	plt.xticks([])
 	plt.yticks([])
-	plt.title('Nigerian Roads')
-	plt.savefig(wdfigs+'nigeria_all_roads',dpi=800)
+	plt.title('Nigeria Roads')
+	plt.savefig(wdfigs+'nigeria_roads',dpi=800)
+	
+plt.clf()
+plt.imshow(roadDensity[:,:,2],cmap=cm.nipy_spectral_r)
+plt.colorbar()
+plt.xticks([])
+plt.yticks([])
+plt.title('Nigeria Teritiary Road Density')
+plt.savefig(wdfigs+'nigeria_teritiary_road_density',dpi=800)
 
 ###### Dist To Roads ######
 try:
@@ -726,6 +797,8 @@ except:
 	plt.clf()
 	plt.imshow(closestDistCities,cmap=cm.viridis_r)
 	plt.colorbar()
+	plt.yticks([])
+	plt.xticks([])
 	plt.title('Distance to Nearest City')
 	plt.savefig(wdfigs+'closestDist',dpi=700)
 	
@@ -762,10 +835,20 @@ popOverDistCities=np.log(popClosestDistCities/closestDistCities)
 popOverDistCities=scale(popOverDistCities)
 if makePlots:
 	plt.clf()
-	plt.imshow(popOverDistCities,cmap=cm.jet_r)
-	plt.title('Log of Population of Closest City / Distance')
+	plt.imshow(popClosestDistCitiesS,cmap=cm.jet)
+	plt.title('Population of Closest City')
 	plt.colorbar()
-	plt.savefig(wdfigs+'popOverDistCities',dpi=700)
+	plt.yticks([])
+	plt.xticks([])
+	plt.savefig(wdfigs+'popClosestDistCitiesS',dpi=700)
+	
+plt.clf()
+plt.imshow(popOverDistCities,cmap=cm.jet)
+plt.title('Population of Closest City / Distance')
+plt.yticks([])
+plt.xticks([])
+plt.colorbar()
+plt.savefig(wdfigs+'popOverDistCities',dpi=700)
 
 ###########################################
 # Night Lights
@@ -775,6 +858,7 @@ try:
 	stable=np.load(wdvars+'nigeria_stable.npy')
 	stableS=np.load(wdvars+'nigeria_stableSmoothed.npy')
 	avgVis=np.load(wdvars+'nigeria_avgVis.npy')
+	avgVisS=np.load(wdvars+'nigeria_avgVisS.npy')
 	avgVisLog=np.load(wdvars+'nigeria_avgVisLog.npy')
 	avgVisLogS=np.load(wdvars+'nigeria_avgVisLogS.npy')
 except:
@@ -798,9 +882,29 @@ except:
 	for h in range(height):
 		latl[h]=miny+h*pixelsizel
 	
+	## grid
+	gridl = np.zeros(shape=(len(lonl),len(latl),2))
+	for x in range(len(lonl)):
+		gridl[x,:,0]=lonl[x]
+	for y in range(len(latl)):
+		gridl[:,y,1]=latl[y]
+	
+	## Plot old and new grid
+	plt.clf()
+	m=4
+	s=1152
+	plt.plot(np.ma.compressed(gridl[:15,:15,0]),np.ma.compressed(gridl[:15,:15,1]),'*k')
+	plt.plot(np.ma.compressed(grid[:m,s-1:s+5,0]),np.ma.compressed(grid[:m,s-1:s+5,1]),'*r')
+	plt.yticks([])
+	plt.xticks([])
+	plt.title('Original Grid (black) and Resized Grid (red)')
+	plt.gca().set_aspect('equal', adjustable='box')
+	plt.savefig(wdfigs+'old_new_grid.pdf')
+	##
+	
 	stableSmall=stableTif.read_image()
 	avgVisSmall=avgVisTif.read_image()
-	
+		
 	latl=np.radians(latl)
 	lonl=np.radians(lonl)
 	lutAvgVis=RectSphereBivariateSpline(latl, lonl, avgVisSmall)
@@ -829,9 +933,15 @@ except:
 	
 	avgVisM=np.ma.masked_array(avgVis,imageMask2)
 	avgVisLog=np.log(avgVis)
-	avgVisLog[np.isnan(avgVisM)]=0
+	avgVisLog[np.isinf(avgVisLog)]=np.amin(avgVisLog[~np.isinf(avgVisLog)])
+	
+	plt.clf()
+	plt.imshow(avgVisLog,cmap=cm.jet)
+	plt.colorbar()
+	plt.title('Avg Visual Lights, log smoothed')
+	plt.savefig(wdfigs+'nigeria_avgVisLogS',dpi=700)
+	
 	avgVisLog=np.clip(scale(avgVisLog),0.94,1)
-	avgVisLog=scale(avgVisLog)
 	avgVisLogS=moving_average_2d(avgVisLog,np.ones((5, 5)))
 	
 	stable=scale(stableRaw)
@@ -847,10 +957,11 @@ except:
 	#distToStable=np.ma.masked_array(distToStable,imageMask2)
 	
 	stableS=moving_average_2d(stable,np.ones((10, 10)))
-
+	
 	np.save(wdvars+'nigeria_stable.npy',stable)
 	np.save(wdvars+'nigeria_stableSmoothed.npy',stableS)
 	np.save(wdvars+'nigeria_avgVis.npy',avgVis)
+	np.save(wdvars+'nigeria_avgVisS.npy',avgVisS)
 	np.save(wdvars+'nigeria_avgVisLog.npy',np.array(avgVisLog))
 	np.save(wdvars+'nigeria_avgVisLogS.npy',avgVisLogS)
 
@@ -862,23 +973,30 @@ avgVisS=scale(np.ma.masked_array(avgVisS,imageMask2))
 
 if makePlots:
 	plt.clf()
-	plt.imshow(avgVisS,cmap=cm.jet)
+	plt.imshow(stable,cmap=cm.jet)
+	plt.yticks([])
+	plt.xticks([])
 	plt.colorbar()
-	plt.title('Avg Visual Lights Smoothed')
-	plt.savefig(wdfigs+'nigeria_avgVisS',dpi=700)
+	plt.title('Stable Lights')
+	plt.savefig(wdfigs+'nigeria_stable',dpi=700)
 	
 	plt.clf()
 	plt.imshow(stableS,cmap=cm.jet)
 	plt.colorbar()
-	plt.title('Stable Lights')
+	plt.title('Stable Lights Smoothed')
 	plt.savefig(wdfigs+'nigeria_stable_lights',dpi=700)
 	
-	#plt.clf()
-	#plt.imshow(avgVis,cmap=cm.jet)
-	#plt.colorbar()
-	#plt.title('Avg Visual Lights')
-	#plt.savefig(wdfigs+'nigeria_avgVis',dpi=700)
-#
+	plt.clf()
+	plt.imshow(avgVis,cmap=cm.jet)
+	plt.colorbar()
+	plt.title('Avg Visual Lights')
+	plt.savefig(wdfigs+'nigeria_avgVis',dpi=700)
+	
+	plt.clf()
+	plt.imshow(avgVisLogS,cmap=cm.jet)
+	plt.colorbar()
+	plt.title('Avg Visual Lights, log smoothed')
+	plt.savefig(wdfigs+'nigeria_avgVisLogS',dpi=700)
 
 ###########################################
 # Rivers
@@ -905,22 +1023,21 @@ except:
 	nonPermanent=records[maskNonPermanent]
 	inland=records[maskInlandWater]
 	flood=records[maskFlood]
-
+	
 	riverHits=np.zeros(shape=(len(lonM),len(latM),4))
-	v=-1
 	itype=-1
 	for rtype in ['permanent','nonPermanent','inland','flood']:
 		itype+=1
-		v+=1
 		for i in range(len(vars()[rtype])):
 			shapePoints=vars()[rtype][i].shape.points
-			riverHits[:,:,itype]=findGridDataLays(shapePoints,grid)
+			riverHits[:,:,itype]+=findGridDataLays(shapePoints,grid)
 	
+	riverHits[riverHits>0]=1
+	
+	riverHits=np.swapaxes(riverHits[:,:,:],0,1)
 	np.save(wdvars+'nigeria_riverHits',riverHits)
 
-riverHits=np.swapaxes(riverHits[:,:,:],0,1)
 riverHits=np.ma.masked_array(riverHits,imageMask3[:,:,:4])
-#riverHits=np.clip(riverHits,0,150)
 
 try:
 	distToRivers=np.load(wdvars+'nigeria_distToRivers.npy')
@@ -931,7 +1048,7 @@ except:
 	rivers0=np.swapaxes(rivers0,0,1)
 	
 	#distToRivers=np.zeros(shape=(len(latM),len(lonM),4))
-	for iriver in range(1): #'permanent','nonPermanent','inland','flood'
+	for iriver in range(4): #'permanent','nonPermanent','inland','flood'
 		riversMidPoints=gridMid[rivers0[:,:,iriver]==1,:]
 		distToRivers[:,:,iriver],iclosest=findNearest(riversMidPoints,gridMid,imageMask1)
 	np.save(wdvars+'nigeria_distToRivers',np.array(distToRivers))
@@ -949,11 +1066,13 @@ if makePlots:
 		plt.title(rtype+' River Density')
 		plt.savefig(wdfigs+'nigeria_'+rtype+'_river_density',dpi=700)
 
-	plt.clf()
-	plt.imshow(np.clip(distToRivers[:,:,1],0,60),cmap=cm.jet_r)
-	plt.title('Dist To nonPermanent Rivers')
-	plt.colorbar()
-	plt.savefig(wdfigs+'dist_to_nonPermanent_Rivers',dpi=700)
+plt.clf()
+plt.imshow(np.clip(distToRivers[:,:,1],0,60))
+plt.title('Dist To Floodlands')
+plt.xticks([])
+plt.yticks([])
+plt.colorbar()
+plt.savefig(wdfigs+'dist_to_nonPermanent_Rivers',dpi=700)
 
 ###########################################
 # Coast Lines
@@ -1001,11 +1120,6 @@ except:
 		coastsMidPoints=gridMid[coastLines[:,:,coastType]==1,:]
 		distToCoasts[:,:,coastType],iclosest=findNearest(coastsMidPoints,gridMid,imageMask1)
 	
-		plt.clf()
-		plt.imshow(np.clip(distToCoasts[:,:,coastType],0,200))
-		plt.colorbar()
-		plt.title('Distance to Coastlines '+str(coastType)+', deg (clipped)')
-		plt.savefig(wdfigs+'distToCoasts'+str(coastType),dpi=700)
 	coastLines=np.swapaxes(coastLines,0,1)
 	np.save(wdvars+'nigeria_coastLines.npy',coastLines)
 	np.save(wdvars+'nigeria_distToCoasts.npy',distToCoasts)
@@ -1014,6 +1128,15 @@ distToCoasts=np.ma.masked_array(distToCoasts,imageMask3[:,:,:2])
 coastLines=np.ma.masked_array(coastLines,imageMask3[:,:,:2])
 
 if makePlots:
+	plt.clf()
+	plt.xticks([])
+	plt.imshow(np.clip(distToCoasts[:,:,0],0,300))
+	plt.colorbar()
+	plt.xticks([])
+	plt.yticks([])
+	plt.title('Distance to Coastlines, km')
+	plt.savefig(wdfigs+'distToCoasts'+str(0),dpi=700)
+
 	plt.clf()
 	map = Basemap(llcrnrlon=lonM[0]-.5,llcrnrlat=np.amin(latM)-.5,urcrnrlon=lonM[-1],urcrnrlat=np.amax(latM), projection='lcc',lon_0=(lonM[-1]+lonM[0])/2,lat_0=(latM[-1]+latM[0])/2,resolution='i')
 	map.drawcountries()
@@ -1038,103 +1161,117 @@ if makePlots:
 	plt.gca().set_aspect('equal', adjustable='box')
 	plt.savefig(wdfigs+'test_coastlines.pdf')
 
-'''
+
 ###########################################
 # Land Classification
 ###########################################
 print 'Land Classification'
-landTypeTif=TIFF.open(wddata+'nigeria_landtype/nigeriaLandClassification.tif',mode='r')
+try:
+	landCover=np.load(wdvars+'nigeria_landcover.npy')
+except:
+	landTypeTif=TIFF.open(wddata+'nigeria_landtype/nigeriaLandClassification.tif',mode='r')
+	
+	ds=gdal.Open(wddata+'nigeria_landtype/nigeriaLandClassification.tif')
+	width = ds.RasterXSize
+	height = ds.RasterYSize
+	gt = ds.GetGeoTransform()
+	minx = gt[0]
+	miny = gt[3] + width*gt[4] + height*gt[5] 
+	maxx = gt[0] + width*gt[1] + height*gt[2]
+	maxy = gt[3] 
+	pixelsizel=abs(gt[-1])
+	
+	latl=np.ones(shape=(height))
+	lonl=np.ones(shape=(width))
+	for w in range(width):
+		lonl[w]=minx+w*pixelsizel
+	for h in range(height):
+		latl[h]=miny+h*pixelsizel
+	latl=np.radians(latl)
+	lonl=np.radians(lonl)
+	
+	landCoverFull=landTypeTif.read_image()
+	landCoverDict={
+		11:'Post-flooding or irrigated croplands',
+		14:'Rainfed croplands',
+		20:'Mosaic cropland (50-70%) / vegetation (grassland shrubland forest) (20-50%)',
+		30:'Mosaic vegetation (grassland shrubland forest) (50-70%) / cropland (20-50%)',
+		40:'Closed to open (>15%) broadleaved evergreen and/or semi-deciduous forest (>5m)',
+		50:'Closed (>40%) broadleaved deciduous forest (>5m)',
+		60:'Open (15-40%) broadleaved deciduous forest (>5m)',
+		70:'Closed (>40%) needleleaved evergreen forest (>5m)',
+		90:'Open (15-40%) needleleaved deciduous or evergreen forest (>5m)',
+		100:'Closed to open (>15%) mixed broadleaved and needleleaved forest (>5m)',
+		110:'Mosaic forest-shrubland (50-70%) / grassland (20-50%)',
+		120:'Mosaic grassland (50-70%) / forest-shrubland (20-50%)',
+		130:'Closed to open (>15%) shrubland (<5m)',
+		140:'Closed to open (>15%) grassland',
+		150:'Sparse (>15%) vegetation (woody vegetation shrubs grassland)',
+		160:'Closed (>40%) broadleaved forest regularly flooded - Fresh water',
+		170:'Closed (>40%) broadleaved semi-deciduous and/or evergreen forest regularly flooded - saline water',
+		180:'Closed to open (>15%) vegetation (grassland shrubland woody vegetation) on regularly flooded or waterlogged soil - fresh brackish or saline water',
+		190:'Artificial surfaces and associated areas (urban areas >50%) GLOBCOVER 2009',
+		200:'Bare areas',
+		210:'Water bodies',
+		220:'Permanent snow and ice',
+		230:'Unclassified'}
+	
+	landCoverDictNew={
+		11:'Post-flooding or irrigated croplands',
+		14:'Rainfed croplands',
+		20:'Mosaic cropland (50-70%) / vegetation (grassland shrubland forest) (20-50%)',
+		30:'Mosaic vegetation (grassland shrubland forest) (50-70%) / cropland (20-50%)',
+		40:'Closed to open (>15%) broadleaved evergreen and/or semi-deciduous forest (>5m)',
+		50:'Closed (>40%) broadleaved deciduous forest (>5m)',
+		60:'Open (15-40%) broadleaved deciduous forest (>5m)',
+		70:'Closed (>40%) needleleaved evergreen forest (>5m)',
+		90:'Open (15-40%) needleleaved deciduous or evergreen forest (>5m)',
+		100:'Closed to open (>15%) mixed broadleaved and needleleaved forest (>5m)',
+		110:'Mosaic forest-shrubland (50-70%) / grassland (20-50%)',
+		120:'Mosaic grassland (50-70%) / forest-shrubland (20-50%)',
+		130:'Closed to open (>15%) shrubland (<5m)',
+		140:'Closed to open (>15%) grassland',
+		150:'Sparse (>15%) vegetation (woody vegetation shrubs grassland)',
+		160:'Closed (>40%) broadleaved forest regularly flooded - Fresh water',
+		170:'Closed (>40%) broadleaved semi-deciduous and/or evergreen forest regularly flooded - saline water',
+		180:'Closed to open (>15%) vegetation (grassland shrubland woody vegetation) on regularly flooded or waterlogged soil - fresh brackish or saline water',
+		210:'Water bodies',
+		190:'Artificial surfaces and associated areas (urban areas >50%) GLOBCOVER 2009',
+		200:'Bare areas',
+		220:'Permanent snow and ice',
+		230:'Unclassified'}
+	
+	convertLandCover=str(landCoverDictNew).replace('{','').replace('}','').split(',')
+	#convertLandCover=str(landCoverConversion).replace('{','').replace('}','').split(',')
+	landCoverSorted=np.array(landCoverFull)
+	for i in range(len(convertLandCover)):
+		landCoverSorted[landCoverSorted==int(convertLandCover[i].split(':')[0])]=i
+	
+	plt.clf()
+	plt.imshow(landCoverSorted,cmap=cm.jet_r)
+	plt.colorbar()
+	plt.savefig(wdfigs+'landCover_fullres_sorted',dpi=700)
+	
+	### Convert to 1km
+	lutland=RectSphereBivariateSpline(latl, lonl, landCoverSorted)
+	
+	newLats=np.radians(latM[::-1])
+	newLons=np.radians(lonM)
+	newLats,newLons=np.meshgrid(newLats,newLons)
+	landCover=lutland.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonM),len(latM))).T
+	
+	plt.clf()
+	plt.imshow(landCover,cmap=cm.gist_ncar,vmin=0)
+	plt.colorbar()
+	plt.xticks([])
+	plt.yticks([])
+	plt.title('Nigeria Land Cover')
+	plt.savefig(wdfigs+'landCover',dpi=700)
+	
+	np.save(wdvars+'nigeria_landCover',landCover)
 
-ds=gdal.Open(wddata+'nigeria_landtype/nigeriaLandClassification.tif')
-width = ds.RasterXSize
-height = ds.RasterYSize
-gt = ds.GetGeoTransform()
-minx = gt[0]
-miny = gt[3] + width*gt[4] + height*gt[5] 
-maxx = gt[0] + width*gt[1] + height*gt[2]
-maxy = gt[3] 
-pixelsizel=abs(gt[-1])
-
-latl=np.ones(shape=(height))
-lonl=np.ones(shape=(width))
-for w in range(width):
-	lonl[w]=minx+w*pixelsizel
-for h in range(height):
-	latl[h]=miny+h*pixelsizel
-
-landCoverFull=landTypeTif.read_image()
-landCoverDict={
-	11:'Post-flooding or irrigated croplands',
-	14:'Rainfed croplands',
-	20:'Mosaic cropland (50-70%) / vegetation (grassland shrubland forest) (20-50%)',
-	30:'Mosaic vegetation (grassland shrubland forest) (50-70%) / cropland (20-50%)',
-	40:'Closed to open (>15%) broadleaved evergreen and/or semi-deciduous forest (>5m)',
-	50:'Closed (>40%) broadleaved deciduous forest (>5m)',
-	60:'Open (15-40%) broadleaved deciduous forest (>5m)',
-	70:'Closed (>40%) needleleaved evergreen forest (>5m)',
-	90:'Open (15-40%) needleleaved deciduous or evergreen forest (>5m)',
-	100:'Closed to open (>15%) mixed broadleaved and needleleaved forest (>5m)',
-	110:'Mosaic forest-shrubland (50-70%) / grassland (20-50%)',
-	120:'Mosaic grassland (50-70%) / forest-shrubland (20-50%)',
-	130:'Closed to open (>15%) shrubland (<5m)',
-	140:'Closed to open (>15%) grassland',
-	150:'Sparse (>15%) vegetation (woody vegetation shrubs grassland)',
-	160:'Closed (>40%) broadleaved forest regularly flooded - Fresh water',
-	170:'Closed (>40%) broadleaved semi-deciduous and/or evergreen forest regularly flooded - saline water',
-	180:'Closed to open (>15%) vegetation (grassland shrubland woody vegetation) on regularly flooded or waterlogged soil - fresh brackish or saline water',
-	190:'Artificial surfaces and associated areas (urban areas >50%) GLOBCOVER 2009',
-	200:'Bare areas',
-	210:'Water bodies',
-	220:'Permanent snow and ice',
-	230:'Unclassified'}
-
-landCoverDictSortedByWealth={
-	210:'Water bodies',
-	200:'Bare areas',
-	180:'Closed to open (>15%) vegetation (grassland, shrubland, woody vegetation) on regularly flooded or waterlogged soil - fresh, brackish or saline water',
-	170:'Closed (>40%) broadleaved semi-deciduous and/or evergreen forest regularly flooded - saline water',
-	160:'Closed (>40%) broadleaved forest regularly flooded - Fresh water',
-	150:'Sparse (>15%) vegetation (woody vegetation, shrubs, grassland)',
-	140:'Closed to open (>15%) grassland',
-	130:'Closed to open (>15%) shrubland (<5m)',
-	120:'Mosaic grassland (50-70%) / forest-shrubland (20-50%)',
-	110:'Mosaic forest-shrubland (50-70%) / grassland (20-50%)',
-	60:'Open (15-40%) broadleaved deciduous forest (>5m)',
-	40:'Closed to open (>15%) broadleaved evergreen and/or semi-deciduous forest (>5m)',
-	30:'Mosaic vegetation (grassland, shrubland, forest) (50-70%) / cropland (20-50%)',
-	20:'Mosaic cropland (50-70%) / vegetation (grassland, shrubland, forest) (20-50%)',
-	14:'Rainfed croplands',
-	11:'Post-flooding or irrigated croplands',
-	190:'Artificial surfaces and associated areas (urban areas >50%) GLOBCOVER 2009',
-	}
-
-convertLandCover=str(landCoverDict).replace('{','').replace('}','').split(',')
-#convertLandCover=str(landCoverConversion).replace('{','').replace('}','').split(',')
-landCoverSorted=landCoverFull
-for i in range(len(convertLandCover)):
-	landCoverSorted[landCoverSorted==int(convertLandCover[i].split(':')[0])]=i
-
-plt.clf()
-plt.imshow(landCoverSorted,cmap=cm.jet_r)
-plt.colorbar()
-plt.savefig(wdfigs+'landCover_fullres_sorted',dpi=700)
-
-### Convert to 1km
-latl=np.radians(latl)
-lonl=np.radians(lonl)
-lutland=RectSphereBivariateSpline(latl, lonl, landCoverFull)
-
-newLats=np.radians(latM[::-1])
-newLons=np.radians(lonM)
-newLats,newLons=np.meshgrid(newLats,newLons)
-landCover=lutland.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonM),len(latM))).T
 landCover=np.ma.masked_array(landCover,imageMask2)
 
-plt.clf()
-plt.imshow(landCover,cmap=cm.gist_ncar,vmin=0,vmax=210)
-plt.colorbar()
-plt.savefig(wdfigs+'landCover',dpi=700)
-'''
 ###########################################
 # Trading Indicies
 ###########################################
@@ -1219,13 +1356,15 @@ except:
 
 	distToBorders=np.zeros(shape=(len(latM),len(lonM),len(borders[0,0,:])))
 	for iborder in range(len(borders[0,0,:])):
-		bordersMidPoints=gridMid[borders[:,:,iborder]==1,:]
-		distToBorders[:,:,iborder],iclosest=findNearest(bordersMidPoints,gridMid,imageMask1)
+		#bordersMidPoints=gridMid[borders[:,:,iborder]==1,:]
+		#distToBorders[:,:,iborder],iclosest=findNearest(bordersMidPoints,gridMid,imageMask1)
 	
 		plt.clf()
 		plt.imshow(np.clip(distToBorders[:,:,iborder],0,300))
 		plt.colorbar()
 		plt.title('Distance to '+countries[iborder]+' Border, km (clipped)')
+		plt.xticks([])
+		plt.yticks([])
 		plt.gca().set_aspect('equal', adjustable='box')
 		plt.savefig(wdfigs+'distTo'+countries[iborder]+'Border',dpi=700)
 	
@@ -1254,6 +1393,9 @@ if makePlots:
 	plt.imshow(bordersM[:,:,2],cmap=cm.binary,vmin=0,vmax=1)
 	plt.imshow(bordersM[:,:,3],cmap=cm.binary,vmin=0,vmax=1)
 	plt.colorbar()
+	plt.title('Nigerian Borders')
+	plt.xticks([])
+	plt.yticks([])
 	plt.savefig(wdfigs+'nigeria_borders',dpi=700)
 
 	plt.clf()
@@ -1266,14 +1408,18 @@ if makePlots:
 	plt.clf()
 	plt.imshow(gdpPerCapitaDist,cmap=cm.jet)
 	plt.colorbar()
-	plt.title('GDP of Surrounding Countries and Dist Index')
+	plt.title('GDP of Surrounding Countries by Distance')
 	plt.gca().set_aspect('equal', adjustable='box')
+	plt.xticks([])
+	plt.yticks([])
 	plt.savefig(wdfigs+'gdpPerCapitaDist',dpi=700)
 	
 	plt.clf()
 	plt.imshow(tradeDist,cmap=cm.jet)
 	plt.colorbar()
-	plt.title('Trade Ease with Surrounding Countries and Dist Index')
+	plt.title('Trade Ease with Surrounding Countries and Dist')
+	plt.xticks([])
+	plt.yticks([])
 	plt.gca().set_aspect('equal', adjustable='box')
 	plt.savefig(wdfigs+'tradeDist',dpi=700)
 	
@@ -1304,13 +1450,150 @@ if makePlots:
 	plt.gca().set_aspect('equal', adjustable='box')
 	plt.savefig(wdfigs+'gdpPerCapitaDist',dpi=700)
 	
-exit()
+###########################################
+# Religion
+###########################################
+rStates=shapefile.Reader(wddata+'nigeria_landtype/NIR-level_1.shp')
+#rRoads = shapefile.Reader(wddata+'nigeria_roads/part/nga_trs_roads_osm_wfpschema_sep2016/nga_trs_roads_osm_wfpschema_sep2016.shp')
 
+records=rStates.shapeRecords()
+records=MaskableList(records)
+stateName=[rec.record[3] for rec in records]
+mask1=np.array([Type!='' for Type in stateName])
+records1=records[mask1]
+
+for i in range(len(records1)):
+	shapePoints=np.array(records1[i].shape.points)
+	state=findGridDataLays(shapePoints,grid)
+	stateFilled=np.zeros(shape=(state.shape))
+
+	stateLons=np.where(state==1)[0]
+	stateLats=np.where(state==1)[1]
+	minLon,minLat=np.amin(stateLons),np.amin(stateLats)
+	maxLon,maxLat=np.amax(stateLons),np.amax(stateLats)
+	avgLon1=minLon+2
+	avgLat2=minLat+2
+	whereMinLon1=np.where(stateLons==minLon)[0][len(np.where(stateLons==minLon)[0])/2]
+	whereMinLat2=np.where(stateLats==minLat)[0][len(np.where(stateLats==minLat)[0])/2]
+	avgLat1=stateLats[whereMinLon1]
+	avgLon2=stateLons[whereMinLat2]
+	stateFilled[avgLon1,avgLat1]=3
+	stateFilled[avgLon2,avgLat2]=3
+	stateFilled=stateFilled[minLon:maxLon,minLat:maxLat]
+	state=state[minLon:maxLon,minLat:maxLat]
+
+	for j in range(2):
+		for ilon in range(len(state[:,0])):
+			if ilon==0:
+				continue
+			for ilat in range(len(state[0,:])):
+				if ilat==0:
+					continue
+				if state[ilon,ilat]==1:
+					continue
+				for k in range(len(state[:,0])):
+					if np.amax(stateFilled[ilon-1:ilon+2,ilat-1:ilat+2])>=1 and np.amax(state[ilon,ilat:ilat+2])==0:
+						stateFilled[ilon,ilat]=1
+		for ilon in range(len(state[:,0]))[::-1]:
+			if ilon==0:
+				continue
+			for ilat in range(len(state[0,:]))[::-1]:
+				if ilat==0:
+					continue
+				for k in range(len(state[:,0])):
+					if np.amax(stateFilled[ilon-1:ilon+2,ilat-1:ilat+2])>=1 and np.amax(state[ilon,ilat:ilat+2])==0:
+						stateFilled[ilon,ilat]=1
+
+	for ilon in range(len(state[:,0]))[::-1]:
+		if ilon==0:
+			continue
+		for ilat in range(len(state[0,:]))[::-1]:
+			if ilat==0:
+				continue
+			if ilon==len(state[:,0])-1 or ilat==len(state[0,:])-1:
+				continue
+			if stateFilled[ilon,ilat-1]>=1:
+				stateFilled[ilon,ilat]=1
+			if stateFilled[ilon-1,ilat]>=1:
+				stateFilled[ilon,ilat]=1
+			if np.sum([state[ilon,ilat-1],state[ilon,ilat+1],state[ilon-1,ilat],state[ilon+1,ilat]])>=3:
+				stateFilled[ilon,ilat]=1
+	state=np.array(state,dtype=int)
+	whereBound=np.where(state==1)
+	for k in range(len(whereBound[0])):
+		stateFilled[whereBound[0][k],whereBound[1][k]]=2
+	plt.clf()
+	plt.imshow(stateFilled)
+	plt.savefig(wdfigs+'nigeria_states_filled',dpi=700)
+	exit()
+
+
+
+	#		pointIn=point_in_polygon([ilon,ilat],poly)
+	#		if pointIn:
+	#			state[ilon,ilat]=1
+
+
+
+#	
+#	for j in range(len(stateLats)):
+#		lon=stateLons[j]
+#		lat=stateLats[j]
+#		i_other_lats=np.where(stateLats==lat)[0]
+#		other_lats=stateLats[i_other_lats]
+#		other_lons=stateLons[i_other_lats]
+#
+#		if len(other_lats)==2 or len(other_lons)==3:
+#			state[np.amin(other_lons):np.amax(other_lons),lat]=1
+#			continue
+#		else:
+#			if other_lons
+#
+#
+#		#	other_lons=np.sort(other_lons)
+#		#	for i in range(len(other_lats)-1):
+#		#		if other_lons[i]==other_lons[i+1] and other_lons[i+1]!=np.amax(other_lons):
+#		#				state[other_lons[i]:np.amax(other_lons),lat]=1
+#		
+#		#if len(other_lats)%2==0:
+#		#	other_lons=np.sort(other_lons)
+#		#	for k in range(0,len(other_lats),2):
+#		#		state[other_lons[k]:other_lons[k+1],lat]=1
+#		#	
+#		#minLon=np.amax(other_lons)
+#		#iminLon=np.where(other_lons==minLon)
+#		#lon=stateLons[np.where(stateLats==lat)[0][iminLon][0]]
+#		#lat=stateLats[np.where(stateLats==lat)[0][iminLon][0]]
+#		#for a in range(1,100):
+#		#	if state[lon,lat-a]==1:
+#		#		break
+#		#	state[lon,lat-a]=1
+#		#	exit()
+#	plt.clf()
+#	plt.imshow(state)
+#	plt.savefig(wdfigs+'nigeria_states',dpi=700)
+#	exit()
+#
+#
+#
+#	exit()
+#	plt.plot(shapePoints[:,0],shapePoints[:,1])
+#plt.savefig(wdfigs+'nigeria_states.pdf')
+
+plt.clf()
+map = Basemap(llcrnrlon=lonM[0]-.5,llcrnrlat=np.amin(latM)-.5,urcrnrlon=lonM[-1],urcrnrlat=np.amax(latM), projection='lcc',lon_0=(lonM[-1]+lonM[0])/2,lat_0=(latM[-1]+latM[0])/2,resolution='i')
+map.drawcountries()
+map.readshapefile(wddata+'nigeria_landtype/NIR-level_1', name='admin', drawbounds=True,linewidth=1.5)
+ax = plt.gca()
+plt.title('Nigerian States')
+plt.savefig(wdfigs+'nigeria_states.pdf')
+
+'''
 ###########################################
 # Make Index
 ###########################################
 ############ Multivariate ##############
-xMulti=np.ma.zeros(shape=(len(latM),len(lonM),26))
+xMulti=np.ma.zeros(shape=(len(latM),len(lonM),23))
 ydata=np.ma.compressed(pov125)
 # roads
 xMulti[:,:,0:3]=roadDensity
@@ -1326,19 +1609,26 @@ xMulti[:,:,11]=stableS
 xMulti[:,:,12]=avgVis
 #xMulti[:,:,13]=avgVisLog
 xMulti[:,:,13]=avgVisLogS
+# coasts
+xMulti[:,:,14:16]=distToCoasts
+# trading
+xMulti[:,:,16]=tradeDist
+xMulti[:,:,17]=gdpPerCapitaDist
 # rivers
 xMulti[:,:,14:18]=riverHits
 xMulti[:,:,18:22]=distToRivers
+# land cover
+xMulti[:,:,22]=landCover
 # coasts
-xMulti[:,:,22:24]=distToCoasts
-# trading
-xMulti[:,:,24]=tradeDist
-xMulti[:,:,25]=gdpPerCapitaDist
+#xMulti[:,:,22:24]=distToCoasts
+## trading
+#xMulti[:,:,24]=tradeDist
+#xMulti[:,:,25]=gdpPerCapitaDist
 
-multiIndicies=['roadDensityP','roadDensityS','roadDensityT','distToRoadsP','distToRoadsS','distToRoadsT','closestDistCities','popClosestDistCities','popClosestDistCitiesS','popOverDistCities','stable','stableS','avgVis','avgVisLogS','riverHitsPermanent','riverHitsNonPermanent','riverHitsInland','riverHitsFlood','distToRiversPermanent','distToRiversNonPermanent','distToRiversHitsInland','distToRiversFlood','distToCoasts','distToInlandCoasts','tradeDist','gdpPerCapitaDist']
+multiIndicies=['roadDensityP','roadDensityS','roadDensityT','distToRoadsP','distToRoadsS','distToRoadsT','closestDistCities','popClosestDistCities','popClosestDistCitiesS','popOverDistCities','stable','stableS','avgVis','avgVisLogS','riverHitsPermanent','riverHitsNonPermanent','riverHitsInland','riverHitsFlood','distToRiversPermanent','distToRiversNonPermanent','distToRiversHitsInland','distToRiversFlood','distToCoasts','distToInlandCoasts','tradeDist','gdpPerCapitaDist','landCover']
 multiIndicies=np.array(multiIndicies)
 
-xMultiC=np.zeros(shape=(len(np.ma.compressed(xMulti[:,:,0])),26))
+xMultiC=np.zeros(shape=(len(np.ma.compressed(xMulti[:,:,0])),len(xMulti[0,0,:])))
 for i in range(len(xMulti[0,0,:])):
 	xMulti[:,:,i]=scale(xMulti[:,:,i])
 	xMultiC[:,i]=np.ma.compressed(xMulti[:,:,i])
@@ -1357,12 +1647,13 @@ povPred=np.sum(povPred,axis=-1)
 povPred=scale(povPred)
 
 plt.clf()
-plt.imshow(povPred,cmap=cm.jet_r)
+plt.imshow(povPred*100,cmap=cm.jet_r)
 plt.colorbar()
 plt.yticks([])
 plt.xticks([])
-plt.title('Predicted Poverty')
-plt.savefig(wdfigs+'predPov',dpi=700)
+plt.title('Predicted Poverty, % living under 1.25 US$/day')
+plt.savefig(wdfigs+'povPred',dpi=700)
+exit()
 
 lutPovPred=RectSphereBivariateSpline(oldLat, oldLon, povPred)
 povPredC=lutPovPred.ev(newLats.ravel(),newLons.ravel()).reshape((widthC,heightC)).T
@@ -1379,7 +1670,7 @@ plt.colorbar()
 plt.yticks([])
 plt.xticks([])
 plt.title('Predicted Poverty, 5km')
-plt.savefig(wdfigs+'predPov5',dpi=700)
+plt.savefig(wdfigs+'predPov',dpi=700)
 
 plt.clf()
 plt.imshow(pov125C,cmap=cm.jet_r)
@@ -1646,3 +1937,4 @@ plt.xticks([])
 plt.title('Children 0-4 per Women of Child Bearing Age 2015')
 plt.colorbar()
 plt.savefig(wdfigs+'pop_A04perWOCBA',dpi=700)
+'''
