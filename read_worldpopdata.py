@@ -22,7 +22,7 @@ from IPython import embed
 import shapefile
 from shapely.geometry import shape, Point
 import matplotlib.patches as patches
-from math import sin, cos, sqrt, atan2, radians
+from math import sin, cos, sqrt, atan2, radians, pi, degrees
 from geopy.geocoders import Nominatim
 geolocator = Nominatim()
 import geopy.distance
@@ -508,7 +508,7 @@ for w in range(widthC):
 	newLons[w]=lonM[0]+w*pixelsizeCoarse
 for h in range(heightC):
 	newLats[h]=latMr[0]+h*pixelsizeCoarse
-latsCoarse,lonsCoarse=newLats,newLons
+latsC,lonsC=newLats,newLons
 
 gridCoarse=np.zeros(shape=(len(newLons),len(newLats),2))
 for x in range(len(newLons)):
@@ -634,12 +634,45 @@ plt.plot(np.ma.compressed(grid[-8:,-8:,0]),np.ma.compressed(grid[-8:,-8:,1]),'*r
 plt.savefig(wdfigs+'old_new_grid.pdf')
 ##
 	
-pop=np.ma.masked_array(pop,imageMask2)
+pop[pop<0]=0
 plt.clf()
-plt.imshow(pop,cmap=cm.jet,vmin=0,vmax=5000)
+plt.imshow(pop,cmap=cm.gist_ncar_r,vmax=5000)
 plt.title('gridded population')
 plt.colorbar()
 plt.savefig(wdfigs+'pop',dpi=700)
+exit()
+
+latl=np.radians(latp[::-1])
+lonl=np.radians(lonp)
+lutpop=RectSphereBivariateSpline(latl, lonl, pop)
+
+newLats,newLons=np.meshgrid(np.radians(latsC),np.radians(lonsC))
+pop1=lutpop.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonsC),len(latsC))).T
+
+R=6371 #km
+latdiff1=abs(np.sin(np.radians(latsC[1:]))-np.sin(np.radians(latsC[:-1])))
+latdiff=np.zeros(shape=(len(latsC)))
+latdiff[:len(latdiff1)]=latdiff1
+latdiff[-1]=latdiff[-2]
+
+londiff1=abs(np.radians(lonsC[1:])-np.radians(lonsC[:-1]))
+londiff=np.zeros(shape=(len(lonsC)))
+londiff[:len(londiff1)]=londiff1
+londiff[-1]=londiff[-2]-(londiff[-3]-londiff[-2])
+
+area=np.zeros(shape=(pop1.shape))
+for ilon in range(len(londiff)):
+	area[:,ilon]=(R**2)*latdiff*londiff[ilon]  #radians
+
+pop=pop1*area
+
+plt.clf()
+plt.imshow(pop,cmap=cm.gist_ncar_r)
+plt.title('gridded population')
+plt.colorbar()
+plt.savefig(wdfigs+'pop1',dpi=700)
+
+
 exit()
 ######################################################
 # Roads
