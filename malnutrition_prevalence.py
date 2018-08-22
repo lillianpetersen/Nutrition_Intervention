@@ -452,193 +452,25 @@ for h in range(height1):
 	latp[h]=miny+h*pixelsize
 latp=latp[::-1] # reverse the order
 
-##### Scale to Africa #####
-worldPop=tifpop.read_image()
-worldPop=ds.ReadAsArray()
-pop=worldPop[latp<np.amax(latM)+pixelsize]
-latp=latp[latp<np.amax(latM)+pixelsize]
-pop=pop[latp>np.amin(latM)]
-latp=latp[latp>np.amin(latM)]
-
-pop=pop[:,lonp<np.amax(lonM)+pixelsize]
-lonp=lonp[lonp<np.amax(lonM)+pixelsize]
-pop=pop[:,lonp>np.amin(lonM)]
-lonp=lonp[lonp>np.amin(lonM)]
+worldMal=tifWasting.read_image()
+worldMal=ds.ReadAsArray()
+mal=worldMal
 
 gridp=np.zeros(shape=(len(lonp),len(latp),2))
 for x in range(len(lonp)):
 	gridp[x,:,0]=lonp[x]
 for y in range(len(latp)):
 	gridp[:,y,1]=latp[y]
+###########################
 
-## Plot old and new grid
+mal[mal<0]=0
 plt.clf()
-plt.plot(np.ma.compressed(gridp[-8:,-8:,0]),np.ma.compressed(gridp[-8:,-8:,1]),'*k')
-plt.plot(np.ma.compressed(grid[-8:,-8:,0]),np.ma.compressed(grid[-8:,-8:,1]),'*r')
-plt.savefig(wdfigs+'old_new_grid.pdf')
-##
-
-# This is the important line	
-pop[pop<0]=0
+plt.imshow(mal,cmap=cm.jet)
+plt.title('gridded wasting 2015')
+plt.colorbar()
+plt.savefig(wdfigs+'wasting',dpi=700)
 
 exit()
-
-##############################################
-# Read Poverty
-##############################################
-#countriesT=['Malawi','Nigeria','Uganda','Tanzania']
-#countries=[]
-#for c in countriesT:
-#	countries.append(c.lower())
-#countryAbb=['mwi','nga','uga','tza']
-#years=['11','10','10','10']
-
-#i=-1
-#for country in countries:
-#	i+=1
-i=1 #country=Nigeria
-country='Nigeria'
-
-
-tif125 = TIFF.open(wddata+'poverty/'+country+'/nga10povcons125.tif',mode='r')
-ds=gdal.Open(wddata+'poverty/'+country+'/nga10povcons125.tif')
-width = ds.RasterXSize
-height = ds.RasterYSize
-gt = ds.GetGeoTransform()
-minx = gt[0]
-miny = gt[3] + width*gt[4] + height*gt[5] 
-maxx = gt[0] + width*gt[1] + height*gt[2]
-maxy = gt[3] 
-pixelsize=abs(gt[-1])
-
-# lat and lon
-lat=np.ones(shape=(height))
-lon=np.ones(shape=(width))
-for w in range(width):
-	lon[w]=minx+w*pixelsize
-for h in range(height):
-	lat[h]=miny+h*pixelsize
-lat=lat[::-1] # reverse the order
-
-pov125 = tif125.read_image()*100
-imageMask=pov125<0
-
-pov125=np.ma.masked_array(pov125,imageMask)
-pov125=pov125[~imageMask.all(axis=1)]
-pov125=pov125[:,~imageMask.all(axis=0)]
-
-lonM=np.ma.masked_array(lon,imageMask.all(axis=0))
-lonM=np.ma.compressed(lonM)
-latM=np.ma.masked_array(lat,imageMask.all(axis=1))
-latM=np.ma.compressed(latM)
-
-## Masks
-imageMask2=imageMask # imageMask2=(lat,lon)
-imageMask2=imageMask2[~imageMask2.all(axis=1)]
-imageMask2=imageMask2[:,~imageMask2.all(axis=0)]
-imageMask1=np.swapaxes(imageMask2,0,1) # imageMask1=(lon,lat)
-imageMask3=np.zeros(shape=(imageMask2.shape[0],imageMask2.shape[1],10),dtype=bool)
-for i in range(10):
-	imageMask3[:,:,i]=imageMask2 # imageMask2=(lat,lon,3)
-
-## grid
-grid = np.zeros(shape=(len(lonM),len(latM),2))
-for x in range(len(lonM)):
-	grid[x,:,0]=lonM[x]
-for y in range(len(latM)):
-	grid[:,y,1]=latM[y]
-
-gridMid=createMidpointGrid(grid,pixelsize) # lon lat
-
-########################
-# Final Downscaled Grid
-########################
-scaleIndex=5.
-heightC,widthC=int(np.round(len(latM)/scaleIndex)),int(np.round(len(lonM)/scaleIndex))
-newLats,newLons=np.ones(shape=(heightC)),np.ones(shape=(widthC))
-pixelsizeCoarse=pixelsize*scaleIndex
-latMr=latM[::-1]
-for w in range(widthC):
-	newLons[w]=lonM[0]+w*pixelsizeCoarse
-for h in range(heightC):
-	newLats[h]=latMr[0]+h*pixelsizeCoarse
-latsC,lonsC=newLats,newLons
-
-gridCoarse=np.zeros(shape=(len(newLons),len(newLats),2))
-for x in range(len(newLons)):
-	gridCoarse[x,:,0]=newLons[x]
-for y in range(len(newLats)):
-	gridCoarse[:,y,1]=newLats[y]
-
-## Plot old and new grid
-plt.clf()
-m=int(scaleIndex*3)
-s=1140
-plt.plot(np.ma.compressed(grid[:m,s:s+m,0]),np.ma.compressed(grid[:m,s:s+m,1]),'*k')
-plt.plot(np.ma.compressed(gridCoarse[:3,:3,0]),np.ma.compressed(gridCoarse[:3,:3,1]),'*r')
-plt.savefig(wdfigs+'old_new_grid.pdf')
-##
-
-## Find New Mask
-oldLat,oldLon=np.radians(latM[::-1]),np.radians(lonM)
-lutMask=RectSphereBivariateSpline(oldLat, oldLon, imageMask2)
-newLats,newLons=np.radians(newLats),np.radians(newLons)
-newLats,newLons=np.meshgrid(newLats,newLons)
-maskCoarse=lutMask.ev(newLats.ravel(),newLons.ravel()).reshape((widthC,heightC)).T
-maskCoarse=np.array(np.round(maskCoarse,0),dtype=bool)
-
-
-#tif200 = TIFF.open(wddata+'poverty/'+country+'/'+countryAbb[i]+years[i]+'povcons200.tif',mode='r')
-#tifuncert200 = TIFF.open(wddata+'poverty/'+country+'/'+countryAbb[i]+years[i]+'povcons200uncert.tif',mode='r')
-#tifuncert125 = TIFF.open(wddata+'poverty/'+country+'/'+countryAbb[i]+years[i]+'povcons125uncert.tif',mode='r')
-#pov200 = tif200.read_image()*100
-#uncert125 = tifuncert125.read_image()*100
-#uncert200 = tifuncert200.read_image()*100
-#
-#pov200=np.ma.masked_array(pov200,imageMask)
-#pov200=pov200[~imageMask.all(axis=1)]
-#pov200=pov200[:,~imageMask.all(axis=0)]
-#
-#uncert125=np.ma.masked_array(uncert125,imageMask)
-#uncert125=uncert125[~imageMask.all(axis=1)]
-#uncert125=uncert125[:,~imageMask.all(axis=0)]
-#
-#uncert200=np.ma.masked_array(uncert200,imageMask)
-#uncert200=uncert200[~imageMask.all(axis=1)]
-#uncert200=uncert200[:,~imageMask.all(axis=0)]
-
-if makePlots:
-	plt.clf()
-	plt.imshow(pov125,cmap=cm.jet_r,vmin=0,vmax=100)
-	plt.yticks([])
-	plt.xticks([])
-	plt.title('Percent living under 1.25 US$/day '+country+' 2010')
-	plt.colorbar()
-	plt.savefig(wdfigs+country+'_poverty_125',dpi=700)
-	
-	#plt.clf()
-	#plt.imshow(pov200,cmap=cm.hot_r,vmin=0,vmax=100)
-	#plt.yticks([])
-	#plt.xticks([])
-	#plt.title('Percent living under 2USD/day '+countriesT[i]+' 20'+years[i])
-	#plt.colorbar()
-	#plt.savefig(wdfigs+country+'_poverty_200',dpi=700)
-	#
-	#plt.clf()
-	#plt.imshow(uncert200,cmap=cm.winter_r,vmin=0,vmax=100)
-	#plt.yticks([])
-	#plt.xticks([])
-	#plt.title(countriesT[i]+' 95 Percent Confidence Interval for Pov2USD')
-	#plt.colorbar()
-	#plt.savefig(wdfigs+country+'_uncertainty200',dpi=700)
-	#
-	#plt.clf()
-	#plt.imshow(uncert125,cmap=cm.winter_r,vmin=0,vmax=100)
-	#plt.yticks([])
-	#plt.xticks([])
-	#plt.title(countriesT[i]+' 95 Percent Confidence Interval for Pov1.25USD')
-	#plt.colorbar()
-	#plt.savefig(wdfigs+country+'_uncertainty125',dpi=700)
 
 ##############################################
 # Gridded Population
