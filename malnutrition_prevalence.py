@@ -229,6 +229,11 @@ latm=latm[::-1] # reverse the order
 mal=tifWasting.read_image()
 mal[mal>1]=0.0308212 # The average of this weird pixel's neighbors
 
+mal=mal[:1740]
+latm=latm[:1740]
+mal=mal[:,185:]
+lonm=lonm[185:]
+
 gridm=np.zeros(shape=(len(lonp),len(latp),2))
 for x in range(len(lonm)):
 	gridm[x,:,0]=lonm[x]
@@ -245,8 +250,7 @@ plt.savefig(wdfigs+'wasting',dpi=700)
 ##############################################
 # Gridded Population
 ##############################################
-tifpop=TIFF.open(wddata+'population/gpw-v4-population-density-rev10_2010_30_sec_tif/gpw_v4_population_density_rev10_2010_30_sec.tif',mode='r')
-ds=gdal.Open(wddata+'population/gpw-v4-population-density-rev10_2010_30_sec_tif/gpw_v4_population_density_rev10_2010_30_sec.tif')
+ds=gdal.Open(wddata+'population/gpw_v4_basic_demographic_characteristics_rev10_a000_004bt_2010_cntm_30_sec.tif')
 width1 = ds.RasterXSize
 height1 = ds.RasterYSize
 gt = ds.GetGeoTransform()
@@ -265,7 +269,6 @@ for h in range(height1):
 	latp[h]=miny+h*pixelsize
 latp=latp[::-1] # reverse the order
 
-worldPop=tifpop.read_image()
 worldPop=ds.ReadAsArray()
 ##### Scale to Africa #####
 pop=worldPop[latp<np.amax(latm)+pixelsize]
@@ -285,10 +288,10 @@ for y in range(len(latp)):
 	gridp[:,y,1]=latp[y]
 
 ## Plot old and new grid
-plt.clf()
-plt.plot(np.ma.compressed(gridp[-8:,-8:,0]),np.ma.compressed(gridp[-8:,-8:,1]),'*k')
-plt.plot(np.ma.compressed(grid[-8:,-8:,0]),np.ma.compressed(grid[-8:,-8:,1]),'*r')
-plt.savefig(wdfigs+'old_new_grid.pdf')
+#plt.clf()
+#plt.plot(np.ma.compressed(gridp[-8:,-8:,0]),np.ma.compressed(gridp[-8:,-8:,1]),'*k')
+#plt.plot(np.ma.compressed(grid[-8:,-8:,0]),np.ma.compressed(grid[-8:,-8:,1]),'*r') 
+#plt.savefig(wdfigs+'old_new_grid.pdf')
 ##
 
 # This is the important line	
@@ -306,6 +309,7 @@ lutpop=RectSphereBivariateSpline(latl, lonl, pop)
 
 newLats,newLons=np.meshgrid(np.radians(latm[::-1])+1.2,np.radians(lonm)+1.2)
 pop1=lutpop.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(latm))).T
+pop1[pop1<0]=0
 
 R=6371 #km
 latdiff1=abs(np.sin(np.radians(latm[1:]))-np.sin(np.radians(latm[:-1])))
@@ -322,13 +326,22 @@ area=np.zeros(shape=(pop1.shape))
 for ilon in range(len(londiff)):
 	area[:,ilon]=(R**2)*latdiff*londiff[ilon]  #radians
 
-pop=pop1*area
+pop5km=pop1*area
 
 plt.clf()
-plt.imshow(pop,cmap=cm.gist_ncar_r)
+plt.imshow(pop5km,cmap=cm.gist_ncar_r,vmax=10000)
 plt.title('gridded population')
 plt.colorbar()
-plt.savefig(wdfigs+'pop1',dpi=700)
+plt.savefig(wdfigs+'pop5km',dpi=700)
+
+malnumber=mal*pop5km
+
+plt.clf()
+plt.imshow(malnumber,cmap=cm.gist_ncar_r,vmax=1000)
+plt.title('malnutrition number')
+plt.colorbar()
+plt.savefig(wdfigs+'malnumber',dpi=700)
+exit()
 
 ######################################################
 # Travel Time
