@@ -196,16 +196,26 @@ def findNearest(cityLonLat,gridMid,imageMask1):
 	return closestDistM,iclosestDistM
 
 ################################################
+Lillian=True
+Garyk=False
 
-wddata='/Users/lilllianpetersen/iiasa/data/'
-wdfigs='/Users/lilllianpetersen/iiasa/figs/'
-wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
+if Lillian:
+	wddata='/Users/lilllianpetersen/iiasa/data/'
+	wdfigs='/Users/lilllianpetersen/iiasa/figs/'
+	wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
+
+if Garyk:
+	wddata='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/data/'
+	wdfigs='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/figs/'
+	wdvars='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/vars/'
+
 
 makePlots=False
 
 ##############################################
 # Gridded Malnutrition
 ##############################################
+print 'Malnutrition'
 tifWasting=TIFF.open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2010_PREVALENCE_Y2018M02D28.TIF',mode='r')
 ds=gdal.Open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2015_PREVALENCE_Y2018M02D28.TIF')
 width1 = ds.RasterXSize
@@ -240,6 +250,10 @@ for x in range(len(lonm)):
 for y in range(len(latm)):
 	gridm[:,y,1]=latm[y]
 
+africaMask=np.array(mal)
+africaMask[africaMask>=0]=0
+africaMask[africaMask<0]=1
+
 mal[mal<0]=0
 plt.clf()
 plt.imshow(mal,cmap=cm.jet,vmax=0.3)
@@ -250,6 +264,7 @@ plt.savefig(wdfigs+'wasting',dpi=700)
 ##############################################
 # Gridded Population
 ##############################################
+print 'Population'
 ds=gdal.Open(wddata+'population/gpw_v4_basic_demographic_characteristics_rev10_a000_004bt_2010_cntm_30_sec.tif')
 width1 = ds.RasterXSize
 height1 = ds.RasterYSize
@@ -327,17 +342,19 @@ for ilon in range(len(londiff)):
 	area[:,ilon]=(R**2)*latdiff*londiff[ilon]  #radians
 
 pop5km=pop1*area
+pop5km=np.ma.masked_array(pop5km,africaMask)
 
 plt.clf()
-plt.imshow(pop5km,cmap=cm.gist_ncar_r,vmax=10000)
+plt.imshow(pop5km,cmap=cm.gist_ncar_r,vmax=1000)
 plt.title('gridded population')
 plt.colorbar()
 plt.savefig(wdfigs+'pop5km',dpi=700)
 
 malnumber=mal*pop5km
+malnumber=np.ma.masked_array(malnumber,africaMask)
 
 plt.clf()
-plt.imshow(malnumber,cmap=cm.gist_ncar_r,vmax=1000)
+plt.imshow(malnumber,cmap=cm.nipy_spectral_r,vmax=500)
 plt.title('malnutrition number')
 plt.colorbar()
 plt.savefig(wdfigs+'malnumber',dpi=700)
@@ -392,6 +409,22 @@ plt.title('Travel Time')
 plt.colorbar()
 plt.savefig(wdfigs+'travel',dpi=700)
 
+### Cities ###
+
+city=shapefile.Reader(wddata+'grump-v1-settlement-points-rev01-shp/global_settlement_points_v1.01.shp')
+
+records=city.records()
+citylonlat=np.zeros(shape=(5000,2))
+cityname=[]
+citycountry=[]
+i=0
+for record in records:
+    if record[29]=='Africa':
+        citylonlat[i,0]=record[3]
+        citylonlat[i,1]=record[4]
+        cityname.append(record[10])
+        citycountry.append(record[30])
+        i+=1
 
 
 
