@@ -445,27 +445,27 @@ maxy = gt[3]
 pixelsize=abs(gt[-1])
 
 # lat and lon
-latm=np.ones(shape=(height1))
-lonm=np.ones(shape=(width1))
+latM=np.ones(shape=(height1))
+lonM=np.ones(shape=(width1))
 for w in range(width1):
-	lonm[w]=minx+w*pixelsize
+	lonM[w]=minx+w*pixelsize
 for h in range(height1):
-	latm[h]=miny+h*pixelsize
-latm=latm[::-1] # reverse the order
+	latM[h]=miny+h*pixelsize
+latM=latM[::-1] # reverse the order
 
 mal=tifWasting.read_image()
 mal[mal>1]=0.0308212 # The average of this weird pixel's neighbors
 
 mal=mal[:1740]
-latm=latm[:1740]
+latM=latM[:1740]
 mal=mal[:,185:]
-lonm=lonm[185:]
+lonM=lonM[185:]
 
 gridm=np.zeros(shape=(len(lonp),len(latp),2))
-for x in range(len(lonm)):
-	gridm[x,:,0]=lonm[x]
-for y in range(len(latm)):
-	gridm[:,y,1]=latm[y]
+for x in range(len(lonM)):
+	gridm[x,:,0]=lonM[x]
+for y in range(len(latM)):
+	gridm[:,y,1]=latM[y]
 
 africaMask=np.array(mal)
 africaMask[africaMask>=0]=0
@@ -503,15 +503,15 @@ latp=latp[::-1] # reverse the order
 
 worldPop=ds.ReadAsArray()
 ##### Scale to Africa #####
-pop=worldPop[latp<np.amax(latm)+pixelsize]
-latp=latp[latp<np.amax(latm)+pixelsize]
-pop=pop[latp>np.amin(latm)]
-latp=latp[latp>np.amin(latm)]
+pop=worldPop[latp<np.amax(latM)+pixelsize]
+latp=latp[latp<np.amax(latM)+pixelsize]
+pop=pop[latp>np.amin(latM)]
+latp=latp[latp>np.amin(latM)]
 
-pop=pop[:,lonp<np.amax(lonm)+pixelsize]
-lonp=lonp[lonp<np.amax(lonm)+pixelsize]
-pop=pop[:,lonp>np.amin(lonm)]
-lonp=lonp[lonp>np.amin(lonm)]
+pop=pop[:,lonp<np.amax(lonM)+pixelsize]
+lonp=lonp[lonp<np.amax(lonM)+pixelsize]
+pop=pop[:,lonp>np.amin(lonM)]
+lonp=lonp[lonp>np.amin(lonM)]
 
 gridp=np.zeros(shape=(len(lonp),len(latp),2))
 for x in range(len(lonp)):
@@ -539,18 +539,18 @@ latl=np.radians(latp[::-1])+1.2
 lonl=np.radians(lonp)+1.2
 lutpop=RectSphereBivariateSpline(latl, lonl, pop)
 
-newLats,newLons=np.meshgrid(np.radians(latm[::-1])+1.2,np.radians(lonm)+1.2)
-pop1=lutpop.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(latm))).T
+newLats,newLons=np.meshgrid(np.radians(latM[::-1])+1.2,np.radians(lonM)+1.2)
+pop1=lutpop.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonM),len(latM))).T
 pop1[pop1<0]=0
 
 R=6371 #km
-latdiff1=abs(np.sin(np.radians(latm[1:]))-np.sin(np.radians(latm[:-1])))
-latdiff=np.zeros(shape=(len(latm)))
+latdiff1=abs(np.sin(np.radians(latM[1:]))-np.sin(np.radians(latM[:-1])))
+latdiff=np.zeros(shape=(len(latM)))
 latdiff[:len(latdiff1)]=latdiff1
 latdiff[-1]=latdiff[-2]
 
-londiff1=abs(np.radians(lonm[1:])-np.radians(lonm[:-1]))
-londiff=np.zeros(shape=(len(lonm)))
+londiff1=abs(np.radians(lonM[1:])-np.radians(lonM[:-1]))
+londiff=np.zeros(shape=(len(lonM)))
 londiff[:len(londiff1)]=londiff1
 londiff[-1]=londiff[-2]-(londiff[-3]-londiff[-2])
 
@@ -575,7 +575,6 @@ plt.imshow(malnumber,cmap=cm.nipy_spectral_r,vmax=500)
 plt.title('malnutrition number')
 plt.colorbar()
 plt.savefig(wdfigs+'malnumber',dpi=700)
-exit()
 
 ######################################################
 # Travel Time
@@ -603,20 +602,20 @@ for h in range(height):
 	latt[h]=miny+h*pixelsizel
 
 latt=latt[::-1]
-if latm[0]<latm[-1]:
-	latm=latm[::-1]
+if latM[0]<latM[-1]:
+	latM=latM[::-1]
 
 #travelWorld=traveltif.read_image()
 ##### Scale to Africa #####
-travel=travelWorld[latt<np.amax(latm)+pixelsize]
-latt=latt[latt<np.amax(latm)+pixelsize]
-travel=travel[latt>np.amin(latm)]
-latt=latt[latt>np.amin(latm)]
+travel=travelWorld[latt<np.amax(latM)+pixelsize]
+latt=latt[latt<np.amax(latM)+pixelsize]
+travel=travel[latt>np.amin(latM)]
+latt=latt[latt>np.amin(latM)]
 
-travel=travel[:,lont<np.amax(lonm)+pixelsize]
-lont=lont[lont<np.amax(lonm)+pixelsize]
-travel=travel[:,lont>np.amin(lonm)]
-lont=lont[lont>np.amin(lonm)]
+travel=travel[:,lont<np.amax(lonM)+pixelsize]
+lont=lont[lont<np.amax(lonM)+pixelsize]
+travel=travel[:,lont>np.amin(lonM)]
+lont=lont[lont>np.amin(lonM)]
 
 travel[travel<0]=-10
 travelbi=np.array(travel)
@@ -1513,7 +1512,6 @@ for i in range(len(records1)):
 	plt.clf()
 	plt.imshow(stateFilled)
 	plt.savefig(wdfigs+'nigeria_states_filled',dpi=700)
-	exit()
 
 
 
@@ -1668,261 +1666,4 @@ plt.xticks([])
 plt.title('Percent Living Under 1.25/day 2010, 5km')
 plt.savefig(wdfigs+'nigeria_pov125C',dpi=700)
 
-exit()
-
-#np.save(wdvars+'Illinois/xMulti',xMulti)
-#np.save(wdvars+'Illinois/ydataMulti',ydata)
-#### For all of Nigeria ####
-#distToPRoadsS=(distToRoads[:,:,0]-np.amin(distToRoads[:,:,0]))/(np.amax(distToRoads[:,:,0])-np.amin(distToRoads[:,:,0]))
-#distToSRoadsS=(distToRoads[:,:,1]-np.amin(distToRoads[:,:,1]))/(np.amax(distToRoads[:,:,1])-np.amin(distToRoads[:,:,1]))
-# Primary
-distToRoadsClipped=np.clip(distToRoads[:,:,0],0,15)
-distToPRoadsS=(distToRoadsClipped[:,:]-np.amin(distToRoadsClipped[:,:]))/(np.amax(distToRoadsClipped[:,:])-np.amin(distToRoadsClipped[:,:]))
-# Secondary
-distToRoadsClipped=np.clip(distToRoads[:,:,1],0,10)
-distToSRoadsS=(distToRoadsClipped[:,:]-np.amin(distToRoadsClipped[:,:]))/(np.amax(distToRoadsClipped[:,:])-np.amin(distToRoadsClipped[:,:]))
-# Teritiary
-distToRoadsClipped=np.clip(distToRoads[:,:,2],0,3)
-distToTRoadsS=(distToRoadsClipped[:,:]-np.amin(distToRoadsClipped[:,:]))/(np.amax(distToRoadsClipped[:,:])-np.amin(distToRoadsClipped[:,:]))
-
-TroadDensityS=(roadDensity[:,:,2]-np.amin(roadDensity[:,:,2]))/(np.amax(roadDensity[:,:,2])-np.amin(roadDensity[:,:,2]))
-SroadDensityS=(roadDensity[:,:,1]-np.amin(roadDensity[:,:,1]))/(np.amax(roadDensity[:,:,1])-np.amin(roadDensity[:,:,1]))
-#roadDensityS=popclosestDistCities/roadDensityS
-closestDistS=(closestDistCities-0)/(np.amax(closestDistCities)-0)
-
-TroadDensityS1=TroadDensityS.filled(np.NaN)
-TroadDensityFilled=replace_nans(TroadDensityS1,2,0.5, 2, method='localmean')
-TroadDensity=moving_average_2d(TroadDensityFilled,np.ones((3,3)))
-TroadDensity=np.ma.masked_array(TroadDensity,imageMask2)
-TroadDensity=(TroadDensity-np.amin(TroadDensity))/(np.amax(TroadDensity)-np.amin(TroadDensity))
-
-i1=1.5*distToPRoadsS+distToSRoadsS+distToTRoadsS
-i2=-TroadDensityS-SroadDensityS
-i1=(i1-np.amin(i1))/(np.amax(i1)-np.amin(i1))
-i2=(i2-np.amin(i2))/(np.amax(i2)-np.amin(i2))
-indext=i1+i2
-indext=(indext-np.amin(indext))/(np.amax(indext)-np.amin(indext))
-#indext=-roadDensityS
-plt.clf()
-plt.imshow(indext,cmap=cm.hot_r)
-plt.colorbar()
-plt.title('DistToRoadsP - TRoadDensity')
-plt.savefig(wdfigs+'indext',dpi=700)
-
-indext1=np.log(popClosestDistCitiesS/closestDistS)
-indext1=(indext1-np.amin(indext1))/(np.amax(indext1)-np.amin(indext1))
-indext1=1-indext1
-#indext1=closestDistS
-plt.clf()
-plt.imshow(indext1,cmap=cm.hot_r)
-plt.colorbar()
-plt.title('popCity/DistToCity')
-plt.savefig(wdfigs+'indext1',dpi=700)
-
-#index1=distToPRoadsS-roadDensityS+closestDistS-popClosestDistCitiesS
-#index1=2*indext+indext1
-index1=1.25*index+indext-3*avgVisS
-index1=(index1-np.amin(index1))/(np.amax(index1)-np.amin(index1))
-#index11=index1.filled(np.NaN)
-#index1Filled=replace_nans(index11,3,0.5, 2, method='localmean')
-#index1s=moving_average_2d(index1Filled,np.ones((5,5)))
-#index1s=np.ma.masked_array(index1s,imageMask2)
-#index1s=(index1s-np.amin(index1s))/(np.amax(index1s)-np.amin(index1s))
-
-###########################################
-# Scale and find Corr
-###########################################
-oldLat,oldLon=np.radians(latM[::-1]),np.radians(lonM)
-lutIndex1=RectSphereBivariateSpline(oldLat, oldLon, index1)
-lutPov=RectSphereBivariateSpline(oldLat, oldLon, pov125)
-lutMask=RectSphereBivariateSpline(oldLat, oldLon, imageMask2)
-
-newLats,newLons=np.radians(newLats),np.radians(newLons)
-newLats,newLons=np.meshgrid(newLats,newLons)
-
-urbanIndex=lutIndex1.ev(newLats.ravel(),newLons.ravel()).reshape((width,height)).T
-pov125Coarse=lutPov.ev(newLats.ravel(),newLons.ravel()).reshape((width,height)).T
-maskCoarse=lutMask.ev(newLats.ravel(),newLons.ravel()).reshape((width,height)).T
-maskCoarse=np.array(np.round(maskCoarse,0),dtype=bool)
-
-urbanIndex=np.ma.masked_array(urbanIndex,maskCoarse)
-urbanIndex=(urbanIndex-np.amin(urbanIndex))/(np.amax(urbanIndex)-np.amin(urbanIndex))
-pov125Coarse=np.ma.masked_array(pov125Coarse,maskCoarse)
-
-plt.clf()
-plt.imshow(urbanIndex,cmap=cm.jet_r)
-plt.colorbar()
-plt.title('Urban/Rural Index Based on Roads and Population')
-plt.savefig(wdfigs+'urbanIndex',dpi=700)
-
-plt.clf()
-plt.imshow(pov125Coarse,cmap=cm.jet_r)
-plt.colorbar()
-plt.title('Percent Under $1.25/Day')
-plt.savefig(wdfigs+'pov125Coarse',dpi=700)
-print corr(np.ma.compressed(urbanIndex),np.ma.compressed(pov125Coarse))
-
-x=np.ma.compressed(index1)
-ydata=np.ma.compressed(pov125)
-Corr=corr(x,ydata)
-slope,bInt=np.polyfit(x,ydata,1)
-yfit=slope*x+bInt
-plt.clf()
-plt.plot(x,ydata,'.',markersize=0.0002)
-plt.plot(x,yfit)
-plt.title('Index1 and Pov125, Corr = '+str(round(Corr,2)))
-plt.ylabel('pov125')
-plt.xlabel('distToPRoads+distToSRoads-(TroadDensity+SroadDensity)+log(popclosestDistCities/closestDistCities)')
-plt.savefig(wdfigs+'index1_and_pov125_nigeria',dpi=700)
-exit()
-
-
-plt.clf()
-plt.imshow(index,cmap=cm.hot_r,norm=colors.LogNorm())
-plt.colorbar()
-plt.title('Rural Index by Cities')
-plt.savefig(wdfigs+'index',dpi=700)
-distToAvgVis=np.ma.masked_array(distToAvgVis,imageMask2)
-
-
-plt.clf()
-plt.imshow(iclosestDistCities)
-plt.colorbar()
-plt.title('Nearest City')
-plt.savefig(wdfigs+'iclosestDist',dpi=700)
-
-plt.clf()
-plt.imshow(popclosestDistCities)
-plt.colorbar()
-plt.title('Nearest City Population')
-plt.savefig(wdfigs+'popClosestDistCities',dpi=700)
-
-#plt.clf()
-#map = Basemap(llcrnrlon=lonM[0],llcrnrlat=np.amin(latM),urcrnrlon=lonM[-1],urcrnrlat=np.amax(latM), projection='lcc',lon_0=(lonM[-1]+lonM[0])/2,lat_0=(latM[-1]+latM[0])/2,resolution='i')
-#map.drawcoastlines(linewidth=1.5)
-#map.drawcountries()
-#map.drawlsmask(land_color='w', ocean_color='lightblue',zorder=0)
-#x,y = map(np.ma.compressed(grid[:,:,0]),np.ma.compressed(grid[:,:,1]))
-#map.pcolormesh(x,y,roadDensity[:,:,0], latlon=False, cmap=cm.nipy_spectral_r,zorder=1)
-#x,y = map(cityLonLat[:,0], cityLonLat[:,1])
-#map.scatter(x,y,s=popScaled,c=cityPop,cmap=cm.jet,alpha=0.7,vmin=0,vmax=800000,zorder=2)
-#plt.title('Nigerian Cities by Population')
-#plt.colorbar()
-#plt.savefig(wdfigs+'nigeria_cities',dpi=700)
-
-
-exit()
-
-######################################################################
-# Age Structures
-######################################################################
-for y in range(0,66,5):
-	for g in ('M','F'):
-		if y<10:
-			print 'A0'+str(y)+'0'+str(y+4)+g
-			# load tiff
-			vars()['tifA0'+str(y)+'0'+str(y+4)+g]=TIFF.open(wddata+'africa_1km_age_structures/AFR_PPP_A0'+str(y)+'0'+str(y+4)+'_'+g+'_2015_adj_v5.tif',mode='r')
-
-			# convert tiff to array
-			vars()['A0'+str(y)+'0'+str(y+4)+g]=vars()['tifA0'+str(y)+'0'+str(y+4)+g].read_image() 
-			# Mask
-			imageMask=vars()['A0'+str(y)+'0'+str(y+4)+g]<0
-			vars()['A0'+str(y)+'0'+str(y+4)+g]=np.ma.masked_array(vars()['A0'+str(y)+'0'+str(y+4)+g],imageMask)
-			vars()['A0'+str(y)+'0'+str(y+4)+g]=vars()['A0'+str(y)+'0'+str(y+4)+g][~imageMask.all(axis=1)]
-			vars()['A0'+str(y)+'0'+str(y+4)+g]=vars()['A0'+str(y)+'0'+str(y+4)+g][:,~imageMask.all(axis=0)]
-			
-		elif y==65:
-			print 'A'+str(y)+'PL'+g
-			# load tiff
-			vars()['tifA'+str(y)+'PL'+g]=TIFF.open(wddata+'africa_1km_age_structures/AFR_PPP_A'+str(y)+'PL'+'_'+g+'_2015_adj_v5.tif',mode='r')
-
-			# convert tiff to array
-			vars()['A'+str(y)+'PL'+g]=vars()['tifA'+str(y)+'PL'+g].read_image()
-
-			imageMask=vars()['A'+str(y)+'PL'+g]<0
-			vars()['A'+str(y)+'PL'+g]=np.ma.masked_array(vars()['A'+str(y)+'PL'+g],imageMask)
-			vars()['A'+str(y)+'PL'+g]=vars()['A'+str(y)+'PL'+g][~imageMask.all(axis=1)]
-			vars()['A'+str(y)+'PL'+g]=vars()['A'+str(y)+'PL'+g][:,~imageMask.all(axis=0)]
-		else:
-			print 'A'+str(y)+str(y+4)+g
-			# load tiff
-			vars()['tifA'+str(y)+str(y+4)+g]=TIFF.open(wddata+'africa_1km_age_structures/AFR_PPP_A'+str(y)+str(y+4)+'_'+g+'_2015_adj_v5.tif',mode='r')
-
-			# convert tiff to array
-			vars()['A'+str(y)+str(y+4)+g]=vars()['tifA'+str(y)+str(y+4)+g].read_image()
-
-			imageMask=vars()['A'+str(y)+str(y+4)+g]<0
-			vars()['A'+str(y)+str(y+4)+g]=np.ma.masked_array(vars()['A'+str(y)+str(y+4)+g],imageMask)
-			vars()['A'+str(y)+str(y+4)+g]=vars()['A'+str(y)+str(y+4)+g][~imageMask.all(axis=1)]
-			vars()['A'+str(y)+str(y+4)+g]=vars()['A'+str(y)+str(y+4)+g][:,~imageMask.all(axis=0)]
-
-ageStructures=np.zeros(shape=(8,2))
-gender=['M','F']
-xc,yc=3738,1064
-i=-1
-for y in range(0,36,5):
-	i+=1
-	for g in range(2):
-		if y<10:
-			ageStructures[i,g]=vars()['A0'+str(y)+'0'+str(y+4)+gender[g]][xc,yc]
-		else:
-			ageStructures[i,g]=vars()['A'+str(y)+str(y+4)+gender[g]][xc,yc]
-
-X = np.arange(0,36,5)
-
-
-plt.clf()
-plt.barh(X, ageStructures[:,1],height=4, color = 'm',alpha=.7,linewidth=2,edgecolor='k')
-plt.barh(X, -ageStructures[:,0],height=4, color = 'b',alpha=.7,linewidth=2,edgecolor='k')
-plt.axvline(x=0,color='k',linewidth=4)
-plt.title('Age Pyramid in a 1km Grid Cell')
-plt.ylabel('Ages')
-plt.xlabel('Number')
-plt.savefig(wdfigs+'sample_age_structure',dpi=700)
-
-exit()
-
-
-tifA0004F=TIFF.open(wddata+'africa_1km_age_structures/AFR_PPP_A0004_F_2015_adj_v5.tif',mode='r')
-A0004F=tifA0004F.read_image()
-tifA0004M=TIFF.open(wddata+'africa_1km_age_structures/AFR_PPP_A0004_M_2015_adj_v5.tif',mode='r')
-A0004M=tifA0004F.read_image()
-tifWOCBA=TIFF.open(wddata+'africa_1km_age_structures/AFR_PPP_WOCBA_2015_adj_v5.tif',mode='r')
-WOCBA=tifWOCBA.read_image()
-
-imageMask=A0004F<0
-
-A0004F=np.ma.masked_array(A0004F,imageMask)
-A0004M=np.ma.masked_array(A0004M,imageMask)
-WOCBA=np.ma.masked_array(WOCBA,imageMask)
-
-A0004=A0004F+A0004M
-
-plt.clf()
-plt.imshow(A0004,cmap=cm.jet,vmin=0,vmax=40)
-plt.yticks([])
-plt.xticks([])
-plt.title('Number of Children Age 0-4 2015')
-plt.colorbar()
-plt.savefig(wdfigs+'A0004',dpi=700)
-
-plt.clf()
-plt.imshow(WOCBA,cmap=cm.jet,vmin=0,vmax=50)
-plt.yticks([])
-plt.xticks([])
-plt.title('Women of Child Bearing Age 2015')
-plt.colorbar()
-plt.savefig(wdfigs+'pop_WOCBA',dpi=700)
-
-A04perWOCBA=A0004/WOCBA
-A04perWOCBA=A04perWOCBA[~imageMask.all(axis=1)]
-A04perWOCBA=A04perWOCBA[:,~imageMask.all(axis=0)]
-
-plt.clf()
-plt.imshow(A04perWOCBA,cmap=cm.jet)
-plt.yticks([])
-plt.xticks([])
-plt.title('Children 0-4 per Women of Child Bearing Age 2015')
-plt.colorbar()
-plt.savefig(wdfigs+'pop_A04perWOCBA',dpi=700)
 '''

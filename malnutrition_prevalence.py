@@ -204,14 +204,14 @@ def nearestCity(cityLonLat,zeroLonLat):
 	2. Closest city
 	'''
 	closestDist=10000*np.ones(shape=(len(zeroLonLat)))
-	iclosestDist=np.ones(shape=(len(zeroLonLat)))
+	iclosestDist=np.ones(shape=(len(zeroLonLat)),dtype=int)
 	R = 6373.0 #earth's radius
 	for i in range(len(zeroLonLat)):
 		distances=np.sqrt((zeroLonLat[i,0]-cityLonLat[:,0])**2+(zeroLonLat[i,1]-cityLonLat[:,1])**2)
 		leastDist=np.amin(distances)
 		iclosestDist[i]=np.where(distances==leastDist)[0][0]
 		closestDist[i]=geopy.distance.distance([zeroLonLat[i,1],zeroLonLat[i,0]],[cityLonLat[iclosestDist[i],1],cityLonLat[iclosestDist[i],0]]).km
-		print np.round(100*ilon/float(lenLon),2),'%'
+		print np.round(100*i/float(len(zeroLonLat)),2),'%'
 
 	return closestDist,iclosestDist
 
@@ -375,7 +375,6 @@ plt.imshow(malnumber,cmap=cm.nipy_spectral_r,vmax=500)
 plt.title('malnutrition number')
 plt.colorbar()
 plt.savefig(wdfigs+'malnumber',dpi=700)
-exit()
 
 ######################################################
 # Travel Time
@@ -440,7 +439,7 @@ plt.savefig(wdfigs+'travel',dpi=700)
 
 ### Cities ###
 
-city=shapefile.Reader(wddata+'grump-v1-settlement-points-rev01-shp/global_settlement_points_v1.01.shp')
+city=shapefile.Reader(wddata+'population/global_settlement_points_v1.01.shp')
 
 records=city.records()
 centerlonlat=np.zeros(shape=(4716,2))
@@ -455,5 +454,18 @@ for record in records:
         citycountry.append(record[30])
         i+=1
 
-closestcity,iclosestcity=nearestCity(citylonlat,citycenters)
+closestcity,iclosestcity=nearestCity(centerlonlat,citycenters)
+
+plt.clf()
+map = Basemap(llcrnrlon=lonm[0],llcrnrlat=np.amin(latm),urcrnrlon=lonm[-1],urcrnrlat=np.amax(latm), projection='lcc',lon_0=(lonm[-1]+lonm[0])/2,lat_0=(latm[-1]+latm[0])/2,resolution='i')
+map.drawcoastlines(linewidth=1.5)
+map.drawcountries()
+ax = plt.gca()
+for i in range(len(centerlonlat)):
+	x,y=map(centerlonlat[i,0],centerlonlat[i,1])
+	map.plot(x,y,'bo',markersize=1.5)
+plt.title('Nigerian Roads from Open Street Map')
+plt.savefig(wdfigs+'cities',dpi=700)
+
+
 
