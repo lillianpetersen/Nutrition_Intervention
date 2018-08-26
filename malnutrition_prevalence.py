@@ -195,6 +195,26 @@ def findNearest(cityLonLat,gridMid,imageMask1):
 	iclosestDistM=np.swapaxes(iclosestDistM,0,1)
 	return closestDistM,iclosestDistM
 
+def nearestCity(cityLonLat,zeroLonLat):
+	'''Give it:
+	1. lon lat data set cities
+	2. lon lat data set zeros on travel time
+	Will return:
+	1. Closest dist to city
+	2. Closest city
+	'''
+	closestDist=10000*np.ones(shape=(len(zeroLonLat)))
+	iclosestDist=np.ones(shape=(len(zeroLonLat)))
+	R = 6373.0 #earth's radius
+	for i in range(len(zeroLonLat)):
+		distances=np.sqrt((zeroLonLat[i,0]-cityLonLat[:,0])**2+(zeroLonLat[i,1]-cityLonLat[:,1])**2)
+		leastDist=np.amin(distances)
+		iclosestDist[i]=np.where(distances==leastDist)[0][0]
+		closestDist[i]=geopy.distance.distance([zeroLonLat[i,1],zeroLonLat[i,0]],[cityLonLat[iclosestDist[i],1],cityLonLat[iclosestDist[i],0]]).km
+		print np.round(100*ilon/float(lenLon),2),'%'
+
+	return closestDist,iclosestDist
+
 ################################################
 Lillian=True
 Garyk=False
