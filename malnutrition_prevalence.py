@@ -457,4 +457,3 @@ for record in records:
 
 closestcity,iclosestcity=nearestCity(citylonlat,citycenters)
 
-

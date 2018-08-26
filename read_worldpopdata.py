@@ -432,7 +432,8 @@ makePlots=False
 ##############################################
 # Gridded Malnutrition
 ##############################################
-tifWasting=TIFF.open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2015_PREVALENCE_Y2018M02D28.TIF',mode='r')
+print 'Malnutrition'
+tifWasting=TIFF.open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2010_PREVALENCE_Y2018M02D28.TIF',mode='r')
 ds=gdal.Open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2015_PREVALENCE_Y2018M02D28.TIF')
 width1 = ds.RasterXSize
 height1 = ds.RasterYSize
@@ -444,207 +445,44 @@ maxy = gt[3]
 pixelsize=abs(gt[-1])
 
 # lat and lon
-latp=np.ones(shape=(height1))
-lonp=np.ones(shape=(width1))
+latm=np.ones(shape=(height1))
+lonm=np.ones(shape=(width1))
 for w in range(width1):
-	lonp[w]=minx+w*pixelsize
+	lonm[w]=minx+w*pixelsize
 for h in range(height1):
-	latp[h]=miny+h*pixelsize
-latp=latp[::-1] # reverse the order
+	latm[h]=miny+h*pixelsize
+latm=latm[::-1] # reverse the order
 
-##### Scale to Africa #####
-worldPop=tifpop.read_image()
-worldPop=ds.ReadAsArray()
-pop=worldPop[latp<np.amax(latM)+pixelsize]
-latp=latp[latp<np.amax(latM)+pixelsize]
-pop=pop[latp>np.amin(latM)]
-latp=latp[latp>np.amin(latM)]
+mal=tifWasting.read_image()
+mal[mal>1]=0.0308212 # The average of this weird pixel's neighbors
 
-pop=pop[:,lonp<np.amax(lonM)+pixelsize]
-lonp=lonp[lonp<np.amax(lonM)+pixelsize]
-pop=pop[:,lonp>np.amin(lonM)]
-lonp=lonp[lonp>np.amin(lonM)]
+mal=mal[:1740]
+latm=latm[:1740]
+mal=mal[:,185:]
+lonm=lonm[185:]
 
-gridp=np.zeros(shape=(len(lonp),len(latp),2))
-for x in range(len(lonp)):
-	gridp[x,:,0]=lonp[x]
-for y in range(len(latp)):
-	gridp[:,y,1]=latp[y]
+gridm=np.zeros(shape=(len(lonp),len(latp),2))
+for x in range(len(lonm)):
+	gridm[x,:,0]=lonm[x]
+for y in range(len(latm)):
+	gridm[:,y,1]=latm[y]
 
-## Plot old and new grid
+africaMask=np.array(mal)
+africaMask[africaMask>=0]=0
+africaMask[africaMask<0]=1
+
+mal[mal<0]=0
 plt.clf()
-plt.plot(np.ma.compressed(gridp[-8:,-8:,0]),np.ma.compressed(gridp[-8:,-8:,1]),'*k')
-plt.plot(np.ma.compressed(grid[-8:,-8:,0]),np.ma.compressed(grid[-8:,-8:,1]),'*r')
-plt.savefig(wdfigs+'old_new_grid.pdf')
-##
-
-# This is the important line	
-pop[pop<0]=0
-
-exit()
-
-##############################################
-# Read Poverty
-##############################################
-#countriesT=['Malawi','Nigeria','Uganda','Tanzania']
-#countries=[]
-#for c in countriesT:
-#	countries.append(c.lower())
-#countryAbb=['mwi','nga','uga','tza']
-#years=['11','10','10','10']
-
-#i=-1
-#for country in countries:
-#	i+=1
-i=1 #country=Nigeria
-country='Nigeria'
-
-
-tif125 = TIFF.open(wddata+'poverty/'+country+'/nga10povcons125.tif',mode='r')
-ds=gdal.Open(wddata+'poverty/'+country+'/nga10povcons125.tif')
-width = ds.RasterXSize
-height = ds.RasterYSize
-gt = ds.GetGeoTransform()
-minx = gt[0]
-miny = gt[3] + width*gt[4] + height*gt[5] 
-maxx = gt[0] + width*gt[1] + height*gt[2]
-maxy = gt[3] 
-pixelsize=abs(gt[-1])
-
-# lat and lon
-lat=np.ones(shape=(height))
-lon=np.ones(shape=(width))
-for w in range(width):
-	lon[w]=minx+w*pixelsize
-for h in range(height):
-	lat[h]=miny+h*pixelsize
-lat=lat[::-1] # reverse the order
-
-pov125 = tif125.read_image()*100
-imageMask=pov125<0
-
-pov125=np.ma.masked_array(pov125,imageMask)
-pov125=pov125[~imageMask.all(axis=1)]
-pov125=pov125[:,~imageMask.all(axis=0)]
-
-lonM=np.ma.masked_array(lon,imageMask.all(axis=0))
-lonM=np.ma.compressed(lonM)
-latM=np.ma.masked_array(lat,imageMask.all(axis=1))
-latM=np.ma.compressed(latM)
-
-## Masks
-imageMask2=imageMask # imageMask2=(lat,lon)
-imageMask2=imageMask2[~imageMask2.all(axis=1)]
-imageMask2=imageMask2[:,~imageMask2.all(axis=0)]
-imageMask1=np.swapaxes(imageMask2,0,1) # imageMask1=(lon,lat)
-imageMask3=np.zeros(shape=(imageMask2.shape[0],imageMask2.shape[1],10),dtype=bool)
-for i in range(10):
-	imageMask3[:,:,i]=imageMask2 # imageMask2=(lat,lon,3)
-
-## grid
-grid = np.zeros(shape=(len(lonM),len(latM),2))
-for x in range(len(lonM)):
-	grid[x,:,0]=lonM[x]
-for y in range(len(latM)):
-	grid[:,y,1]=latM[y]
-
-gridMid=createMidpointGrid(grid,pixelsize) # lon lat
-
-########################
-# Final Downscaled Grid
-########################
-scaleIndex=5.
-heightC,widthC=int(np.round(len(latM)/scaleIndex)),int(np.round(len(lonM)/scaleIndex))
-newLats,newLons=np.ones(shape=(heightC)),np.ones(shape=(widthC))
-pixelsizeCoarse=pixelsize*scaleIndex
-latMr=latM[::-1]
-for w in range(widthC):
-	newLons[w]=lonM[0]+w*pixelsizeCoarse
-for h in range(heightC):
-	newLats[h]=latMr[0]+h*pixelsizeCoarse
-latsC,lonsC=newLats,newLons
-
-gridCoarse=np.zeros(shape=(len(newLons),len(newLats),2))
-for x in range(len(newLons)):
-	gridCoarse[x,:,0]=newLons[x]
-for y in range(len(newLats)):
-	gridCoarse[:,y,1]=newLats[y]
-
-## Plot old and new grid
-plt.clf()
-m=int(scaleIndex*3)
-s=1140
-plt.plot(np.ma.compressed(grid[:m,s:s+m,0]),np.ma.compressed(grid[:m,s:s+m,1]),'*k')
-plt.plot(np.ma.compressed(gridCoarse[:3,:3,0]),np.ma.compressed(gridCoarse[:3,:3,1]),'*r')
-plt.savefig(wdfigs+'old_new_grid.pdf')
-##
-
-## Find New Mask
-oldLat,oldLon=np.radians(latM[::-1]),np.radians(lonM)
-lutMask=RectSphereBivariateSpline(oldLat, oldLon, imageMask2)
-newLats,newLons=np.radians(newLats),np.radians(newLons)
-newLats,newLons=np.meshgrid(newLats,newLons)
-maskCoarse=lutMask.ev(newLats.ravel(),newLons.ravel()).reshape((widthC,heightC)).T
-maskCoarse=np.array(np.round(maskCoarse,0),dtype=bool)
-
-
-#tif200 = TIFF.open(wddata+'poverty/'+country+'/'+countryAbb[i]+years[i]+'povcons200.tif',mode='r')
-#tifuncert200 = TIFF.open(wddata+'poverty/'+country+'/'+countryAbb[i]+years[i]+'povcons200uncert.tif',mode='r')
-#tifuncert125 = TIFF.open(wddata+'poverty/'+country+'/'+countryAbb[i]+years[i]+'povcons125uncert.tif',mode='r')
-#pov200 = tif200.read_image()*100
-#uncert125 = tifuncert125.read_image()*100
-#uncert200 = tifuncert200.read_image()*100
-#
-#pov200=np.ma.masked_array(pov200,imageMask)
-#pov200=pov200[~imageMask.all(axis=1)]
-#pov200=pov200[:,~imageMask.all(axis=0)]
-#
-#uncert125=np.ma.masked_array(uncert125,imageMask)
-#uncert125=uncert125[~imageMask.all(axis=1)]
-#uncert125=uncert125[:,~imageMask.all(axis=0)]
-#
-#uncert200=np.ma.masked_array(uncert200,imageMask)
-#uncert200=uncert200[~imageMask.all(axis=1)]
-#uncert200=uncert200[:,~imageMask.all(axis=0)]
-
-if makePlots:
-	plt.clf()
-	plt.imshow(pov125,cmap=cm.jet_r,vmin=0,vmax=100)
-	plt.yticks([])
-	plt.xticks([])
-	plt.title('Percent living under 1.25 US$/day '+country+' 2010')
-	plt.colorbar()
-	plt.savefig(wdfigs+country+'_poverty_125',dpi=700)
-	
-	#plt.clf()
-	#plt.imshow(pov200,cmap=cm.hot_r,vmin=0,vmax=100)
-	#plt.yticks([])
-	#plt.xticks([])
-	#plt.title('Percent living under 2USD/day '+countriesT[i]+' 20'+years[i])
-	#plt.colorbar()
-	#plt.savefig(wdfigs+country+'_poverty_200',dpi=700)
-	#
-	#plt.clf()
-	#plt.imshow(uncert200,cmap=cm.winter_r,vmin=0,vmax=100)
-	#plt.yticks([])
-	#plt.xticks([])
-	#plt.title(countriesT[i]+' 95 Percent Confidence Interval for Pov2USD')
-	#plt.colorbar()
-	#plt.savefig(wdfigs+country+'_uncertainty200',dpi=700)
-	#
-	#plt.clf()
-	#plt.imshow(uncert125,cmap=cm.winter_r,vmin=0,vmax=100)
-	#plt.yticks([])
-	#plt.xticks([])
-	#plt.title(countriesT[i]+' 95 Percent Confidence Interval for Pov1.25USD')
-	#plt.colorbar()
-	#plt.savefig(wdfigs+country+'_uncertainty125',dpi=700)
+plt.imshow(mal,cmap=cm.jet,vmax=0.3)
+plt.title('gridded wasting 2015')
+plt.colorbar()
+plt.savefig(wdfigs+'wasting',dpi=700)
 
 ##############################################
 # Gridded Population
 ##############################################
-tifpop=TIFF.open(wddata+'population/gpw-v4-population-density-rev10_2010_30_sec_tif/gpw_v4_population_density_rev10_2010_30_sec.tif',mode='r')
-ds=gdal.Open(wddata+'population/gpw-v4-population-density-rev10_2010_30_sec_tif/gpw_v4_population_density_rev10_2010_30_sec.tif')
+print 'Population'
+ds=gdal.Open(wddata+'population/gpw_v4_basic_demographic_characteristics_rev10_a000_004bt_2010_cntm_30_sec.tif')
 width1 = ds.RasterXSize
 height1 = ds.RasterYSize
 gt = ds.GetGeoTransform()
@@ -663,18 +501,17 @@ for h in range(height1):
 	latp[h]=miny+h*pixelsize
 latp=latp[::-1] # reverse the order
 
-##### Scale to Africa #####
-worldPop=tifpop.read_image()
 worldPop=ds.ReadAsArray()
-pop=worldPop[latp<np.amax(latM)+pixelsize]
-latp=latp[latp<np.amax(latM)+pixelsize]
-pop=pop[latp>np.amin(latM)]
-latp=latp[latp>np.amin(latM)]
+##### Scale to Africa #####
+pop=worldPop[latp<np.amax(latm)+pixelsize]
+latp=latp[latp<np.amax(latm)+pixelsize]
+pop=pop[latp>np.amin(latm)]
+latp=latp[latp>np.amin(latm)]
 
-pop=pop[:,lonp<np.amax(lonM)+pixelsize]
-lonp=lonp[lonp<np.amax(lonM)+pixelsize]
-pop=pop[:,lonp>np.amin(lonM)]
-lonp=lonp[lonp>np.amin(lonM)]
+pop=pop[:,lonp<np.amax(lonm)+pixelsize]
+lonp=lonp[lonp<np.amax(lonm)+pixelsize]
+pop=pop[:,lonp>np.amin(lonm)]
+lonp=lonp[lonp>np.amin(lonm)]
 
 gridp=np.zeros(shape=(len(lonp),len(latp),2))
 for x in range(len(lonp)):
@@ -683,10 +520,10 @@ for y in range(len(latp)):
 	gridp[:,y,1]=latp[y]
 
 ## Plot old and new grid
-plt.clf()
-plt.plot(np.ma.compressed(gridp[-8:,-8:,0]),np.ma.compressed(gridp[-8:,-8:,1]),'*k')
-plt.plot(np.ma.compressed(grid[-8:,-8:,0]),np.ma.compressed(grid[-8:,-8:,1]),'*r')
-plt.savefig(wdfigs+'old_new_grid.pdf')
+#plt.clf()
+#plt.plot(np.ma.compressed(gridp[-8:,-8:,0]),np.ma.compressed(gridp[-8:,-8:,1]),'*k')
+#plt.plot(np.ma.compressed(grid[-8:,-8:,0]),np.ma.compressed(grid[-8:,-8:,1]),'*r') 
+#plt.savefig(wdfigs+'old_new_grid.pdf')
 ##
 
 # This is the important line	
@@ -697,23 +534,23 @@ plt.imshow(pop,cmap=cm.gist_ncar_r,vmax=5000)
 plt.title('gridded population')
 plt.colorbar()
 plt.savefig(wdfigs+'pop',dpi=700)
-exit()
 
-latl=np.radians(latp[::-1])
-lonl=np.radians(lonp)
+latl=np.radians(latp[::-1])+1.2
+lonl=np.radians(lonp)+1.2
 lutpop=RectSphereBivariateSpline(latl, lonl, pop)
 
-newLats,newLons=np.meshgrid(np.radians(latsC),np.radians(lonsC))
-pop1=lutpop.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonsC),len(latsC))).T
+newLats,newLons=np.meshgrid(np.radians(latm[::-1])+1.2,np.radians(lonm)+1.2)
+pop1=lutpop.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(latm))).T
+pop1[pop1<0]=0
 
 R=6371 #km
-latdiff1=abs(np.sin(np.radians(latsC[1:]))-np.sin(np.radians(latsC[:-1])))
-latdiff=np.zeros(shape=(len(latsC)))
+latdiff1=abs(np.sin(np.radians(latm[1:]))-np.sin(np.radians(latm[:-1])))
+latdiff=np.zeros(shape=(len(latm)))
 latdiff[:len(latdiff1)]=latdiff1
 latdiff[-1]=latdiff[-2]
 
-londiff1=abs(np.radians(lonsC[1:])-np.radians(lonsC[:-1]))
-londiff=np.zeros(shape=(len(lonsC)))
+londiff1=abs(np.radians(lonm[1:])-np.radians(lonm[:-1]))
+londiff=np.zeros(shape=(len(lonm)))
 londiff[:len(londiff1)]=londiff1
 londiff[-1]=londiff[-2]-(londiff[-3]-londiff[-2])
 
@@ -721,13 +558,76 @@ area=np.zeros(shape=(pop1.shape))
 for ilon in range(len(londiff)):
 	area[:,ilon]=(R**2)*latdiff*londiff[ilon]  #radians
 
-pop=pop1*area
+pop5km=pop1*area
+pop5km=np.ma.masked_array(pop5km,africaMask)
 
 plt.clf()
-plt.imshow(pop,cmap=cm.gist_ncar_r)
+plt.imshow(pop5km,cmap=cm.gist_ncar_r,vmax=1000)
 plt.title('gridded population')
 plt.colorbar()
-plt.savefig(wdfigs+'pop1',dpi=700)
+plt.savefig(wdfigs+'pop5km',dpi=700)
+
+malnumber=mal*pop5km
+malnumber=np.ma.masked_array(malnumber,africaMask)
+
+plt.clf()
+plt.imshow(malnumber,cmap=cm.nipy_spectral_r,vmax=500)
+plt.title('malnutrition number')
+plt.colorbar()
+plt.savefig(wdfigs+'malnumber',dpi=700)
+exit()
+
+######################################################
+# Travel Time
+######################################################
+print 'Roads'
+
+#rRoads = shapefile.Reader(wddata+'openstreetmap/'+country+'/openstreetmap/nga_trs_roads_osm.shp')
+traveltif=TIFF.open(wddata+'travel_time/accessibility_to_cities_2015_v1.0.tif',mode='r')
+
+ds=gdal.Open(wddata+'travel_time/accessibility_to_cities_2015_v1.0.tif')
+width = ds.RasterXSize
+height = ds.RasterYSize
+gt = ds.GetGeoTransform()
+minx = gt[0]
+miny = gt[3] + width*gt[4] + height*gt[5] 
+maxx = gt[0] + width*gt[1] + height*gt[2]
+maxy = gt[3] 
+pixelsizel=abs(gt[-1])
+
+latt=np.ones(shape=(height))
+lont=np.ones(shape=(width))
+for w in range(width):
+	lont[w]=minx+w*pixelsizel
+for h in range(height):
+	latt[h]=miny+h*pixelsizel
+
+latt=latt[::-1]
+if latm[0]<latm[-1]:
+	latm=latm[::-1]
+
+#travelWorld=traveltif.read_image()
+##### Scale to Africa #####
+travel=travelWorld[latt<np.amax(latm)+pixelsize]
+latt=latt[latt<np.amax(latm)+pixelsize]
+travel=travel[latt>np.amin(latm)]
+latt=latt[latt>np.amin(latm)]
+
+travel=travel[:,lont<np.amax(lonm)+pixelsize]
+lont=lont[lont<np.amax(lonm)+pixelsize]
+travel=travel[:,lont>np.amin(lonm)]
+lont=lont[lont>np.amin(lonm)]
+
+travel[travel<0]=-10
+travelbi=np.array(travel)
+travelbi[travel!=0]=1
+travelbi=1-travelbi
+
+plt.clf()
+plt.imshow(travelbi,cmap=cm.gist_ncar_r)
+plt.title('Travel Time')
+plt.colorbar()
+plt.savefig(wdfigs+'travel',dpi=700)
 
 ######################################################
 # Roads
