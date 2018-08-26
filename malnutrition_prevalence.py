@@ -220,6 +220,7 @@ try:
 	wddata='/Users/lilllianpetersen/iiasa/data/'
 	wdfigs='/Users/lilllianpetersen/iiasa/figs/'
 	wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
+	tifWasting=TIFF.open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2010_PREVALENCE_Y2018M02D28.TIF',mode='r')
 except:
 	wddata='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/data/'
 	wdfigs='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/figs/'
@@ -260,7 +261,7 @@ latm=latm[:1740]
 mal=mal[:,185:]
 lonm=lonm[185:]
 
-gridm=np.zeros(shape=(len(lonp),len(latp),2))
+gridm=np.zeros(shape=(len(lonm),len(latm),2))
 for x in range(len(lonm)):
 	gridm[x,:,0]=lonm[x]
 for y in range(len(latm)):
@@ -405,7 +406,7 @@ latt=latt[::-1]
 if latm[0]<latm[-1]:
 	latm=latm[::-1]
 
-#travelWorld=traveltif.read_image()
+travelWorld=traveltif.read_image()
 ##### Scale to Africa #####
 travel=travelWorld[latt<np.amax(latm)+pixelsize]
 latt=latt[latt<np.amax(latm)+pixelsize]
@@ -417,9 +418,19 @@ lont=lont[lont<np.amax(lonm)+pixelsize]
 travel=travel[:,lont>np.amin(lonm)]
 lont=lont[lont>np.amin(lonm)]
 
+gridt=np.zeros(shape=(len(lont),len(latt),2))
+for x in range(len(lont)):
+	gridt[x,:,0]=lont[x]
+for y in range(len(latt)):
+	gridt[:,y,1]=latt[y]
+
 travel[travel<0]=-10
 travelbi=np.array(travel)
 travelbi[travel!=0]=1
+travelbi=1-travelbi
+travelbi=np.array(travelbi, dtype=bool)
+travelbi=np.swapaxes(travelbi, 0,1)
+citycenters=gridt[travelbi]
 
 plt.clf()
 plt.imshow(travelbi,cmap=cm.gist_ncar_r)
@@ -432,18 +443,18 @@ plt.savefig(wdfigs+'travel',dpi=700)
 city=shapefile.Reader(wddata+'grump-v1-settlement-points-rev01-shp/global_settlement_points_v1.01.shp')
 
 records=city.records()
-citylonlat=np.zeros(shape=(5000,2))
+centerlonlat=np.zeros(shape=(4716,2))
 cityname=[]
 citycountry=[]
 i=0
 for record in records:
-    if record[29]=='Africa':
-        citylonlat[i,0]=record[3]
-        citylonlat[i,1]=record[4]
+    if record[29]=='Africa' and record[5]>20000:
+        centerlonlat[i,0]=record[3]
+        centerlonlat[i,1]=record[4]
         cityname.append(record[10])
         citycountry.append(record[30])
         i+=1
 
-
+closestcity,iclosestcity=nearestCity(citylonlat,citycenters)
 
 
