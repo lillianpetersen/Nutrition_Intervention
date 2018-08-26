@@ -430,6 +430,62 @@ wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
 makePlots=False
 
 ##############################################
+# Read Poverty
+##############################################
+i=1 #country=Nigeria
+country='Nigeria'
+
+tif125 = TIFF.open(wddata+'poverty/'+country+'/nga10povcons125.tif',mode='r')
+ds=gdal.Open(wddata+'poverty/'+country+'/nga10povcons125.tif')
+width = ds.RasterXSize
+height = ds.RasterYSize
+gt = ds.GetGeoTransform()
+minx = gt[0]
+miny = gt[3] + width*gt[4] + height*gt[5] 
+maxx = gt[0] + width*gt[1] + height*gt[2]
+maxy = gt[3] 
+pixelsize=abs(gt[-1])
+
+# lat and lon
+lat=np.ones(shape=(height))
+lon=np.ones(shape=(width))
+for w in range(width):
+	lon[w]=minx+w*pixelsize
+for h in range(height):
+	lat[h]=miny+h*pixelsize
+lat=lat[::-1] # reverse the order
+
+pov125 = tif125.read_image()*100
+imageMask=pov125<0
+
+pov125=np.ma.masked_array(pov125,imageMask)
+pov125=pov125[~imageMask.all(axis=1)]
+pov125=pov125[:,~imageMask.all(axis=0)]
+
+lonp=np.ma.masked_array(lon,imageMask.all(axis=0))
+lonp=np.ma.compressed(lonp)
+latp=np.ma.masked_array(lat,imageMask.all(axis=1))
+latp=np.ma.compressed(latp)
+
+## Masks
+imageMask2=imageMask # imageMask2=(lat,lon)
+imageMask2=imageMask2[~imageMask2.all(axis=1)]
+imageMask2=imageMask2[:,~imageMask2.all(axis=0)]
+imageMask1=np.swapaxes(imageMask2,0,1) # imageMask1=(lon,lat)
+imageMask3=np.zeros(shape=(imageMask2.shape[0],imageMask2.shape[1],10),dtype=bool)
+for i in range(10):
+	imageMask3[:,:,i]=imageMask2 # imageMask2=(lat,lon,3)
+
+## grid
+grid = np.zeros(shape=(len(lonp),len(latp),2))
+for x in range(len(lonp)):
+	grid[x,:,0]=lonp[x]
+for y in range(len(latp)):
+	grid[:,y,1]=latp[y]
+
+gridMid=createMidpointGrid(grid,pixelsize) # lon lat
+
+##############################################
 # Gridded Malnutrition
 ##############################################
 print 'Malnutrition'
@@ -461,7 +517,7 @@ latM=latM[:1740]
 mal=mal[:,185:]
 lonM=lonM[185:]
 
-gridm=np.zeros(shape=(len(lonp),len(latp),2))
+gridm=np.zeros(shape=(len(lonM),len(latM),2))
 for x in range(len(lonM)):
 	gridm[x,:,0]=lonM[x]
 for y in range(len(latM)):
@@ -472,11 +528,14 @@ africaMask[africaMask>=0]=0
 africaMask[africaMask<0]=1
 
 mal[mal<0]=0
+np.save(wdvars+'wasting',mal)
+
 plt.clf()
 plt.imshow(mal,cmap=cm.jet,vmax=0.3)
 plt.title('gridded wasting 2015')
 plt.colorbar()
 plt.savefig(wdfigs+'wasting',dpi=700)
+exit()
 
 ##############################################
 # Gridded Population
