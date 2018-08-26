@@ -228,7 +228,25 @@ except:
 
 
 makePlots=False
+##############################################
+## city tif
+###
+cityTif=TIFF.open(wddata+'GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0\GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0.tif',mode='r')
+mc=gdal.Open(wddata+'GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0\GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0.tif')
 
+height = mc.RasterYSize
+plt.clf()
+cityMap=cityTif.read_image()
+imageMaskPo = cityMap<0
+cityMap=np.ma.masked_array(cityMap,imageMaskPo)
+plt.imshow(cityMap,cmap=cm.binary,vmin=0,vmax=1)
+plt.yticks([])
+plt.xticks([])
+plt.title('Children under 4 in 2020')
+plt.colorbar()
+plt.savefig(wdfigs +'city_map',dpi=700)
+
+exit()
 ##############################################
 # Gridded Malnutrition
 ##############################################
