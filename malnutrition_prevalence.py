@@ -402,9 +402,11 @@ travel=travel[:,lont>np.amin(lonm)]
 lont=lont[lont>np.amin(lonm)]
 
 travel[travel<0]=-10
+travelbi=np.array(travel)
+travelbi[travel!=0]=1
 
 plt.clf()
-plt.imshow(travel,cmap=cm.gist_ncar_r,norm=colors.LogNorm())
+plt.imshow(travelbi,cmap=cm.gist_ncar_r)
 plt.title('Travel Time')
 plt.colorbar()
 plt.savefig(wdfigs+'travel',dpi=700)
