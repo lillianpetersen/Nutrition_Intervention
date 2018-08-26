@@ -216,15 +216,11 @@ def nearestCity(cityLonLat,zeroLonLat):
 	return closestDist,iclosestDist
 
 ################################################
-Lillian=True
-Garyk=False
-
-if Lillian:
+try:
 	wddata='/Users/lilllianpetersen/iiasa/data/'
 	wdfigs='/Users/lilllianpetersen/iiasa/figs/'
 	wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
-
-if Garyk:
+except:
 	wddata='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/data/'
 	wdfigs='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/figs/'
 	wdvars='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/vars/'
