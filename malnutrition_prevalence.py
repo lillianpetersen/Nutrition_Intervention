@@ -226,27 +226,8 @@ except:
 	wdfigs='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/figs/'
 	wdvars='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/vars/'
 
-
 makePlots=False
-##############################################
-## city tif
-###
-cityTif=TIFF.open(wddata+'population/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0\GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0.tif',mode='r')
-mc=gdal.Open(wddata+'population/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0\GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0.tif')
 
-height = mc.RasterYSize
-plt.clf()
-cityMap=cityTif.read_image()
-imageMaskPo = cityMap<0
-cityMap=np.ma.masked_array(cityMap,imageMaskPo)
-plt.imshow(cityMap,cmap=cm.binary,vmin=0,vmax=1)
-plt.yticks([])
-plt.xticks([])
-plt.title('Children under 4 in 2020')
-plt.colorbar()
-plt.savefig(wdfigs +'city_map',dpi=700)
-
-exit()
 ##############################################
 # Gridded Malnutrition
 ##############################################
@@ -296,6 +277,7 @@ plt.title('gridded wasting 2015')
 plt.colorbar()
 plt.savefig(wdfigs+'wasting',dpi=700)
 
+'''
 ##############################################
 # Gridded Population
 ##############################################
@@ -484,6 +466,107 @@ for i in range(len(centerlonlat)):
 	map.plot(x,y,'bo',markersize=1.5)
 plt.title('Nigerian Roads from Open Street Map')
 plt.savefig(wdfigs+'cities',dpi=700)
+
+##############################################
+# city tif
+##############################################
+cityTif=TIFF.open(wddata+'population/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0.tif',mode='r')
+ds=gdal.Open(wddata+'population/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0.tif')
+
+width1 = ds.RasterXSize
+height1 = ds.RasterYSize
+gt = ds.GetGeoTransform()
+minx = gt[0]
+miny = gt[3] + width1*gt[4] + height1*gt[5] 
+maxx = gt[0] + width1*gt[1] + height1*gt[2]
+maxy = gt[3] 
+pixelsize=abs(gt[-1])
+
+# lat and lon
+latm=np.ones(shape=(height1))
+lonm=np.ones(shape=(width1))
+for w in range(width1):
+	lonm[w]=minx+w*pixelsize
+for h in range(height1):
+	latm[h]=miny+h*pixelsize
+latm=latm[::-1] # reverse the order
+
+cityMap=cityTif.read_image()
+
+cityMap=cityMap[latp<np.amax(latm)+pixelsize]
+latp=latp[latp<np.amax(latm)+pixelsize]
+pop=pop[latp>np.amin(latm)]
+latp=latp[latp>np.amin(latm)]
+
+pop=pop[:,lonp<np.amax(lonm)+pixelsize]
+lonp=lonp[lonp<np.amax(lonm)+pixelsize]
+pop=pop[:,lonp>np.amin(lonm)]
+lonp=lonp[lonp>np.amin(lonm)]
+
+plt.clf()
+plt.imshow(cityMap,cmap=cm.nipy_spectral)
+plt.yticks([])
+plt.xticks([])
+plt.title('Children under 4 in 2020')
+plt.colorbar()
+plt.savefig(wdfigs +'city_map',dpi=700)
+
+'''
+
+##############################################
+# Market sheds
+##############################################
+
+ds=gdal.Open(wddata+'population/MSH_50K_TX--SSA.tif')
+width = ds.RasterXSize
+height = ds.RasterYSize
+gt = ds.GetGeoTransform()
+minx = gt[0]
+miny = gt[3] + width*gt[4] + height*gt[5] 
+maxx = gt[0] + width*gt[1] + height*gt[2]
+maxy = gt[3] 
+pixelsize=abs(gt[-1])
+
+latc=np.ones(shape=(height))
+lonc=np.ones(shape=(width))
+for w in range(width):
+	lonc[w]=minx+w*pixelsize
+for h in range(height):
+	latc[h]=miny+h*pixelsize
+
+latc=latc[::-1]
+
+marketShedsfake=ds.ReadAsArray()
+marketSheds=np.array(shape=(marketShedsfake.shape))
+
+f = open(wddata+'population/MSH_50K_TX.csv')
+i=-1
+for line in f:
+	i+=1
+	if i==0:
+		continue
+	tmp=line.split(',')
+	city=tmp[0]
+	lat=tmp[6]
+	lon=tmp[7]
+	print line
+	exit()
+
+plt.clf()
+plt.imshow(marketSheds,cmap=cm.nipy_spectral)
+plt.yticks([])
+plt.xticks([])
+plt.title('African MarketSheds')
+plt.colorbar()
+plt.savefig(wdfigs+'marketSheds',dpi=700)
+exit()
+
+latl=np.radians(latp[::-1])+1.2
+lonl=np.radians(lonp)+1.2
+lutpop=RectSphereBivariateSpline(latl, lonl, pop)
+
+newLats,newLons=np.meshgrid(np.radians(latm[::-1])+1.2,np.radians(lonm)+1.2)
+pop1=lutpop.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(latm))).T
 
 
 
