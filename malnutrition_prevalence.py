@@ -6,7 +6,7 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.mlab as mlab
-from mpl_toolkits.basemap import Basemap
+#from mpl_toolkits.basemap import Basemap
 import os
 from scipy.stats import norm
 import matplotlib as mpl
@@ -15,21 +15,21 @@ import random
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 from PIL import Image
-from libtiff import TIFF
-from osgeo import gdal
-import ogr
+#from osgeo import gdal
+#import ogr
 from IPython import embed
 import shapefile
-from shapely.geometry import shape, Point
+#from shapely.geometry import shape, Point
 import matplotlib.patches as patches
 from math import sin, cos, sqrt, atan2, radians, pi, degrees
-# from geopy.geocoders import Nominatim
-# geolocator = Nominatim()
-# import geopy.distance
+from geopy.geocoders import Nominatim
+geolocator = Nominatim()
+import geopy.distance
 from scipy import ndimage
 from scipy.signal import convolve2d
 from sklearn import linear_model
 from scipy.interpolate import RectSphereBivariateSpline
+from libtiff import TIFF
 
 ###############################################
 # Functions
@@ -187,7 +187,7 @@ def findNearest(cityLonLat,gridMid,imageMask1):
 			leastDist=np.amin(distances)
 			iclosestDist[ilon,ilat]=np.where(distances==leastDist)[0][0]
 			closestDist[ilon,ilat]=geopy.distance.distance([gridMid[ilon,ilat,1],gridMid[ilon,ilat,0]],[cityLonLat[iclosestDist[ilon,ilat],1],cityLonLat[iclosestDist[ilon,ilat],0]]).km
-		print np.round(100*ilon/float(lenLon),2),'%'
+		print(np.round(100*ilon/float(lenLon),2),'%')
 
 	closestDistM=np.ma.masked_array(closestDist,imageMask1)
 	iclosestDistM=np.ma.masked_array(iclosestDist,imageMask1)
@@ -211,7 +211,7 @@ def nearestCity(cityLonLat,zeroLonLat):
 		leastDist=np.amin(distances)
 		iclosestDist[i]=np.where(distances==leastDist)[0][0]
 		closestDist[i]=geopy.distance.distance([zeroLonLat[i,1],zeroLonLat[i,0]],[cityLonLat[iclosestDist[i],1],cityLonLat[iclosestDist[i],0]]).km
-		print np.round(100*i/float(len(zeroLonLat)),2),'%'
+		print(np.round(100*i/float(len(zeroLonLat)),2),'%')
 
 	return closestDist,iclosestDist
 
@@ -231,7 +231,7 @@ makePlots=False
 ##############################################
 # Gridded Malnutrition
 ##############################################
-print 'Malnutrition'
+print('Malnutrition')
 tifWasting=TIFF.open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2010_PREVALENCE_Y2018M02D28.TIF',mode='r')
 ds=gdal.Open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2015_PREVALENCE_Y2018M02D28.TIF')
 width1 = ds.RasterXSize
@@ -281,7 +281,7 @@ plt.savefig(wdfigs+'wasting',dpi=700)
 ##############################################
 # Gridded Population
 ##############################################
-print 'Population'
+print('Population')
 ds=gdal.Open(wddata+'population/gpw_v4_basic_demographic_characteristics_rev10_a000_004bt_2010_cntm_30_sec.tif')
 width1 = ds.RasterXSize
 height1 = ds.RasterYSize
@@ -379,7 +379,7 @@ plt.savefig(wdfigs+'malnumber',dpi=700)
 ######################################################
 # Travel Time
 ######################################################
-print 'Roads'
+print('Roads')
 
 #rRoads = shapefile.Reader(wddata+'openstreetmap/'+country+'/openstreetmap/nga_trs_roads_osm.shp')
 traveltif=TIFF.open(wddata+'travel_time/accessibility_to_cities_2015_v1.0.tif',mode='r')
