@@ -23,9 +23,9 @@ import shapefile
 from shapely.geometry import shape, Point
 import matplotlib.patches as patches
 from math import sin, cos, sqrt, atan2, radians, pi, degrees
-from geopy.geocoders import Nominatim
-geolocator = Nominatim()
-import geopy.distance
+# from geopy.geocoders import Nominatim
+# geolocator = Nominatim()
+# import geopy.distance
 from scipy import ndimage
 from scipy.signal import convolve2d
 from sklearn import linear_model
@@ -536,37 +536,74 @@ for h in range(height):
 
 latc=latc[::-1]
 
+# lonz=[]
+gridc=np.zeros(shape=(len(lonc),len(latc),2))
+for x in range(len(lonc)):
+	gridc[x,:,0]=lonc[x]
+	# lonz.append(lonc[x])
+for y in range(len(latc)):
+	gridc[:,y,1]=latc[y]
+	
+midpointsc=createMidpointGrid(gridc,pixelsize)
+
 marketShedsfake=ds.ReadAsArray()
-marketSheds=np.array(shape=(marketShedsfake.shape))
+marketSheds=np.zeros(shape=(marketShedsfake.shape))
 
 f = open(wddata+'population/MSH_50K_TX.csv')
 i=-1
+lattest=[]
+lontest=[]
 for line in f:
 	i+=1
 	if i==0:
 		continue
 	tmp=line.split(',')
 	city=tmp[0]
-	lat=tmp[6]
-	lon=tmp[7]
-	print line
-	exit()
+	lattest.append(tmp[6])
+	lontest.append(tmp[7])
+# 
+# for i in range(len(lontest)):
+#     for j in range(len(lonz)):
+#         if lon[i]==lonz[j]:
+#             print('match')
+
+# [lat==latc[i] for i in range(len(latc))]
+
 
 plt.clf()
-plt.imshow(marketSheds,cmap=cm.nipy_spectral)
+plt.imshow(marketShedsfake,cmap=cm.nipy_spectral)
 plt.yticks([])
 plt.xticks([])
 plt.title('African MarketSheds')
 plt.colorbar()
 plt.savefig(wdfigs+'marketSheds',dpi=700)
-exit()
 
-latl=np.radians(latp[::-1])+1.2
-lonl=np.radians(lonp)+1.2
-lutpop=RectSphereBivariateSpline(latl, lonl, pop)
+# latl=np.radians(latp[::-1])+1.2
+# lonl=np.radians(lonp)+1.2
+# lutpop=RectSphereBivariateSpline(latl, lonl, pop)
+# 
+# newLats,newLons=np.meshgrid(np.radians(latm[::-1])+1.2,np.radians(lonm)+1.2)
+# pop1=lutpop.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(latm))).T
 
-newLats,newLons=np.meshgrid(np.radians(latm[::-1])+1.2,np.radians(lonm)+1.2)
-pop1=lutpop.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(latm))).T
+#market shed name list
+citynames=["" for x in range(629)]
+countrynames=["" for x in range(629)]
+previouscity=1
+firstline=True
+index = 0
+
+for line in f:
+    if firstline:
+        firstline = False
+        continue
+    tmp=line.split(',')
+    marketname=tmp[0]
+    countrycode=tmp[2]
+    if(np.amax([marketname==citynames[i] for i in range(len(citynames))])==0):
+        citynames[index]=marketname
+        countrynames[index]=countrycode
+        index=index+1
+    previouscity=tmp[0]
 
 
 
