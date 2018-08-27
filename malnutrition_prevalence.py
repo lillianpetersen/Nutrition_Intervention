@@ -15,7 +15,7 @@ import random
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 from PIL import Image
-#from osgeo import gdal
+from osgeo import gdal
 #import ogr
 from IPython import embed
 import shapefile
@@ -277,7 +277,7 @@ plt.title('gridded wasting 2015')
 plt.colorbar()
 plt.savefig(wdfigs+'wasting',dpi=700)
 
-'''
+
 ##############################################
 # Gridded Population
 ##############################################
@@ -456,16 +456,16 @@ for record in records:
 
 closestcity,iclosestcity=nearestCity(centerlonlat,citycenters)
 
-plt.clf()
-map = Basemap(llcrnrlon=lonm[0],llcrnrlat=np.amin(latm),urcrnrlon=lonm[-1],urcrnrlat=np.amax(latm), projection='lcc',lon_0=(lonm[-1]+lonm[0])/2,lat_0=(latm[-1]+latm[0])/2,resolution='i')
-map.drawcoastlines(linewidth=1.5)
-map.drawcountries()
-ax = plt.gca()
-for i in range(len(centerlonlat)):
-	x,y=map(centerlonlat[i,0],centerlonlat[i,1])
-	map.plot(x,y,'bo',markersize=1.5)
-plt.title('Nigerian Roads from Open Street Map')
-plt.savefig(wdfigs+'cities',dpi=700)
+# plt.clf()
+# map = Basemap(llcrnrlon=lonm[0],llcrnrlat=np.amin(latm),urcrnrlon=lonm[-1],urcrnrlat=np.amax(latm), projection='lcc',lon_0=(lonm[-1]+lonm[0])/2,lat_0=(latm[-1]+latm[0])/2,resolution='i')
+# map.drawcoastlines(linewidth=1.5)
+# map.drawcountries()
+# ax = plt.gca()
+# for i in range(len(centerlonlat)):
+# 	x,y=map(centerlonlat[i,0],centerlonlat[i,1])
+# 	map.plot(x,y,'bo',markersize=1.5)
+# plt.title('Nigerian Roads from Open Street Map')
+# plt.savefig(wdfigs+'cities',dpi=700)
 
 ##############################################
 # city tif
@@ -511,7 +511,6 @@ plt.title('Children under 4 in 2020')
 plt.colorbar()
 plt.savefig(wdfigs +'city_map',dpi=700)
 
-'''
 
 
 ds=gdal.Open(wddata+'travel_time/TT_250K--SSA.tif')
@@ -635,5 +634,24 @@ for line in f:
         index=index+1
     previouscity=tmp[0]
 
+hundredTif=TIFF.open(wddata+'travel_time/TT_100K--SSA.tif',mode='r')
+ds=gdal.Open(wddata+'travel_time/TT_100K--SSA.tif')
+width = ds.RasterXSize
+height = ds.RasterYSize
+gt = ds.GetGeoTransform()
+minx = gt[0]
+miny = gt[3] + width*gt[4] + height*gt[5] 
+maxx = gt[0] + width*gt[1] + height*gt[2]
+maxy = gt[3] 
+pixelsize=abs(gt[-1])
 
+hundredsheds=ds.ReadAsArray()
+hundredsheds[hundredsheds<0]=-1
 
+plt.clf()
+plt.imshow(hundredsheds,cmap=cm.nipy_spectral, vmin=1, vmax=2)
+plt.yticks([])
+plt.xticks([])
+plt.title('African MarketSheds')
+plt.colorbar()
+plt.show()
