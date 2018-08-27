@@ -513,6 +513,36 @@ plt.savefig(wdfigs +'city_map',dpi=700)
 
 '''
 
+
+ds=gdal.Open(wddata+'travel_time/TT_250K--SSA.tif')
+width = ds.RasterXSize
+height = ds.RasterYSize
+gt = ds.GetGeoTransform()
+minx = gt[0]
+miny = gt[3] + width*gt[4] + height*gt[5] 
+maxx = gt[0] + width*gt[1] + height*gt[2]
+maxy = gt[3] 
+pixelsize=abs(gt[-1])
+
+latc=np.ones(shape=(height))
+lonc=np.ones(shape=(width))
+for w in range(width):
+	lonc[w]=minx+w*pixelsize
+for h in range(height):
+	latc[h]=miny+h*pixelsize
+
+latc=latc[::-1]
+traveltime=ds.ReadAsArray()
+traveltime[traveltime<0]=-10
+
+plt.clf()
+plt.imshow(traveltime,cmap=cm.nipy_spectral,vmin=1,vmax=2)
+plt.yticks([])
+plt.xticks([])
+plt.title('travel time to 250k')
+plt.colorbar()
+plt.savefig(wdfigs +'traveltime250k',dpi=700)
+
 ##############################################
 # Market sheds
 ##############################################
