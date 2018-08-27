@@ -446,10 +446,12 @@ centerlonlat=np.zeros(shape=(4716,2))
 cityname=[]
 citycountry=[]
 i=0
+
 for record in records:
-    if record[29]=='Africa' and record[5]>20000:
-        centerlonlat[i,0]=record[3]
-        centerlonlat[i,1]=record[4]
+    if record[29]=='Africa' and record[5]>200000:
+        print(record[10])
+        centerlonlat[i,1]=record[3]
+        centerlonlat[i,0]=record[4]
         cityname.append(record[10])
         citycountry.append(record[30])
         i+=1
