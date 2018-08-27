@@ -22,7 +22,7 @@ from IPython import embed
 import shapefile
 from shapely.geometry import shape, Point
 import matplotlib.patches as patches
-from math import sin, cos, sqrt, atan2, radians, pi, degrees
+from math import sin, cos, sqrt, atan2, radians, pi, degrees 
 from geopy.geocoders import Nominatim
 geolocator = Nominatim()
 import geopy.distance
@@ -468,13 +468,14 @@ latp=np.ma.masked_array(lat,imageMask.all(axis=1))
 latp=np.ma.compressed(latp)
 
 ## Masks
-imageMask2=imageMask # imageMask2=(lat,lon)
-imageMask2=imageMask2[~imageMask2.all(axis=1)]
-imageMask2=imageMask2[:,~imageMask2.all(axis=0)]
-imageMask1=np.swapaxes(imageMask2,0,1) # imageMask1=(lon,lat)
-imageMask3=np.zeros(shape=(imageMask2.shape[0],imageMask2.shape[1],10),dtype=bool)
+imageMask21km=imageMask # imageMask2=(lat,lon)
+imageMask21km=imageMask21km[~imageMask21km.all(axis=1)]
+imageMask21km=imageMask21km[:,~imageMask21km.all(axis=0)]
+imageMask11km=np.swapaxes(imageMask21km,0,1) # imageMask1=(lon,lat)
+imageMask31km=np.zeros(shape=(imageMask21km.shape[0],imageMask21km.shape[1],10),dtype=bool)
 for i in range(10):
-	imageMask3[:,:,i]=imageMask2 # imageMask2=(lat,lon,3)
+	imageMask31km[:,:,i]=imageMask21km # imageMask2=(lat,lon,3)
+
 
 ## grid
 grid = np.zeros(shape=(len(lonp),len(latp),2))
@@ -512,10 +513,21 @@ latM=latM[::-1] # reverse the order
 mal=tifWasting.read_image()
 mal[mal>1]=0.0308212 # The average of this weird pixel's neighbors
 
-mal=mal[:1740]
-latM=latM[:1740]
-mal=mal[:,185:]
-lonM=lonM[185:]
+##### Scale to Africa #####
+mal=mal[latM<np.amax(latp)+pixelsize]
+latM=latM[latM<np.amax(latp)+pixelsize]
+mal=mal[latM>np.amin(latp)]
+latM=latM[latM>np.amin(latp)]
+
+mal=mal[:,lonM<np.amax(lonp)+pixelsize]
+lonM=lonM[lonM<np.amax(lonp)+pixelsize]
+mal=mal[:,lonM>np.amin(lonp)]
+lonM=lonM[lonM>np.amin(lonp)]
+
+#mal=mal[:1740]
+#latM=latM[:1740]
+#mal=mal[:,185:]
+#lonM=lonM[185:]
 
 gridm=np.zeros(shape=(len(lonM),len(latM),2))
 for x in range(len(lonM)):
@@ -528,14 +540,35 @@ africaMask[africaMask>=0]=0
 africaMask[africaMask<0]=1
 
 mal[mal<0]=0
-np.save(wdvars+'wasting',mal)
+
+### Mask ###
+latl=np.radians(latp[::-1])+1.2
+lonl=np.radians(lonp)+1.2
+lutMask=RectSphereBivariateSpline(latl, lonl, imageMask21km)
+
+newLats,newLons=np.meshgrid(np.radians(latM[::-1])+1.2,np.radians(lonM)+1.2)
+imageMask2=lutMask.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonM),len(latM))).T
+
+imageMask2=np.round(imageMask2,0)
+imageMask2[imageMask2>1]=1
+imageMask2=np.array(imageMask2,dtype=int)
+
+imageMask1=np.swapaxes(imageMask2,0,1) # imageMask1=(lon,lat)
+imageMask3=np.zeros(shape=(imageMask2.shape[0],imageMask2.shape[1],10),dtype=bool)
+for i in range(10):
+	imageMask3[:,:,i]=imageMask2# imageMask2=(lat,lon,3)
+
+#np.save(wdvars+'wasting',mal)
+
+mal=np.ma.masked_array(mal,imageMask2)
+
+imageMask2[mal==0]=1
 
 plt.clf()
-plt.imshow(mal,cmap=cm.jet,vmax=0.3)
-plt.title('gridded wasting 2015')
+plt.imshow(mal,cmap=cm.jet)
+plt.title('gridded wasting 2010')
 plt.colorbar()
-plt.savefig(wdfigs+'wasting',dpi=700)
-exit()
+plt.savefig(wdfigs+'wastingNigeria',dpi=700)
 
 ##############################################
 # Gridded Population
@@ -552,31 +585,31 @@ maxy = gt[3]
 pixelsize=abs(gt[-1])
 
 # lat and lon
-latp=np.ones(shape=(height1))
-lonp=np.ones(shape=(width1))
+latpop=np.ones(shape=(height1))
+lonpop=np.ones(shape=(width1))
 for w in range(width1):
-	lonp[w]=minx+w*pixelsize
+	lonpop[w]=minx+w*pixelsize
 for h in range(height1):
-	latp[h]=miny+h*pixelsize
-latp=latp[::-1] # reverse the order
+	latpop[h]=miny+h*pixelsize
+latpop=latpop[::-1] # reverse the order
 
 worldPop=ds.ReadAsArray()
 ##### Scale to Africa #####
-pop=worldPop[latp<np.amax(latM)+pixelsize]
-latp=latp[latp<np.amax(latM)+pixelsize]
-pop=pop[latp>np.amin(latM)]
-latp=latp[latp>np.amin(latM)]
+pop=worldPop[latpop<np.amax(latM)+pixelsize]
+latpop=latpop[latpop<np.amax(latM)+pixelsize]
+pop=pop[latpop>np.amin(latM)]
+latpop=latpop[latpop>np.amin(latM)]
 
-pop=pop[:,lonp<np.amax(lonM)+pixelsize]
-lonp=lonp[lonp<np.amax(lonM)+pixelsize]
-pop=pop[:,lonp>np.amin(lonM)]
-lonp=lonp[lonp>np.amin(lonM)]
+pop=pop[:,lonpop<np.amax(lonM)+pixelsize]
+lonpop=lonpop[lonpop<np.amax(lonM)+pixelsize]
+pop=pop[:,lonpop>np.amin(lonM)]
+lonpop=lonpop[lonpop>np.amin(lonM)]
 
-gridp=np.zeros(shape=(len(lonp),len(latp),2))
-for x in range(len(lonp)):
-	gridp[x,:,0]=lonp[x]
-for y in range(len(latp)):
-	gridp[:,y,1]=latp[y]
+gridp=np.zeros(shape=(len(lonpop),len(latpop),2))
+for x in range(len(lonpop)):
+	gridp[x,:,0]=lonpop[x]
+for y in range(len(latpop)):
+	gridp[:,y,1]=latpop[y]
 
 ## Plot old and new grid
 #plt.clf()
@@ -594,8 +627,8 @@ plt.title('gridded population')
 plt.colorbar()
 plt.savefig(wdfigs+'pop',dpi=700)
 
-latl=np.radians(latp[::-1])+1.2
-lonl=np.radians(lonp)+1.2
+latl=np.radians(latpop[::-1])+1.2
+lonl=np.radians(lonpop)+1.2
 lutpop=RectSphereBivariateSpline(latl, lonl, pop)
 
 newLats,newLons=np.meshgrid(np.radians(latM[::-1])+1.2,np.radians(lonM)+1.2)
@@ -681,8 +714,15 @@ travelbi=np.array(travel)
 travelbi[travel!=0]=1
 travelbi=1-travelbi
 
+latl=np.radians(latt[::-1])+1.2
+lonl=np.radians(lont)+1.2
+luttravel=RectSphereBivariateSpline(latl, lonl, imageMask21km)
+
+newLats,newLons=np.meshgrid(np.radians(latM[::-1])+1.2,np.radians(lonM)+1.2)
+travel=lutMask.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonM),len(latM))).T
+
 plt.clf()
-plt.imshow(travelbi,cmap=cm.gist_ncar_r)
+plt.imshow(travel,cmap=cm.gist_ncar_r)
 plt.title('Travel Time')
 plt.colorbar()
 plt.savefig(wdfigs+'travel',dpi=700)
@@ -741,6 +781,14 @@ except:
 	np.save(wdvars+'nigeria_raodDensity',roadDensity)
 
 roadDensity=np.swapaxes(roadDensity[:,:,:],0,1)
+
+latl=np.radians(latp[::-1])+1.2
+lonl=np.radians(lonp)+1.2
+lutroad=RectSphereBivariateSpline(latl, lonl, imageMask21km)
+
+newLats,newLons=np.meshgrid(np.radians(latM[::-1])+1.2,np.radians(lonM)+1.2)
+imageMask2=lutroad.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonM),len(latM))).T
+
 roadDensity=np.ma.masked_array(roadDensity,imageMask3[:,:,:3])
 
 if makePlots:
@@ -1211,112 +1259,112 @@ if makePlots:
 ###########################################
 # Land Classification
 ###########################################
-print 'Land Classification'
-try:
-	landCover=np.load(wdvars+'nigeria_landcover.npy')
-except:
-	landTypeTif=TIFF.open(wddata+'nigeria_landtype/nigeriaLandClassification.tif',mode='r')
-	
-	ds=gdal.Open(wddata+'nigeria_landtype/nigeriaLandClassification.tif')
-	width = ds.RasterXSize
-	height = ds.RasterYSize
-	gt = ds.GetGeoTransform()
-	minx = gt[0]
-	miny = gt[3] + width*gt[4] + height*gt[5] 
-	maxx = gt[0] + width*gt[1] + height*gt[2]
-	maxy = gt[3] 
-	pixelsizel=abs(gt[-1])
-	
-	latl=np.ones(shape=(height))
-	lonl=np.ones(shape=(width))
-	for w in range(width):
-		lonl[w]=minx+w*pixelsizel
-	for h in range(height):
-		latl[h]=miny+h*pixelsizel
-	latl=np.radians(latl)
-	lonl=np.radians(lonl)
-	
-	landCoverFull=landTypeTif.read_image()
-	landCoverDict={
-		11:'Post-flooding or irrigated croplands',
-		14:'Rainfed croplands',
-		20:'Mosaic cropland (50-70%) / vegetation (grassland shrubland forest) (20-50%)',
-		30:'Mosaic vegetation (grassland shrubland forest) (50-70%) / cropland (20-50%)',
-		40:'Closed to open (>15%) broadleaved evergreen and/or semi-deciduous forest (>5m)',
-		50:'Closed (>40%) broadleaved deciduous forest (>5m)',
-		60:'Open (15-40%) broadleaved deciduous forest (>5m)',
-		70:'Closed (>40%) needleleaved evergreen forest (>5m)',
-		90:'Open (15-40%) needleleaved deciduous or evergreen forest (>5m)',
-		100:'Closed to open (>15%) mixed broadleaved and needleleaved forest (>5m)',
-		110:'Mosaic forest-shrubland (50-70%) / grassland (20-50%)',
-		120:'Mosaic grassland (50-70%) / forest-shrubland (20-50%)',
-		130:'Closed to open (>15%) shrubland (<5m)',
-		140:'Closed to open (>15%) grassland',
-		150:'Sparse (>15%) vegetation (woody vegetation shrubs grassland)',
-		160:'Closed (>40%) broadleaved forest regularly flooded - Fresh water',
-		170:'Closed (>40%) broadleaved semi-deciduous and/or evergreen forest regularly flooded - saline water',
-		180:'Closed to open (>15%) vegetation (grassland shrubland woody vegetation) on regularly flooded or waterlogged soil - fresh brackish or saline water',
-		190:'Artificial surfaces and associated areas (urban areas >50%) GLOBCOVER 2009',
-		200:'Bare areas',
-		210:'Water bodies',
-		220:'Permanent snow and ice',
-		230:'Unclassified'}
-	
-	landCoverDictNew={
-		11:'Post-flooding or irrigated croplands',
-		14:'Rainfed croplands',
-		20:'Mosaic cropland (50-70%) / vegetation (grassland shrubland forest) (20-50%)',
-		30:'Mosaic vegetation (grassland shrubland forest) (50-70%) / cropland (20-50%)',
-		40:'Closed to open (>15%) broadleaved evergreen and/or semi-deciduous forest (>5m)',
-		50:'Closed (>40%) broadleaved deciduous forest (>5m)',
-		60:'Open (15-40%) broadleaved deciduous forest (>5m)',
-		70:'Closed (>40%) needleleaved evergreen forest (>5m)',
-		90:'Open (15-40%) needleleaved deciduous or evergreen forest (>5m)',
-		100:'Closed to open (>15%) mixed broadleaved and needleleaved forest (>5m)',
-		110:'Mosaic forest-shrubland (50-70%) / grassland (20-50%)',
-		120:'Mosaic grassland (50-70%) / forest-shrubland (20-50%)',
-		130:'Closed to open (>15%) shrubland (<5m)',
-		140:'Closed to open (>15%) grassland',
-		150:'Sparse (>15%) vegetation (woody vegetation shrubs grassland)',
-		160:'Closed (>40%) broadleaved forest regularly flooded - Fresh water',
-		170:'Closed (>40%) broadleaved semi-deciduous and/or evergreen forest regularly flooded - saline water',
-		180:'Closed to open (>15%) vegetation (grassland shrubland woody vegetation) on regularly flooded or waterlogged soil - fresh brackish or saline water',
-		210:'Water bodies',
-		190:'Artificial surfaces and associated areas (urban areas >50%) GLOBCOVER 2009',
-		200:'Bare areas',
-		220:'Permanent snow and ice',
-		230:'Unclassified'}
-	
-	convertLandCover=str(landCoverDictNew).replace('{','').replace('}','').split(',')
-	#convertLandCover=str(landCoverConversion).replace('{','').replace('}','').split(',')
-	landCoverSorted=np.array(landCoverFull)
-	for i in range(len(convertLandCover)):
-		landCoverSorted[landCoverSorted==int(convertLandCover[i].split(':')[0])]=i
-	
-	plt.clf()
-	plt.imshow(landCoverSorted,cmap=cm.jet_r)
-	plt.colorbar()
-	plt.savefig(wdfigs+'landCover_fullres_sorted',dpi=700)
-	
-	### Convert to 1km
-	lutland=RectSphereBivariateSpline(latl, lonl, landCoverSorted)
-	
-	newLats=np.radians(latM[::-1])
-	newLons=np.radians(lonM)
-	newLats,newLons=np.meshgrid(newLats,newLons)
-	landCover=lutland.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonM),len(latM))).T
-	
-	plt.clf()
-	plt.imshow(landCover,cmap=cm.gist_ncar,vmin=0)
-	plt.colorbar()
-	plt.xticks([])
-	plt.yticks([])
-	plt.title('Nigeria Land Cover')
-	plt.savefig(wdfigs+'landCover',dpi=700)
-	
-	np.save(wdvars+'nigeria_landCover',landCover)
-
-landCover=np.ma.masked_array(landCover,imageMask2)
+#print 'Land Classification'
+#try:
+#	landCover=np.load(wdvars+'nigeria_landcover.npy')
+#except:
+#	landTypeTif=TIFF.open(wddata+'nigeria_landtype/nigeriaLandClassification.tif',mode='r')
+#	
+#	ds=gdal.Open(wddata+'nigeria_landtype/nigeriaLandClassification.tif')
+#	width = ds.RasterXSize
+#	height = ds.RasterYSize
+#	gt = ds.GetGeoTransform()
+#	minx = gt[0]
+#	miny = gt[3] + width*gt[4] + height*gt[5] 
+#	maxx = gt[0] + width*gt[1] + height*gt[2]
+#	maxy = gt[3] 
+#	pixelsizel=abs(gt[-1])
+#	
+#	latl=np.ones(shape=(height))
+#	lonl=np.ones(shape=(width))
+#	for w in range(width):
+#		lonl[w]=minx+w*pixelsizel
+#	for h in range(height):
+#		latl[h]=miny+h*pixelsizel
+#	latl=np.radians(latl)
+#	lonl=np.radians(lonl)
+#	
+#	landCoverFull=landTypeTif.read_image()
+#	landCoverDict={
+#		11:'Post-flooding or irrigated croplands',
+#		14:'Rainfed croplands',
+#		20:'Mosaic cropland (50-70%) / vegetation (grassland shrubland forest) (20-50%)',
+#		30:'Mosaic vegetation (grassland shrubland forest) (50-70%) / cropland (20-50%)',
+#		40:'Closed to open (>15%) broadleaved evergreen and/or semi-deciduous forest (>5m)',
+#		50:'Closed (>40%) broadleaved deciduous forest (>5m)',
+#		60:'Open (15-40%) broadleaved deciduous forest (>5m)',
+#		70:'Closed (>40%) needleleaved evergreen forest (>5m)',
+#		90:'Open (15-40%) needleleaved deciduous or evergreen forest (>5m)',
+#		100:'Closed to open (>15%) mixed broadleaved and needleleaved forest (>5m)',
+#		110:'Mosaic forest-shrubland (50-70%) / grassland (20-50%)',
+#		120:'Mosaic grassland (50-70%) / forest-shrubland (20-50%)',
+#		130:'Closed to open (>15%) shrubland (<5m)',
+#		140:'Closed to open (>15%) grassland',
+#		150:'Sparse (>15%) vegetation (woody vegetation shrubs grassland)',
+#		160:'Closed (>40%) broadleaved forest regularly flooded - Fresh water',
+#		170:'Closed (>40%) broadleaved semi-deciduous and/or evergreen forest regularly flooded - saline water',
+#		180:'Closed to open (>15%) vegetation (grassland shrubland woody vegetation) on regularly flooded or waterlogged soil - fresh brackish or saline water',
+#		190:'Artificial surfaces and associated areas (urban areas >50%) GLOBCOVER 2009',
+#		200:'Bare areas',
+#		210:'Water bodies',
+#		220:'Permanent snow and ice',
+#		230:'Unclassified'}
+#	
+#	landCoverDictNew={
+#		11:'Post-flooding or irrigated croplands',
+#		14:'Rainfed croplands',
+#		20:'Mosaic cropland (50-70%) / vegetation (grassland shrubland forest) (20-50%)',
+#		30:'Mosaic vegetation (grassland shrubland forest) (50-70%) / cropland (20-50%)',
+#		40:'Closed to open (>15%) broadleaved evergreen and/or semi-deciduous forest (>5m)',
+#		50:'Closed (>40%) broadleaved deciduous forest (>5m)',
+#		60:'Open (15-40%) broadleaved deciduous forest (>5m)',
+#		70:'Closed (>40%) needleleaved evergreen forest (>5m)',
+#		90:'Open (15-40%) needleleaved deciduous or evergreen forest (>5m)',
+#		100:'Closed to open (>15%) mixed broadleaved and needleleaved forest (>5m)',
+#		110:'Mosaic forest-shrubland (50-70%) / grassland (20-50%)',
+#		120:'Mosaic grassland (50-70%) / forest-shrubland (20-50%)',
+#		130:'Closed to open (>15%) shrubland (<5m)',
+#		140:'Closed to open (>15%) grassland',
+#		150:'Sparse (>15%) vegetation (woody vegetation shrubs grassland)',
+#		160:'Closed (>40%) broadleaved forest regularly flooded - Fresh water',
+#		170:'Closed (>40%) broadleaved semi-deciduous and/or evergreen forest regularly flooded - saline water',
+#		180:'Closed to open (>15%) vegetation (grassland shrubland woody vegetation) on regularly flooded or waterlogged soil - fresh brackish or saline water',
+#		210:'Water bodies',
+#		190:'Artificial surfaces and associated areas (urban areas >50%) GLOBCOVER 2009',
+#		200:'Bare areas',
+#		220:'Permanent snow and ice',
+#		230:'Unclassified'}
+#	
+#	convertLandCover=str(landCoverDictNew).replace('{','').replace('}','').split(',')
+#	#convertLandCover=str(landCoverConversion).replace('{','').replace('}','').split(',')
+#	landCoverSorted=np.array(landCoverFull)
+#	for i in range(len(convertLandCover)):
+#		landCoverSorted[landCoverSorted==int(convertLandCover[i].split(':')[0])]=i
+#	
+#	plt.clf()
+#	plt.imshow(landCoverSorted,cmap=cm.jet_r)
+#	plt.colorbar()
+#	plt.savefig(wdfigs+'landCover_fullres_sorted',dpi=700)
+#	
+#	### Convert to 1km
+#	lutland=RectSphereBivariateSpline(latl, lonl, landCoverSorted)
+#	
+#	newLats=np.radians(latM[::-1])
+#	newLons=np.radians(lonM)
+#	newLats,newLons=np.meshgrid(newLats,newLons)
+#	landCover=lutland.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonM),len(latM))).T
+#	
+#	plt.clf()
+#	plt.imshow(landCover,cmap=cm.gist_ncar,vmin=0)
+#	plt.colorbar()
+#	plt.xticks([])
+#	plt.yticks([])
+#	plt.title('Nigeria Land Cover')
+#	plt.savefig(wdfigs+'landCover',dpi=700)
+#	
+#	np.save(wdvars+'nigeria_landCover',landCover)
+#
+#landCover=np.ma.masked_array(landCover,imageMask2)
 
 ###########################################
 # Trading Indicies
