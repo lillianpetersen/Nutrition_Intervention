@@ -633,6 +633,9 @@ for i in range(len(listofcities)):
             distanceDictionary[listofcities[i]].append(gmapreturn['distance']['value'])
             distanceArray[i,j]=gmapreturn['distance']['value']
 
+###convert to cost of transport per tonne
+# distanceDictionary.update((x, y/1000*) for x, y in distanceDictionary.items())
+
 ######################################
 # Market Sheds from 250k
 ######################################
@@ -677,9 +680,19 @@ for ilat in range(len(cities[:,0])):
 			citycenters[ilat,ilon]=1
 			cityrad[ilat-10:ilat+11,ilon-10:ilon+11]=1
 
+gridc=np.zeros(shape=(len(lonc),len(latc),2))
+for x in range(len(lonc)):
+	gridc[x,:,0]=lonc[x]
+	# lonz.append(lonc[x])
+for y in range(len(latc)):
+	gridc[:,y,1]=latc[y]
+
 
 citycenters=np.ma.masked_array(citycenters,mask)
 centersLatLon=gridc[citycenters==1]
+
+midpointsc=createMidpointGrid(gridc,pixelsize)
+centersLonLat=midpointsc[bitybenters==1]
 
 majorcities=np.zeros(shape=(200,2))
 majorCityNames=[]
@@ -697,7 +710,6 @@ for line in f:
 	majorCityPop[i]=tmp[3]
 	majorcities[i]=geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).latitude,geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).longitude
 	print i,majorCityNames[i],majorcities[i,0],majorcities[i,1]
-
 
 plt.clf()
 plt.imshow(citycenters,cmap=cm.nipy_spectral_r)
