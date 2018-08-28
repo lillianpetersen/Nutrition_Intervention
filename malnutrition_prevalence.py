@@ -167,6 +167,14 @@ def createMidpointGrid(grid,pixelsize):
 		gridMid[:,ilat,1]=np.mean([grid[:,ilat,1],grid[:,ilat,1]+pixelsize])
 	return gridMid
 
+def createMidpointGridlatlon(grid,pixelsize):
+	gridMid=np.zeros(shape=(grid.shape))
+	for ilat in range(len(grid[:,0,0])):
+		gridMid[ilat,:,0]=np.mean([grid[ilat,0,0],grid[ilat,0,0]+pixelsize])
+	for ilon in range(len(grid[0,:,1])):
+		gridMid[:,ilon,1]=np.mean([grid[:,ilon,1],grid[:,ilon,1]+pixelsize])
+	return gridMid
+
 def findNearest(cityLonLat,gridMid,imageMask1):
 	'''Give it:
 	1. one dimentional lon lat data set
@@ -680,19 +688,34 @@ for ilat in range(len(cities[:,0])):
 			citycenters[ilat,ilon]=1
 			cityrad[ilat-10:ilat+11,ilon-10:ilon+11]=1
 
-gridc=np.zeros(shape=(len(lonc),len(latc),2))
-for x in range(len(lonc)):
-	gridc[x,:,0]=lonc[x]
+# for i in citycenters:
+#     for j in i:
+#         if 
+#     exit()
+    
+gridc=np.zeros(shape=(len(latc),len(lonc),2))
+for x in range(len(latc)):
+	gridc[x,:,0]=latc[x]
 	# lonz.append(lonc[x])
-for y in range(len(latc)):
-	gridc[:,y,1]=latc[y]
+for y in range(len(lonc)):
+	gridc[:,y,1]=lonc[y]
 
+midpointsc=createMidpointGridlatlon(gridc,pixelsize)
 
 citycenters=np.ma.masked_array(citycenters,mask)
 centersLatLon=gridc[citycenters==1]
 
-midpointsc=createMidpointGrid(gridc,pixelsize)
-centersLonLat=midpointsc[bitybenters==1]
+closestcity,iclosestcity=nearestCity(majorcities,centersLatLon)
+
+IDofmarketsheds=[]
+citymatches=[]
+for cityindex in iclosestcity:
+    IDofmarketsheds.append(majorCityNames[cityindex])
+    citymatches.append(majorcities[cityindex])
+    
+    
+# findNearest2(centersLatLon,midpointsc)
+# closestcity,iclosestcity=nearestCity(majorcities,centersLatLon) OOF
 
 majorcities=np.zeros(shape=(200,2))
 majorCityNames=[]
