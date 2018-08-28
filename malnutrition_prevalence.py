@@ -702,14 +702,15 @@ f=open(wddata+'travel_time/african_major_cities.csv','r')
 i=-1
 for line in f:
 	i+=1
-	if majorcities[i,0]!=0:
-		continue
 	tmp=line.split(',')
 	majorCityNames.append(tmp[1])
 	majorCityCountries.append(tmp[2])
 	majorCityPop[i]=tmp[3]
-	majorcities[i]=geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).latitude,geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).longitude
-	print i,majorCityNames[i],majorcities[i,0],majorcities[i,1]
+	if majorCityNames[i]=='El Mahallah el Kubra':
+		majorcities[i]=30.9697,31.1681
+	else:
+		majorcities[i]=geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).latitude,geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).longitude
+	print i,majorCityNames[i],majorCityCountries[i],majorcities[i,0],majorcities[i,1]
 
 plt.clf()
 plt.imshow(citycenters,cmap=cm.nipy_spectral_r)
