@@ -638,8 +638,12 @@ for i in range(len(listofcities)):
             distanceArray[i,j]=0
         else:
             gmapreturn=(gmaps.distance_matrix(listofcities[i],listofcities[j])['rows'][0]['elements'][0])
-            distanceDictionary[listofcities[i]].append(gmapreturn['distance']['value'])
-            distanceArray[i,j]=gmapreturn['distance']['value']
+            if(gmapreturn=={u'status': u'ZERO_RESULTS'}):
+                distanceDictionary[listofcities[i]].append(99999)
+                distanceArray[i,j]=99999
+            else:
+                distanceDictionary[listofcities[i]].append(gmapreturn['distance']['value'])
+                distanceArray[i,j]=gmapreturn['distance']['value']
 
 ###convert to cost of transport per tonne
 # distanceDictionary.update((x, y/1000*) for x, y in distanceDictionary.items())
@@ -681,9 +685,9 @@ cities=np.ma.masked_array(cities,mask)
 
 cityrad=np.zeros(shape=(cities.shape))
 citycenters=np.zeros(shape=(cities.shape))
-for ilat in range(len(cities[:,0])):
+for ilat in range(len(cities[:,0])-1,-1,-1):
 	print np.round(100*ilat/float(len(cities[:,0])),2),'%'
-	for ilon in range(len(cities[:,1])):
+	for ilon in range(len(cities[:,1])-1,-1,-1):
 		if cities[ilat,ilon]==0 and cityrad[ilat,ilon]==0:
 			citycenters[ilat,ilon]=1
 			cityrad[ilat-10:ilat+11,ilon-10:ilon+11]=1
@@ -712,15 +716,15 @@ citymatches=[]
 for cityindex in iclosestcity:
     IDofmarketsheds.append(majorCityNames[cityindex])
     citymatches.append(majorcities[cityindex])
-    
+
     
 # findNearest2(centersLatLon,midpointsc)
 # closestcity,iclosestcity=nearestCity(majorcities,centersLatLon) OOF
 
-majorcities=np.zeros(shape=(200,2))
+majorcities=np.zeros(shape=(204,2))
 majorCityNames=[]
 majorCityCountries=[]
-majorCityPop=np.zeros(shape=(200))
+majorCityPop=np.zeros(shape=(204))
 f=open(wddata+'travel_time/african_major_cities.csv','r')
 i=-1
 for line in f:
