@@ -658,6 +658,55 @@ latc=latc[::-1]
 traveltime=ds.ReadAsArray()
 traveltime[traveltime<0]=-10
 
+mask=np.zeros(shape=(traveltime.shape))
+mask[traveltime<0]=1
+traveltime=np.ma.masked_array(traveltime,mask)
+
+cities=np.array(traveltime)
+cities=np.ma.masked_array(cities,mask)
+cities[cities>.5]=1
+cities[cities<1]=0
+cities=np.ma.masked_array(cities,mask)
+
+cityrad=np.zeros(shape=(cities.shape))
+citycenters=np.zeros(shape=(cities.shape))
+for ilat in range(len(cities[:,0])):
+	print np.round(100*ilat/float(len(cities[:,0])),2),'%'
+	for ilon in range(len(cities[:,1])):
+		if cities[ilat,ilon]==0 and cityrad[ilat,ilon]==0:
+			citycenters[ilat,ilon]=1
+			cityrad[ilat-10:ilat+11,ilon-10:ilon+11]=1
+
+
+citycenters=np.ma.masked_array(citycenters,mask)
+centersLatLon=gridc[citycenters==1]
+
+majorcities=np.zeros(shape=(200,2))
+majorCityNames=[]
+majorCityCountries=[]
+majorCityPop=np.zeros(shape=(200))
+f=open(wddata+'travel_time/african_major_cities.csv','r')
+i=-1
+for line in f:
+	i+=1
+	if majorcities[i,0]!=0:
+		continue
+	tmp=line.split(',')
+	majorCityNames.append(tmp[1])
+	majorCityCountries.append(tmp[2])
+	majorCityPop[i]=tmp[3]
+	majorcities[i]=geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).latitude,geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).longitude
+	print i,majorCityNames[i],majorcities[i,0],majorcities[i,1]
+
+
+plt.clf()
+plt.imshow(citycenters,cmap=cm.nipy_spectral_r)
+plt.yticks([])
+plt.xticks([])
+plt.title('travel time to 250k')
+plt.colorbar()
+plt.savefig(wdfigs +'citiescenters',dpi=900)
+
 cities=np.array(
 
 plt.clf()
