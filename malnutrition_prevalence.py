@@ -30,6 +30,7 @@ from scipy.signal import convolve2d
 from sklearn import linear_model
 from scipy.interpolate import RectSphereBivariateSpline
 from libtiff import TIFF
+import googlemaps
 
 ###############################################
 # Functions
@@ -560,9 +561,8 @@ for line in f:
 		continue
 	tmp=line.split(',')
 	city=tmp[0]
-	lattest.append(tmp[6])
-	lontest.append(tmp[7])
-# 
+	# lattest.append(tmp[6])
+	# lontest.append(tmp[7])
 # for i in range(len(lontest)):
 #     for j in range(len(lonz)):
 #         if lon[i]==lonz[j]:
@@ -587,7 +587,10 @@ plt.savefig(wdfigs+'marketSheds',dpi=700)
 # pop1=lutpop.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(latm))).T
 
 #market shed name list
+
+f = open(wddata+'population/MSH_50K_TX.csv')
 citynames=["" for x in range(629)]
+citylonlats=np.zeros(shape=(629,2))
 countrynames=["" for x in range(629)]
 previouscity=1
 firstline=True
@@ -606,6 +609,24 @@ for line in f:
         index=index+1
     previouscity=tmp[0]
 
+index = 0
+for cityname in citynames:
+    georeturn=geolocator.geocode(cityname)
+    citylonlats[index]=(georeturn[1])
+    index=index+1
+
+######################################
+# mapping between
+######################################
+gmaps = googlemaps.Client(key='AIzaSyAv4HITl2PsxqID8CX8xbOa8qMv6CU03hA')
+distanceArray=np.zeros(shape=(94,94))
+counter=0
+for i in range(len(listofcities)):
+    for j in range(len(listofcities)):
+        if listofcities[i]==listofcities[j]:
+            distanceArray[i,j]=0
+        else:
+            distanceArray[i,j]=str(gmaps.distance_matrix(listofcities[i],listofcities[j])['rows'][0]['elements'][0])
 
 ######################################
 # Market Sheds from 250k
