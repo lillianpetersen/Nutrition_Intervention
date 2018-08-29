@@ -713,17 +713,34 @@ closestcity,iclosestcity=nearestCity(majorcities,centersLatLon)
 
 IDofmarketsheds=[]
 citymatches=[]
+matchcountries=[]
 for cityindex in iclosestcity:
     IDofmarketsheds.append(majorCityNames[cityindex])
     citymatches.append(majorcities[cityindex])
+    matchcountries.append(majorCityCountries[cityindex])
 
+f=open(wddata+'travel_time/citymatches_coord.csv','w')
+for i in range(len(centersLatLon)):
+    f.write(str(IDofmarketsheds[i]) +','+ str(matchcountries[i]) +','+ str(centersLatLon[i,0]) + "," + str(centersLatLon[i,1])+'\n')
+f.close()
+
+revisedcities=np.zeros(shape=(91,2))
+f=open(wddata+'travel_time/citymatches_coord.csv','r')
+i=-1
+for line in f:
+    i+=1
+    tmp=line.split(',')
+    revisedcities[i,0]=tmp[2]
+    revisedcities[i,1]=tmp[3]
+
+closestcity2,iclosestcity2=nearestCity(majorcities,revisedcities)
 # findNearest2(centersLatLon,midpointsc)
 # closestcity,iclosestcity=nearestCity(majorcities,centersLatLon) OOF
 
-majorcities=np.zeros(shape=(207,2))
+majorcities=np.zeros(shape=(210,2))
 majorCityNames=[]
 majorCityCountries=[]
-majorCityPop=np.zeros(shape=(207))
+majorCityPop=np.zeros(shape=(210))
 f=open(wddata+'travel_time/african_major_cities.csv','r')
 i=-1
 for line in f:
@@ -733,14 +750,17 @@ for line in f:
 	majorCityCountries.append(tmp[2])
 	majorCityPop[i]=tmp[3]
 	if majorCityNames[i]=='Mbeya':
-	    majorcities[i]=8.91667,33.4166
+	    majorcities[i]=-8.91667,33.4166
+	    continue
 	if majorCityNames[i]=='Kolwezi':
 	    majorcities[i]=-10.75000333,25.50000332
+	    continue
 	if majorCityNames[i]=='El Mahallah el Kubra':
 		majorcities[i]=30.9697,31.1681
 	else:
 		majorcities[i]=geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).latitude,geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).longitude
 	print i,majorCityNames[i],majorCityCountries[i],majorcities[i,0],majorcities[i,1]
+    
 
 plt.clf()
 plt.imshow(citycenters,cmap=cm.nipy_spectral_r)
