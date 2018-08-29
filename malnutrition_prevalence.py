@@ -630,6 +630,7 @@ gmaps = googlemaps.Client(key='AIzaSyAv4HITl2PsxqID8CX8xbOa8qMv6CU03hA')
 distanceArray=np.zeros(shape=(94,94))
 distanceDictionary={}
 counter=0
+listofcities=IDofmarketsheds
 for i in range(len(listofcities)):
     distanceDictionary[listofcities[i]]=[]
     for j in range(len(listofcities)):
@@ -637,8 +638,8 @@ for i in range(len(listofcities)):
             distanceDictionary[listofcities[i]].append(0)
             distanceArray[i,j]=0
         else:
-            gmapreturn=(gmaps.distance_matrix(listofcities[i],listofcities[j])['rows'][0]['elements'][0])
-            if(gmapreturn=={u'status': u'ZERO_RESULTS'}):
+            gmapreturn=(gmaps.distance_matrix(listofcities[i]+matchcountries[i],listofcities[j]+matchcountries[j])['rows'][0]['elements'][0])
+            if(gmapreturn=={u'status': u'ZERO_RESULTS'} or gmapreturn=={u'status': u'NOT_FOUND'}):
                 distanceDictionary[listofcities[i]].append(99999)
                 distanceArray[i,j]=99999
             else:
