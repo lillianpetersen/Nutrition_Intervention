@@ -717,7 +717,6 @@ for cityindex in iclosestcity:
     IDofmarketsheds.append(majorCityNames[cityindex])
     citymatches.append(majorcities[cityindex])
 
-    
 # findNearest2(centersLatLon,midpointsc)
 # closestcity,iclosestcity=nearestCity(majorcities,centersLatLon) OOF
 
@@ -733,6 +732,10 @@ for line in f:
 	majorCityNames.append(tmp[1])
 	majorCityCountries.append(tmp[2])
 	majorCityPop[i]=tmp[3]
+	if majorCityNames[i]=='Mbeya':
+	    majorcities[i]=8.91667,33.4166
+	if majorCityNames[i]=='Kolwezi':
+	    majorcities[i]=-10.75000333,25.50000332
 	if majorCityNames[i]=='El Mahallah el Kubra':
 		majorcities[i]=30.9697,31.1681
 	else:
