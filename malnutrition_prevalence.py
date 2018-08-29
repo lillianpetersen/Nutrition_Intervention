@@ -721,10 +721,10 @@ for cityindex in iclosestcity:
 # findNearest2(centersLatLon,midpointsc)
 # closestcity,iclosestcity=nearestCity(majorcities,centersLatLon) OOF
 
-majorcities=np.zeros(shape=(204,2))
+majorcities=np.zeros(shape=(207,2))
 majorCityNames=[]
 majorCityCountries=[]
-majorCityPop=np.zeros(shape=(204))
+majorCityPop=np.zeros(shape=(207))
 f=open(wddata+'travel_time/african_major_cities.csv','r')
 i=-1
 for line in f:
@@ -747,7 +747,7 @@ plt.title('travel time to 250k')
 plt.colorbar()
 plt.savefig(wdfigs +'citiescenters',dpi=900)
 
-cities=np.array(
+# cities=np.array(
 
 plt.clf()
 plt.imshow(traveltime,cmap=cm.nipy_spectral,vmin=1,vmax=2)
