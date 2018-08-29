@@ -559,12 +559,14 @@ plt.savefig(wdfigs +'traveltime250k',dpi=700)
 ######################################
 # mapping between
 ######################################
+exit()
 gmaps = googlemaps.Client(key='AIzaSyAv4HITl2PsxqID8CX8xbOa8qMv6CU03hA')
-distanceArray=np.zeros(shape=(94,94))
+distanceArray=np.zeros(shape=(91,91))
 distanceDictionary={}
 counter=0
 listofcities=IDofmarketsheds
 for i in range(len(listofcities)):
+    print(listofcities[i])
     distanceDictionary[listofcities[i]]=[]
     for j in range(len(listofcities)):
         if listofcities[i]==listofcities[j]:
@@ -573,11 +575,26 @@ for i in range(len(listofcities)):
         else:
             gmapreturn=(gmaps.distance_matrix(listofcities[i]+matchcountries[i],listofcities[j]+matchcountries[j])['rows'][0]['elements'][0])
             if(gmapreturn=={u'status': u'ZERO_RESULTS'} or gmapreturn=={u'status': u'NOT_FOUND'}):
-                distanceDictionary[listofcities[i]].append(99999)
-                distanceArray[i,j]=99999
+                distanceDictionary[listofcities[i]].append(999999999)
+                distanceArray[i,j]=999999999
             else:
                 distanceDictionary[listofcities[i]].append(gmapreturn['distance']['value'])
                 distanceArray[i,j]=gmapreturn['distance']['value']
+
+for key in distanceDictionary:
+    for i in range(len(distanceDictionary[key])):
+        distanceDictionary[key][i]=(distanceDictionary[key][i]/1000.0)
+
+distanceArray=distanceArray/1000.0
+
+with open(wddata + 'travel_time/traveldictionary.json', 'w') as outfile:
+      json.dump(distanceDictionary, outfile)
+
+with open(wddata + 'travel_time/traveldictionary.json') as f:
+      dictionary2=json.load(f)
+
+df = pd.DataFrame(distanceArray)
+df.to_csv(wddata+"travelarray.csv", header=None, index=None)
 
 ###convert to cost of transport per tonne
 # distanceDictionary.update((x, y/1000*) for x, y in distanceDictionary.items())
