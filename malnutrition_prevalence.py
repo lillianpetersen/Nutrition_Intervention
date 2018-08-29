@@ -720,7 +720,7 @@ plt.title('travel time to 250k')
 plt.colorbar()
 plt.savefig(wdfigs +'citiescenters',dpi=900)
 
-cities=np.array(
+cities=np.array()
 
 plt.clf()
 plt.imshow(traveltime,cmap=cm.nipy_spectral,vmin=1,vmax=2)
