@@ -220,7 +220,7 @@ def nearestCity(cityLonLat,zeroLonLat):
 		leastDist=np.amin(distances)
 		iclosestDist[i]=np.where(distances==leastDist)[0][0]
 		closestDist[i]=geopy.distance.distance([zeroLonLat[i,1],zeroLonLat[i,0]],[cityLonLat[iclosestDist[i],1],cityLonLat[iclosestDist[i],0]]).km
-		print(np.round(100*i/float(len(zeroLonLat)),2),'%')
+		print np.round(100*i/float(len(zeroLonLat)),2),'%' 
 
 	return closestDist,iclosestDist
 
@@ -240,7 +240,7 @@ makePlots=False
 ##############################################
 # Gridded Malnutrition
 ##############################################
-print('Malnutrition')
+print 'Malnutrition' 
 tifWasting=TIFF.open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2010_PREVALENCE_Y2018M02D28.TIF',mode='r')
 ds=gdal.Open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2015_PREVALENCE_Y2018M02D28.TIF')
 width1 = ds.RasterXSize
@@ -275,9 +275,8 @@ for x in range(len(lonm)):
 for y in range(len(latm)):
 	gridm[:,y,1]=latm[y]
 
-africaMask=np.array(mal)
-africaMask[africaMask>=0]=0
-africaMask[africaMask<0]=1
+africaMask=np.zeros(shape=(mal.shape))
+africaMask[mal<0]=1
 
 mal[mal<0]=0
 plt.clf()
@@ -290,7 +289,7 @@ plt.savefig(wdfigs+'wasting',dpi=700)
 ##############################################
 # Gridded Population
 ##############################################
-print('Population')
+print 'Population' 
 ds=gdal.Open(wddata+'population/gpw_v4_basic_demographic_characteristics_rev10_a000_004bt_2010_cntm_30_sec.tif')
 width1 = ds.RasterXSize
 height1 = ds.RasterYSize
@@ -385,243 +384,6 @@ plt.title('malnutrition number')
 plt.colorbar()
 plt.savefig(wdfigs+'malnumber',dpi=700)
 
-######################################################
-# Travel Time
-######################################################
-print('Roads')
-
-#rRoads = shapefile.Reader(wddata+'openstreetmap/'+country+'/openstreetmap/nga_trs_roads_osm.shp')
-traveltif=TIFF.open(wddata+'travel_time/accessibility_to_cities_2015_v1.0.tif',mode='r')
-
-ds=gdal.Open(wddata+'travel_time/accessibility_to_cities_2015_v1.0.tif')
-width = ds.RasterXSize
-height = ds.RasterYSize
-gt = ds.GetGeoTransform()
-minx = gt[0]
-miny = gt[3] + width*gt[4] + height*gt[5] 
-maxx = gt[0] + width*gt[1] + height*gt[2]
-maxy = gt[3] 
-pixelsizel=abs(gt[-1])
-
-latt=np.ones(shape=(height))
-lont=np.ones(shape=(width))
-for w in range(width):
-	lont[w]=minx+w*pixelsizel
-for h in range(height):
-	latt[h]=miny+h*pixelsizel
-
-latt=latt[::-1]
-if latm[0]<latm[-1]:
-	latm=latm[::-1]
-
-travelWorld=traveltif.read_image()
-##### Scale to Africa #####
-travel=travelWorld[latt<np.amax(latm)+pixelsize]
-latt=latt[latt<np.amax(latm)+pixelsize]
-travel=travel[latt>np.amin(latm)]
-latt=latt[latt>np.amin(latm)]
-
-travel=travel[:,lont<np.amax(lonm)+pixelsize]
-lont=lont[lont<np.amax(lonm)+pixelsize]
-travel=travel[:,lont>np.amin(lonm)]
-lont=lont[lont>np.amin(lonm)]
-
-gridt=np.zeros(shape=(len(lont),len(latt),2))
-for x in range(len(lont)):
-	gridt[x,:,0]=lont[x]
-for y in range(len(latt)):
-	gridt[:,y,1]=latt[y]
-
-travel[travel<0]=-10
-travelbi=np.array(travel)
-travelbi[travel!=0]=1
-travelbi=1-travelbi
-travelbi=np.array(travelbi, dtype=bool)
-travelbi=np.swapaxes(travelbi, 0,1)
-citycenters=gridt[travelbi]
-
-plt.clf()
-plt.imshow(travelbi,cmap=cm.gist_ncar_r)
-plt.title('Travel Time')
-plt.colorbar()
-plt.savefig(wdfigs+'travel',dpi=700)
-
-### Cities ###
-
-city=shapefile.Reader(wddata+'population/global_settlement_points_v1.01.shp')
-
-records=city.records()
-centerlonlat=np.zeros(shape=(4716,2))
-cityname=[]
-citycountry=[]
-i=0
-
-for record in records:
-    if record[29]=='Africa' and record[5]>200000:
-        print(record[10])
-        centerlonlat[i,1]=record[3]
-        centerlonlat[i,0]=record[4]
-        cityname.append(record[10])
-        citycountry.append(record[30])
-        i+=1
-
-closestcity,iclosestcity=nearestCity(centerlonlat,citycenters)
-
-# plt.clf()
-# map = Basemap(llcrnrlon=lonm[0],llcrnrlat=np.amin(latm),urcrnrlon=lonm[-1],urcrnrlat=np.amax(latm), projection='lcc',lon_0=(lonm[-1]+lonm[0])/2,lat_0=(latm[-1]+latm[0])/2,resolution='i')
-# map.drawcoastlines(linewidth=1.5)
-# map.drawcountries()
-# ax = plt.gca()
-# for i in range(len(centerlonlat)):
-# 	x,y=map(centerlonlat[i,0],centerlonlat[i,1])
-# 	map.plot(x,y,'bo',markersize=1.5)
-# plt.title('Nigerian Roads from Open Street Map')
-# plt.savefig(wdfigs+'cities',dpi=700)
-
-##############################################
-# city tif
-##############################################
-cityTif=TIFF.open(wddata+'population/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0.tif',mode='r')
-ds=gdal.Open(wddata+'population/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0.tif')
-
-width1 = ds.RasterXSize
-height1 = ds.RasterYSize
-gt = ds.GetGeoTransform()
-minx = gt[0]
-miny = gt[3] + width1*gt[4] + height1*gt[5] 
-maxx = gt[0] + width1*gt[1] + height1*gt[2]
-maxy = gt[3] 
-pixelsize=abs(gt[-1])
-
-# lat and lon
-latm=np.ones(shape=(height1))
-lonm=np.ones(shape=(width1))
-for w in range(width1):
-	lonm[w]=minx+w*pixelsize
-for h in range(height1):
-	latm[h]=miny+h*pixelsize
-latm=latm[::-1] # reverse the order
-
-cityMap=cityTif.read_image()
-
-cityMap=cityMap[latp<np.amax(latm)+pixelsize]
-latp=latp[latp<np.amax(latm)+pixelsize]
-pop=pop[latp>np.amin(latm)]
-latp=latp[latp>np.amin(latm)]
-
-pop=pop[:,lonp<np.amax(lonm)+pixelsize]
-lonp=lonp[lonp<np.amax(lonm)+pixelsize]
-pop=pop[:,lonp>np.amin(lonm)]
-lonp=lonp[lonp>np.amin(lonm)]
-
-plt.clf()
-plt.imshow(cityMap,cmap=cm.nipy_spectral)
-plt.yticks([])
-plt.xticks([])
-plt.title('Children under 4 in 2020')
-plt.colorbar()
-plt.savefig(wdfigs +'city_map',dpi=700)
-
-
-##############################################
-# Market sheds
-##############################################
-
-ds=gdal.Open(wddata+'population/MSH_50K_TX--SSA.tif')
-width = ds.RasterXSize
-height = ds.RasterYSize
-gt = ds.GetGeoTransform()
-minx = gt[0]
-miny = gt[3] + width*gt[4] + height*gt[5] 
-maxx = gt[0] + width*gt[1] + height*gt[2]
-maxy = gt[3] 
-pixelsize=abs(gt[-1])
-
-latc=np.ones(shape=(height))
-lonc=np.ones(shape=(width))
-for w in range(width):
-	lonc[w]=minx+w*pixelsize
-for h in range(height):
-	latc[h]=miny+h*pixelsize
-
-latc=latc[::-1]
-
-# lonz=[]
-gridc=np.zeros(shape=(len(lonc),len(latc),2))
-for x in range(len(lonc)):
-	gridc[x,:,0]=lonc[x]
-	# lonz.append(lonc[x])
-for y in range(len(latc)):
-	gridc[:,y,1]=latc[y]
-	
-midpointsc=createMidpointGrid(gridc,pixelsize)
-
-marketShedsfake=ds.ReadAsArray()
-marketSheds=np.zeros(shape=(marketShedsfake.shape))
-
-f = open(wddata+'population/MSH_50K_TX.csv')
-i=-1
-lattest=[]
-lontest=[]
-for line in f:
-	i+=1
-	if i==0:
-		continue
-	tmp=line.split(',')
-	city=tmp[0]
-	# lattest.append(tmp[6])
-	# lontest.append(tmp[7])
-# for i in range(len(lontest)):
-#     for j in range(len(lonz)):
-#         if lon[i]==lonz[j]:
-#             print('match')
-
-# [lat==latc[i] for i in range(len(latc))]
-
-
-plt.clf()
-plt.imshow(marketShedsfake,cmap=cm.nipy_spectral)
-plt.yticks([])
-plt.xticks([])
-plt.title('African MarketSheds')
-plt.colorbar()
-plt.savefig(wdfigs+'marketSheds',dpi=700)
-
-# latl=np.radians(latp[::-1])+1.2
-# lonl=np.radians(lonp)+1.2
-# lutpop=RectSphereBivariateSpline(latl, lonl, pop)
-# 
-# newLats,newLons=np.meshgrid(np.radians(latm[::-1])+1.2,np.radians(lonm)+1.2)
-# pop1=lutpop.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(latm))).T
-
-#market shed name list
-
-f = open(wddata+'population/MSH_50K_TX.csv')
-citynames=["" for x in range(629)]
-citylonlats=np.zeros(shape=(629,2))
-countrynames=["" for x in range(629)]
-previouscity=1
-firstline=True
-index = 0
-
-for line in f:
-    if firstline:
-        firstline = False
-        continue
-    tmp=line.split(',')
-    marketname=tmp[0]
-    countrycode=tmp[2]
-    if(np.amax([marketname==citynames[i] for i in range(len(citynames))])==0):
-        citynames[index]=marketname
-        countrynames[index]=countrycode
-        index=index+1
-    previouscity=tmp[0]
-
-index = 0
-for cityname in citynames:
-    georeturn=geolocator.geocode(cityname)
-    citylonlats[index]=(georeturn[1])
-    index=index+1
 
 ######################################
 # mapping between
@@ -650,7 +412,7 @@ for i in range(len(listofcities)):
 # distanceDictionary.update((x, y/1000*) for x, y in distanceDictionary.items())
 
 ######################################
-# Market Sheds from 250k
+# Travel time from 250k
 ######################################
 
 ds=gdal.Open(wddata+'travel_time/TT_250K--SSA.tif')
@@ -671,14 +433,21 @@ for h in range(height):
 	latc[h]=miny+h*pixelsize
 
 latc=latc[::-1]
-traveltime=ds.ReadAsArray()
-traveltime[traveltime<0]=-10
+travel=ds.ReadAsArray()
+travel[travel<0]=-10
 
-africaMask=np.zeros(shape=(traveltime.shape))
-africaMask[traveltime<0]=1
-traveltime=np.ma.masked_array(traveltime,africaMask)
+travel=np.ma.masked_array(travel,africaMask)
 
-cities=np.array(traveltime)
+plt.clf()
+plt.imshow(travel,cmap=cm.gist_ncar_r)
+plt.title('Travel Time')
+plt.colorbar()
+plt.savefig(wdfigs+'travel',dpi=700)
+exit()
+
+
+########### Cities ###########
+cities=np.array(travel)
 cities=np.ma.masked_array(cities,africaMask)
 cities[cities>.5]=1
 cities[cities<1]=0
@@ -720,10 +489,10 @@ for cityindex in iclosestcity:
     citymatches.append(majorcities[cityindex])
     matchcountries.append(majorCityCountries[cityindex])
 
-f=open(wddata+'travel_time/citymatches_coord.csv','w')
-for i in range(len(centersLatLon)):
-    f.write(str(IDofmarketsheds[i]) +','+ str(matchcountries[i]) +','+ str(centersLatLon[i,0]) + "," + str(centersLatLon[i,1])+'\n')
-f.close()
+#f=open(wddata+'travel_time/citymatches_coord.csv','w')
+#for i in range(len(centersLatLon)):
+#    f.write(str(IDofmarketsheds[i]) +','+ str(matchcountries[i]) +','+ str(centersLatLon[i,0]) + "," + str(centersLatLon[i,1])+'\n')
+#f.close()
 
 revisedcities=np.zeros(shape=(91,2))
 f=open(wddata+'travel_time/citymatches_coord.csv','r')
@@ -738,29 +507,29 @@ closestcity2,iclosestcity2=nearestCity(majorcities,revisedcities)
 # findNearest2(centersLatLon,midpointsc)
 # closestcity,iclosestcity=nearestCity(majorcities,centersLatLon) OOF
 
-majorcities=np.zeros(shape=(210,2))
-majorCityNames=[]
-majorCityCountries=[]
-majorCityPop=np.zeros(shape=(210))
-f=open(wddata+'travel_time/african_major_cities.csv','r')
-i=-1
-for line in f:
-	i+=1
-	tmp=line.split(',')
-	majorCityNames.append(tmp[1])
-	majorCityCountries.append(tmp[2])
-	majorCityPop[i]=tmp[3]
-	if majorCityNames[i]=='Mbeya':
-	    majorcities[i]=-8.91667,33.4166
-	    continue
-	if majorCityNames[i]=='Kolwezi':
-	    majorcities[i]=-10.75000333,25.50000332
-	    continue
-	if majorCityNames[i]=='El Mahallah el Kubra':
-		majorcities[i]=30.9697,31.1681
-	else:
-		majorcities[i]=geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).latitude,geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).longitude
-	print i,majorCityNames[i],majorCityCountries[i],majorcities[i,0],majorcities[i,1]
+#majorcities=np.zeros(shape=(210,2))
+#majorCityNames=[]
+#majorCityCountries=[]
+#majorCityPop=np.zeros(shape=(210))
+#f=open(wddata+'travel_time/african_major_cities.csv','r')
+#i=-1
+#for line in f:
+#	i+=1
+#	tmp=line.split(',')
+#	majorCityNames.append(tmp[1])
+#	majorCityCountries.append(tmp[2])
+#	majorCityPop[i]=tmp[3]
+#	if majorCityNames[i]=='Mbeya':
+#	    majorcities[i]=-8.91667,33.4166
+#	    continue
+#	if majorCityNames[i]=='Kolwezi':
+#	    majorcities[i]=-10.75000333,25.50000332
+#	    continue
+#	if majorCityNames[i]=='El Mahallah el Kubra':
+#		majorcities[i]=30.9697,31.1681
+#	else:
+#		majorcities[i]=geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).latitude,geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).longitude
+#	print i,majorCityNames[i],majorCityCountries[i],majorcities[i,0],majorcities[i,1]
     
 
 
@@ -769,10 +538,15 @@ for line in f:
 centersLonLat=np.zeros(shape=(centersLatLon.shape))
 centersLonLat[:,0]=centersLatLon[:,1]
 centersLonLat[:,1]=centersLatLon[:,0]
-marketSheds=np.zeros(shape=(traveltime.shape))
+marketSheds=np.zeros(shape=(travel.shape))
 africaMaskLonLat=np.swapaxes(africaMask,0,1)
 
 shedsDist,isheds=findNearest(centersLonLat, midpointsc, africaMaskLonLat)
+
+#for i in range(len(np.amax(isheds)+1)):
+
+
+
 
 plt.clf()
 plt.imshow(isheds,cmap=cm.nipy_spectral)
@@ -798,7 +572,7 @@ plt.savefig(wdfigs +'citiescenters',dpi=900)
 cities=np.array()
 
 plt.clf()
-plt.imshow(traveltime,cmap=cm.nipy_spectral,vmin=1,vmax=2)
+plt.imshow(travel,cmap=cm.nipy_spectral,vmin=1,vmax=2)
 plt.yticks([])
 plt.xticks([])
 plt.title('travel time to 250k')
