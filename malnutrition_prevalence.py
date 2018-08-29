@@ -167,6 +167,14 @@ def createMidpointGrid(grid,pixelsize):
 		gridMid[:,ilat,1]=np.mean([grid[:,ilat,1],grid[:,ilat,1]+pixelsize])
 	return gridMid
 
+def createMidpointGridlatlon(grid,pixelsize):
+	gridMid=np.zeros(shape=(grid.shape))
+	for ilat in range(len(grid[:,0,0])):
+		gridMid[ilat,:,0]=np.mean([grid[ilat,0,0],grid[ilat,0,0]+pixelsize])
+	for ilon in range(len(grid[0,:,1])):
+		gridMid[:,ilon,1]=np.mean([grid[:,ilon,1],grid[:,ilon,1]+pixelsize])
+	return gridMid
+
 def findNearest(cityLonLat,gridMid,imageMask1):
 	'''Give it:
 	1. one dimentional lon lat data set
@@ -630,8 +638,12 @@ for i in range(len(listofcities)):
             distanceArray[i,j]=0
         else:
             gmapreturn=(gmaps.distance_matrix(listofcities[i],listofcities[j])['rows'][0]['elements'][0])
-            distanceDictionary[listofcities[i]].append(gmapreturn['distance']['value'])
-            distanceArray[i,j]=gmapreturn['distance']['value']
+            if(gmapreturn=={u'status': u'ZERO_RESULTS'}):
+                distanceDictionary[listofcities[i]].append(99999)
+                distanceArray[i,j]=99999
+            else:
+                distanceDictionary[listofcities[i]].append(gmapreturn['distance']['value'])
+                distanceArray[i,j]=gmapreturn['distance']['value']
 
 ###convert to cost of transport per tonne
 # distanceDictionary.update((x, y/1000*) for x, y in distanceDictionary.items())
@@ -673,31 +685,46 @@ cities=np.ma.masked_array(cities,mask)
 
 cityrad=np.zeros(shape=(cities.shape))
 citycenters=np.zeros(shape=(cities.shape))
-for ilat in range(len(cities[:,0])):
+for ilat in range(len(cities[:,0])-1,-1,-1):
 	print np.round(100*ilat/float(len(cities[:,0])),2),'%'
-	for ilon in range(len(cities[:,1])):
+	for ilon in range(len(cities[:,1])-1,-1,-1):
 		if cities[ilat,ilon]==0 and cityrad[ilat,ilon]==0:
 			citycenters[ilat,ilon]=1
 			cityrad[ilat-10:ilat+11,ilon-10:ilon+11]=1
 
-gridc=np.zeros(shape=(len(lonc),len(latc),2))
-for x in range(len(lonc)):
-	gridc[x,:,0]=lonc[x]
+# for i in citycenters:
+#     for j in i:
+#         if 
+#     exit()
+    
+gridc=np.zeros(shape=(len(latc),len(lonc),2))
+for x in range(len(latc)):
+	gridc[x,:,0]=latc[x]
 	# lonz.append(lonc[x])
-for y in range(len(latc)):
-	gridc[:,y,1]=latc[y]
+for y in range(len(lonc)):
+	gridc[:,y,1]=lonc[y]
 
+midpointsc=createMidpointGridlatlon(gridc,pixelsize)
 
 citycenters=np.ma.masked_array(citycenters,mask)
 centersLatLon=gridc[citycenters==1]
 
-midpointsc=createMidpointGrid(gridc,pixelsize)
-centersLonLat=midpointsc[bitybenters==1]
+closestcity,iclosestcity=nearestCity(majorcities,centersLatLon)
 
-majorcities=np.zeros(shape=(200,2))
+IDofmarketsheds=[]
+citymatches=[]
+for cityindex in iclosestcity:
+    IDofmarketsheds.append(majorCityNames[cityindex])
+    citymatches.append(majorcities[cityindex])
+
+    
+# findNearest2(centersLatLon,midpointsc)
+# closestcity,iclosestcity=nearestCity(majorcities,centersLatLon) OOF
+
+majorcities=np.zeros(shape=(207,2))
 majorCityNames=[]
 majorCityCountries=[]
-majorCityPop=np.zeros(shape=(200))
+majorCityPop=np.zeros(shape=(207))
 f=open(wddata+'travel_time/african_major_cities.csv','r')
 i=-1
 for line in f:
