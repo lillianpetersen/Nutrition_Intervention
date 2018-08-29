@@ -386,32 +386,6 @@ plt.savefig(wdfigs+'malnumber',dpi=700)
 
 
 ######################################
-# mapping between
-######################################
-gmaps = googlemaps.Client(key='AIzaSyAv4HITl2PsxqID8CX8xbOa8qMv6CU03hA')
-distanceArray=np.zeros(shape=(94,94))
-distanceDictionary={}
-counter=0
-listofcities=IDofmarketsheds
-for i in range(len(listofcities)):
-    distanceDictionary[listofcities[i]]=[]
-    for j in range(len(listofcities)):
-        if listofcities[i]==listofcities[j]:
-            distanceDictionary[listofcities[i]].append(0)
-            distanceArray[i,j]=0
-        else:
-            gmapreturn=(gmaps.distance_matrix(listofcities[i]+matchcountries[i],listofcities[j]+matchcountries[j])['rows'][0]['elements'][0])
-            if(gmapreturn=={u'status': u'ZERO_RESULTS'} or gmapreturn=={u'status': u'NOT_FOUND'}):
-                distanceDictionary[listofcities[i]].append(99999)
-                distanceArray[i,j]=99999
-            else:
-                distanceDictionary[listofcities[i]].append(gmapreturn['distance']['value'])
-                distanceArray[i,j]=gmapreturn['distance']['value']
-
-###convert to cost of transport per tonne
-# distanceDictionary.update((x, y/1000*) for x, y in distanceDictionary.items())
-
-######################################
 # Travel time from 250k
 ######################################
 
@@ -446,7 +420,35 @@ plt.savefig(wdfigs+'travel',dpi=700)
 exit()
 
 
-########### Cities ###########
+######################################
+# Major Cities
+######################################
+
+#majorcities=np.zeros(shape=(210,2))
+#majorCityNames=[]
+#majorCityCountries=[]
+#majorCityPop=np.zeros(shape=(210))
+#f=open(wddata+'travel_time/african_major_cities.csv','r')
+#i=-1
+#for line in f:
+#	i+=1
+#	tmp=line.split(',')
+#	majorCityNames.append(tmp[1])
+#	majorCityCountries.append(tmp[2])
+#	majorCityPop[i]=tmp[3]
+#	if majorCityNames[i]=='Mbeya':
+#	    majorcities[i]=-8.91667,33.4166
+#	    continue
+#	if majorCityNames[i]=='Kolwezi':
+#	    majorcities[i]=-10.75000333,25.50000332
+#	    continue
+#	if majorCityNames[i]=='El Mahallah el Kubra':
+#		majorcities[i]=30.9697,31.1681
+#	else:
+#		majorcities[i]=geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).latitude,geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).longitude
+#	print i,majorCityNames[i],majorCityCountries[i],majorcities[i,0],majorcities[i,1]
+    
+
 cities=np.array(travel)
 cities=np.ma.masked_array(cities,africaMask)
 cities[cities>.5]=1
@@ -507,33 +509,10 @@ closestcity2,iclosestcity2=nearestCity(majorcities,revisedcities)
 # findNearest2(centersLatLon,midpointsc)
 # closestcity,iclosestcity=nearestCity(majorcities,centersLatLon) OOF
 
-#majorcities=np.zeros(shape=(210,2))
-#majorCityNames=[]
-#majorCityCountries=[]
-#majorCityPop=np.zeros(shape=(210))
-#f=open(wddata+'travel_time/african_major_cities.csv','r')
-#i=-1
-#for line in f:
-#	i+=1
-#	tmp=line.split(',')
-#	majorCityNames.append(tmp[1])
-#	majorCityCountries.append(tmp[2])
-#	majorCityPop[i]=tmp[3]
-#	if majorCityNames[i]=='Mbeya':
-#	    majorcities[i]=-8.91667,33.4166
-#	    continue
-#	if majorCityNames[i]=='Kolwezi':
-#	    majorcities[i]=-10.75000333,25.50000332
-#	    continue
-#	if majorCityNames[i]=='El Mahallah el Kubra':
-#		majorcities[i]=30.9697,31.1681
-#	else:
-#		majorcities[i]=geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).latitude,geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).longitude
-#	print i,majorCityNames[i],majorCityCountries[i],majorcities[i,0],majorcities[i,1]
-    
 
-
-######### African Marketsheds ##########
+######################################
+# African Marketsheds
+######################################
 
 centersLonLat=np.zeros(shape=(centersLatLon.shape))
 centersLonLat[:,0]=centersLatLon[:,1]
@@ -544,9 +523,6 @@ africaMaskLonLat=np.swapaxes(africaMask,0,1)
 shedsDist,isheds=findNearest(centersLonLat, midpointsc, africaMaskLonLat)
 
 #for i in range(len(np.amax(isheds)+1)):
-
-
-
 
 plt.clf()
 plt.imshow(isheds,cmap=cm.nipy_spectral)
@@ -578,3 +554,31 @@ plt.xticks([])
 plt.title('travel time to 250k')
 plt.colorbar()
 plt.savefig(wdfigs +'traveltime250k',dpi=700)
+
+
+######################################
+# mapping between
+######################################
+gmaps = googlemaps.Client(key='AIzaSyAv4HITl2PsxqID8CX8xbOa8qMv6CU03hA')
+distanceArray=np.zeros(shape=(94,94))
+distanceDictionary={}
+counter=0
+listofcities=IDofmarketsheds
+for i in range(len(listofcities)):
+    distanceDictionary[listofcities[i]]=[]
+    for j in range(len(listofcities)):
+        if listofcities[i]==listofcities[j]:
+            distanceDictionary[listofcities[i]].append(0)
+            distanceArray[i,j]=0
+        else:
+            gmapreturn=(gmaps.distance_matrix(listofcities[i]+matchcountries[i],listofcities[j]+matchcountries[j])['rows'][0]['elements'][0])
+            if(gmapreturn=={u'status': u'ZERO_RESULTS'} or gmapreturn=={u'status': u'NOT_FOUND'}):
+                distanceDictionary[listofcities[i]].append(99999)
+                distanceArray[i,j]=99999
+            else:
+                distanceDictionary[listofcities[i]].append(gmapreturn['distance']['value'])
+                distanceArray[i,j]=gmapreturn['distance']['value']
+
+###convert to cost of transport per tonne
+# distanceDictionary.update((x, y/1000*) for x, y in distanceDictionary.items())
+
