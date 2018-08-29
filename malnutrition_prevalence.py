@@ -192,11 +192,11 @@ def findNearest(cityLonLat,gridMid,imageMask1):
 		for ilat in range(lenLat):
 			if imageMask1[ilon,ilat]==True:
 				continue
-			distances=np.sqrt((grid[ilon,ilat,0]-cityLonLat[:,0])**2+(grid[ilon,ilat,1]-cityLonLat[:,1])**2)
+			distances=np.sqrt((gridMid[ilon,ilat,0]-cityLonLat[:,0])**2+(gridMid[ilon,ilat,1]-cityLonLat[:,1])**2)
 			leastDist=np.amin(distances)
 			iclosestDist[ilon,ilat]=np.where(distances==leastDist)[0][0]
 			closestDist[ilon,ilat]=geopy.distance.distance([gridMid[ilon,ilat,1],gridMid[ilon,ilat,0]],[cityLonLat[iclosestDist[ilon,ilat],1],cityLonLat[iclosestDist[ilon,ilat],0]]).km
-		print(np.round(100*ilon/float(lenLon),2),'%')
+		print np.round(100*ilon/float(lenLon),2),'%' 
 
 	closestDistM=np.ma.masked_array(closestDist,imageMask1)
 	iclosestDistM=np.ma.masked_array(iclosestDist,imageMask1)
@@ -673,15 +673,15 @@ latc=latc[::-1]
 traveltime=ds.ReadAsArray()
 traveltime[traveltime<0]=-10
 
-mask=np.zeros(shape=(traveltime.shape))
-mask[traveltime<0]=1
-traveltime=np.ma.masked_array(traveltime,mask)
+africaMask=np.zeros(shape=(traveltime.shape))
+africaMask[traveltime<0]=1
+traveltime=np.ma.masked_array(traveltime,africaMask)
 
 cities=np.array(traveltime)
-cities=np.ma.masked_array(cities,mask)
+cities=np.ma.masked_array(cities,africaMask)
 cities[cities>.5]=1
 cities[cities<1]=0
-cities=np.ma.masked_array(cities,mask)
+cities=np.ma.masked_array(cities,africaMask)
 
 cityrad=np.zeros(shape=(cities.shape))
 citycenters=np.zeros(shape=(cities.shape))
@@ -704,9 +704,9 @@ for x in range(len(latc)):
 for y in range(len(lonc)):
 	gridc[:,y,1]=lonc[y]
 
-midpointsc=createMidpointGridlatlon(gridc,pixelsize)
+midpointsc=createMidpointGridlatlon(gridc,pixelsize) # lon lat
 
-citycenters=np.ma.masked_array(citycenters,mask)
+citycenters=np.ma.masked_array(citycenters,africaMask)
 centersLatLon=gridc[citycenters==1]
 
 closestcity,iclosestcity=nearestCity(majorcities,centersLatLon)
@@ -761,6 +761,30 @@ for line in f:
 		majorcities[i]=geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).latitude,geolocator.geocode(str(majorCityNames[i]+', '+majorCityCountries[i])).longitude
 	print i,majorCityNames[i],majorCityCountries[i],majorcities[i,0],majorcities[i,1]
     
+
+
+######### African Marketsheds ##########
+
+centersLonLat=np.zeros(shape=(centersLatLon.shape))
+centersLonLat[:,0]=centersLatLon[:,1]
+centersLonLat[:,1]=centersLatLon[:,0]
+marketSheds=np.zeros(shape=(traveltime.shape))
+africaMaskLonLat=np.swapaxes(africaMask,0,1)
+
+shedsDist,isheds=findNearest(centersLonLat, midpointsc, africaMaskLonLat)
+
+plt.clf()
+plt.imshow(isheds,cmap=cm.nipy_spectral)
+plt.title('Market Sheds')
+plt.colorbar()
+plt.savefig(wdfigs+'marketsheds',dpi=700)
+
+plt.clf()
+plt.imshow(shedsDist,cmap=cm.nipy_spectral)
+plt.title('Dist to Market Sheds')
+plt.colorbar()
+plt.savefig(wdfigs+'marketshedsDist',dpi=700)
+
 
 plt.clf()
 plt.imshow(citycenters,cmap=cm.nipy_spectral_r)
