@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.mlab as mlab
 #from mpl_toolkits.basemap import Basemap
 import os
-from scipy.stats import norm
+import scipy
 import matplotlib as mpl
 from matplotlib.patches import Polygon
 import random
@@ -599,13 +599,15 @@ for i in range(len(listofcities)):
             distanceDictionary[listofcities[i]].append(0)
             distanceArray[i,j]=0
         else:
-            gmapreturn=(gmaps.distance_matrix(listofcities[i]+matchcountries[i],listofcities[j]+matchcountries[j])['rows'][0]['elements'][0])
+            gmapreturn=(gmaps.distance_matrix(listofcities[i]+" "+matchcountries[i],listofcities[j]+" "+matchcountries[j])['rows'][0]['elements'][0])
             if(gmapreturn=={u'status': u'ZERO_RESULTS'} or gmapreturn=={u'status': u'NOT_FOUND'}):
                 distanceDictionary[listofcities[i]].append(999999999)
                 distanceArray[i,j]=999999999
+                print('wrong!')
             else:
                 distanceDictionary[listofcities[i]].append(gmapreturn['distance']['value'])
                 distanceArray[i,j]=gmapreturn['distance']['value']
+
 
 for key in distanceDictionary:
     for i in range(len(distanceDictionary[key])):
@@ -617,10 +619,12 @@ with open(wddata + 'travel_time/traveldictionary.json', 'w') as outfile:
       json.dump(distanceDictionary, outfile)
 
 with open(wddata + 'travel_time/traveldictionary.json') as f:
-      dictionary2=json.load(f)
+      distanceDictionary=json.load(f)
 
 df = pd.DataFrame(distanceArray)
 df.to_csv(wddata+"travelarray.csv", header=None, index=None)
+
+distanceArray = np.genfromtxt(wddata+'travelarray.csv', delimiter=',')
 
 ###convert to cost of transport per tonne
 # distanceDictionary.update((x, y/1000*) for x, y in distanceDictionary.items())
