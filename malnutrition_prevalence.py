@@ -521,11 +521,15 @@ for cityindex in iclosestcity:
 #f.close()
 
 revisedcities=np.zeros(shape=(91,2))
+IDofmarketsheds=[]
+matchcountries=[]
 f=open(wddata+'travel_time/citymatches_coord.csv','r')
 i=-1
 for line in f:
     i+=1
     tmp=line.split(',')
+    IDofmarketsheds.append(tmp[0])
+    matchcountries.append(tmp[1])
     revisedcities[i,0]=tmp[2]
     revisedcities[i,1]=tmp[3]
 
@@ -608,15 +612,27 @@ for i in range(len(listofcities)):
                 distanceDictionary[listofcities[i]].append(gmapreturn['distance']['value'])
                 distanceArray[i,j]=gmapreturn['distance']['value']
 
-
 for key in distanceDictionary:
     for i in range(len(distanceDictionary[key])):
         distanceDictionary[key][i]=(distanceDictionary[key][i]/1000.0)
 
 distanceArray=distanceArray/1000.0
 
+networkDictionary={}
+### array to dict
+for i in range(len(listofcities)):
+    networkDictionary[listofcities[i]]=[]
+    for j in range(len(listofcities)):
+        networkDictionary[listofcities[i]].append(distanceArray[i,j])
+
 with open(wddata + 'travel_time/traveldictionary.json', 'w') as outfile:
       json.dump(distanceDictionary, outfile)
+
+with open(wddata + 'travel_time/traveldictionary2.json', 'w') as outfile:
+      json.dump(networkDictionary, outfile)
+
+df = pd.DataFrame(distanceArray)
+df.to_csv(wddata+"travelarray.csv", header=None, index=None)
 
 with open(wddata + 'travel_time/traveldictionary.json') as f:
       distanceDictionary=json.load(f)
