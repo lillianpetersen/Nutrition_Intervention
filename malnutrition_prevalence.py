@@ -410,11 +410,35 @@ latc=latc[::-1]
 travel=ds.ReadAsArray()
 travel[travel<0]=-10
 
-travel=np.ma.masked_array(travel,africaMask)
+africaMask1=np.zeros(shape=(travel.shape),dtype=int)
+africaMask1[travel<0]=1
+
+######### 5km #########
+lattmp=latm[latm<np.amax(latc)+pixelsize]
+lattmp=lattmp[lattmp>np.amin(latc)]
+travel=travel[latc>latm[-1]]
+africaMask1=africaMask1[latc>latm[-1]]
+latc=latc[latc>latm[-1]]
+
+latl=np.radians(latc[::-1])+1.2
+lonl=np.radians(lonc)+1.2
+lut=RectSphereBivariateSpline(latl, lonl, travel)
+newLats,newLons=np.meshgrid(np.radians(lattmp[::-1])+1.2,np.radians(lonm)+1.2)
+travel=lut.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(lattmp))).T
+
+lut=RectSphereBivariateSpline(latl, lonl, africaMask1)
+newLats,newLons=np.meshgrid(np.radians(lattmp[::-1])+1.2,np.radians(lonm)+1.2)
+africaMask1=lut.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(lattmp))).T
+#######################
+africaMask1=np.round(africaMask1,0)
+
+travel=np.ma.masked_array(travel,africaMask1)
 
 plt.clf()
-plt.imshow(travel,cmap=cm.gist_ncar_r)
+plt.imshow(travel,cmap=cm.gist_ncar_r,vmin=0,vmax=30)
 plt.title('Travel Time')
+plt.yticks([])
+plt.xticks([])
 plt.colorbar()
 plt.savefig(wdfigs+'travel',dpi=700)
 exit()
@@ -522,7 +546,9 @@ africaMaskLonLat=np.swapaxes(africaMask,0,1)
 
 shedsDist,isheds=findNearest(centersLonLat, midpointsc, africaMaskLonLat)
 
-#for i in range(len(np.amax(isheds)+1)):
+
+for i in range(len(np.amax(isheds)+1)):
+
 
 plt.clf()
 plt.imshow(isheds,cmap=cm.nipy_spectral)
