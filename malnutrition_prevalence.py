@@ -579,12 +579,23 @@ lonp=lonp[lonp<np.amax(lonm)+pixelsize]
 pop=pop[:,lonp>np.amin(lonm)]
 lonp=lonp[lonp>np.amin(lonm)]
 
+#### Number of grammes per child
+tonnes=malnum*(365/75.)*(200)*(1/1000000.)*50
+
+plt.clf()
+plt.imshow(tonnes,cmap=cm.jet,vmin=0,vmax=10)
+plt.title('Tonnes of SC+ Required per Year')
+plt.yticks([])
+plt.xticks([])
+plt.colorbar()
+plt.savefig(wdfigs+'tonnesSCperyear',dpi=700)
+################################
 
 shedsDemand=np.zeros(shape=(np.amax(isheds)+1))
 ishedsDemand=np.zeros(shape=(isheds.shape))
 ishedsDemandScaled=np.zeros(shape=(isheds.shape))
 for i in range(np.amax(isheds)+1):
-	shedsDemand[i]=np.sum(malnum[isheds==i])
+	shedsDemand[i]=np.sum(tonnes[isheds==i])
 	ishedsDemand[isheds==i]=shedsDemand[i]
 	ishedsDemandScaled[isheds==i]=shedsDemand[i]/(float(np.where(isheds==i)[1].shape[0]))
 
@@ -592,8 +603,8 @@ ishedsDemand=np.ma.masked_array(ishedsDemand,africaMask1)
 ishedsDemandScaled=np.ma.masked_array(ishedsDemandScaled,africaMask1)
 
 plt.clf()
-plt.imshow(ishedsDemandScaled,cmap=cm.jet,vmin=0)
-plt.title('Market Sheds by Demand Scaled by Area')
+plt.imshow(ishedsDemand,cmap=cm.jet,vmin=0,vmax=20000)
+plt.title('Tonnes SC+ Required by Marketshed')
 plt.yticks([])
 plt.xticks([])
 plt.colorbar()
