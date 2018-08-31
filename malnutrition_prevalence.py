@@ -250,15 +250,15 @@ minx = gt[0]
 miny = gt[3] + width1*gt[4] + height1*gt[5] 
 maxx = gt[0] + width1*gt[1] + height1*gt[2]
 maxy = gt[3] 
-pixelsize=abs(gt[-1])
+pixelsizem=abs(gt[-1])
 
 # lat and lon
 latm=np.ones(shape=(height1))
 lonm=np.ones(shape=(width1))
 for w in range(width1):
-	lonm[w]=minx+w*pixelsize
+	lonm[w]=minx+w*pixelsizem
 for h in range(height1):
-	latm[h]=miny+h*pixelsize
+	latm[h]=miny+h*pixelsizem
 latm=latm[::-1] # reverse the order
 
 mal=tifWasting.read_image()
@@ -405,8 +405,10 @@ for w in range(width):
 	lonc[w]=minx+w*pixelsize
 for h in range(height):
 	latc[h]=miny+h*pixelsize
-
 latc=latc[::-1]
+lattravel=latc
+lontravel=lonc
+
 travel=ds.ReadAsArray()
 travel[travel<0]=-10
 
@@ -414,23 +416,27 @@ africaMask1=np.zeros(shape=(travel.shape),dtype=int)
 africaMask1[travel<0]=1
 
 ######### 5km #########
-lattmp=latm[latm<np.amax(latc)+pixelsize]
-lattmp=lattmp[lattmp>np.amin(latc)]
+latsubsaharan=latm[latm<np.amax(latc)+pixelsize]
+latsubsaharan=latsubsaharan[latsubsaharan>np.amin(latc)]
 travel=travel[latc>latm[-1]]
 africaMask1=africaMask1[latc>latm[-1]]
 latc=latc[latc>latm[-1]]
+latsubsaharan=latsubsaharan[latsubsaharan>latm[-1]]
 
+# travel
 latl=np.radians(latc[::-1])+1.2
 lonl=np.radians(lonc)+1.2
 lut=RectSphereBivariateSpline(latl, lonl, travel)
-newLats,newLons=np.meshgrid(np.radians(lattmp[::-1])+1.2,np.radians(lonm)+1.2)
-travel=lut.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(lattmp))).T
+newLats,newLons=np.meshgrid(np.radians(latsubsaharan[::-1])+1.2,np.radians(lonm)+1.2)
+travel=lut.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(latsubsaharan))).T
 
+# AfricaMask
 lut=RectSphereBivariateSpline(latl, lonl, africaMask1)
-newLats,newLons=np.meshgrid(np.radians(lattmp[::-1])+1.2,np.radians(lonm)+1.2)
-africaMask1=lut.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(lattmp))).T
+newLats,newLons=np.meshgrid(np.radians(latsubsaharan[::-1])+1.2,np.radians(lonm)+1.2)
+africaMask1=lut.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(latsubsaharan))).T
 #######################
 africaMask1=np.round(africaMask1,0)
+lonsubsaharan=lonm
 
 travel=np.ma.masked_array(travel,africaMask1)
 
@@ -441,7 +447,6 @@ plt.yticks([])
 plt.xticks([])
 plt.colorbar()
 plt.savefig(wdfigs+'travel',dpi=700)
-exit()
 
 
 ######################################
@@ -474,10 +479,10 @@ exit()
     
 
 cities=np.array(travel)
-cities=np.ma.masked_array(cities,africaMask)
+cities=np.ma.masked_array(cities,africaMask1)
 cities[cities>.5]=1
 cities[cities<1]=0
-cities=np.ma.masked_array(cities,africaMask)
+cities=np.ma.masked_array(cities,africaMask1)
 
 cityrad=np.zeros(shape=(cities.shape))
 citycenters=np.zeros(shape=(cities.shape))
@@ -493,17 +498,17 @@ for ilat in range(len(cities[:,0])-1,-1,-1):
 #         if 
 #     exit()
     
-gridc=np.zeros(shape=(len(latc),len(lonc),2))
-for x in range(len(latc)):
-	gridc[x,:,0]=latc[x]
+gridsubsaharan=np.zeros(shape=(len(latsubsaharan),len(lonsubsaharan),2))
+for x in range(len(latsubsaharan)):
+	gridsubsaharan[x,:,0]=latsubsaharan[x]
 	# lonz.append(lonc[x])
-for y in range(len(lonc)):
-	gridc[:,y,1]=lonc[y]
+for y in range(len(lonsubsaharan)):
+	gridsubsaharan[:,y,1]=lonsubsaharan[y]
 
-midpointsc=createMidpointGridlatlon(gridc,pixelsize) # lon lat
+midpointsc=createMidpointGridlatlon(gridsubsaharan,pixelsize) # lon lat
 
-citycenters=np.ma.masked_array(citycenters,africaMask)
-centersLatLon=gridc[citycenters==1]
+citycenters=np.ma.masked_array(citycenters,africaMask1)
+centersLatLon=gridsubsaharan[citycenters==1]
 
 closestcity,iclosestcity=nearestCity(majorcities,centersLatLon)
 
@@ -542,16 +547,65 @@ closestcity2,iclosestcity2=nearestCity(majorcities,revisedcities)
 # African Marketsheds
 ######################################
 
-centersLonLat=np.zeros(shape=(centersLatLon.shape))
-centersLonLat[:,0]=centersLatLon[:,1]
-centersLonLat[:,1]=centersLatLon[:,0]
+centersLonLat=np.zeros(shape=(revisedcities.shape))
+centersLonLat[:,0]=revisedcities[:,1]
+centersLonLat[:,1]=revisedcities[:,0]
 marketSheds=np.zeros(shape=(travel.shape))
-africaMaskLonLat=np.swapaxes(africaMask,0,1)
+africaMaskLonLat=np.swapaxes(africaMask1,0,1)
+midpointscLonLat=np.zeros(shape=(midpointsc.shape))
+midpointscLonLat[:,:,0]=midpointsc[:,:,1]
+midpointscLonLat[:,:,1]=midpointsc[:,:,0]
+midpointscLonLat=np.swapaxes(midpointscLonLat,0,1)
 
-shedsDist,isheds=findNearest(centersLonLat, midpointsc, africaMaskLonLat)
+plt.clf()
+plt.plot(centersLonLat[:,0],centersLonLat[:,1],'*')
+plt.title('African Marketsheds')
+plt.savefig(wdfigs+'cities',dpi=700)
+
+shedsDist,isheds=findNearest(centersLonLat, midpointscLonLat, africaMaskLonLat)
 
 
-for i in range(len(np.amax(isheds)+1)):
+####### Sum Demand #######
+malnum=np.array(malnumber)
+malnum=np.ma.masked_array(malnum,africaMask1)
+
+malnum=malnum[latm<np.amax(latsubsaharan)+pixelsizem+0.0001]
+latms=latm[latm<np.amax(latsubsaharan)+pixelsizem+0.0001]
+malnum=malnum[latms>np.amin(latsubsaharan)]
+latms=latms[latms>np.amin(latsubsaharan)]
+
+pop=pop[:,lonp<np.amax(lonm)+pixelsize]
+lonp=lonp[lonp<np.amax(lonm)+pixelsize]
+pop=pop[:,lonp>np.amin(lonm)]
+lonp=lonp[lonp>np.amin(lonm)]
+
+
+shedsDemand=np.zeros(shape=(np.amax(isheds)+1))
+ishedsDemand=np.zeros(shape=(isheds.shape))
+ishedsDemandScaled=np.zeros(shape=(isheds.shape))
+for i in range(np.amax(isheds)+1):
+	shedsDemand[i]=np.sum(malnum[isheds==i])
+	ishedsDemand[isheds==i]=shedsDemand[i]
+	ishedsDemandScaled[isheds==i]=shedsDemand[i]/(float(np.where(isheds==i)[1].shape[0]))
+
+ishedsDemand=np.ma.masked_array(ishedsDemand,africaMask1)
+ishedsDemandScaled=np.ma.masked_array(ishedsDemandScaled,africaMask1)
+
+plt.clf()
+plt.imshow(ishedsDemandScaled,cmap=cm.jet,vmin=0)
+plt.title('Market Sheds by Demand Scaled by Area')
+plt.yticks([])
+plt.xticks([])
+plt.colorbar()
+plt.savefig(wdfigs+'ishedsDemand',dpi=700)
+
+plt.clf()
+plt.imshow(malnum,cmap=cm.jet,vmin=0,vmax=100)
+plt.title('Number of Malnurished')
+plt.yticks([])
+plt.xticks([])
+plt.colorbar()
+plt.savefig(wdfigs+'malnumsubsaharan',dpi=700)
 
 
 plt.clf()
