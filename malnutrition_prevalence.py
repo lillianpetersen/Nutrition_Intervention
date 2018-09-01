@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.mlab as mlab
 #from mpl_toolkits.basemap import Basemap
 import os
-import scipy
+from scipy.stats import norm
 import matplotlib as mpl
 from matplotlib.patches import Polygon
 import random
@@ -250,15 +250,15 @@ minx = gt[0]
 miny = gt[3] + width1*gt[4] + height1*gt[5] 
 maxx = gt[0] + width1*gt[1] + height1*gt[2]
 maxy = gt[3] 
-pixelsizem=abs(gt[-1])
+pixelsize=abs(gt[-1])
 
 # lat and lon
 latm=np.ones(shape=(height1))
 lonm=np.ones(shape=(width1))
 for w in range(width1):
-	lonm[w]=minx+w*pixelsizem
+	lonm[w]=minx+w*pixelsize
 for h in range(height1):
-	latm[h]=miny+h*pixelsizem
+	latm[h]=miny+h*pixelsize
 latm=latm[::-1] # reverse the order
 
 mal=tifWasting.read_image()
@@ -405,10 +405,8 @@ for w in range(width):
 	lonc[w]=minx+w*pixelsize
 for h in range(height):
 	latc[h]=miny+h*pixelsize
-latc=latc[::-1]
-lattravel=latc
-lontravel=lonc
 
+latc=latc[::-1]
 travel=ds.ReadAsArray()
 travel[travel<0]=-10
 
@@ -416,27 +414,22 @@ africaMask1=np.zeros(shape=(travel.shape),dtype=int)
 africaMask1[travel<0]=1
 
 ######### 5km #########
-latsubsaharan=latm[latm<np.amax(latc)+pixelsize]
-latsubsaharan=latsubsaharan[latsubsaharan>np.amin(latc)]
+lattmp=latm[latm<np.amax(latc)+pixelsize]
+lattmp=lattmp[lattmp>np.amin(latc)]
 travel=travel[latc>latm[-1]]
-africaMask1=africaMask1[latc>latm[-1]]
 latc=latc[latc>latm[-1]]
-latsubsaharan=latsubsaharan[latsubsaharan>latm[-1]]
 
-# travel
 latl=np.radians(latc[::-1])+1.2
 lonl=np.radians(lonc)+1.2
 lut=RectSphereBivariateSpline(latl, lonl, travel)
-newLats,newLons=np.meshgrid(np.radians(latsubsaharan[::-1])+1.2,np.radians(lonm)+1.2)
-travel=lut.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(latsubsaharan))).T
+newLats,newLons=np.meshgrid(np.radians(lattmp[::-1])+1.2,np.radians(lonm)+1.2)
+travel1=lut.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(lattmp))).T
 
-# AfricaMask
 lut=RectSphereBivariateSpline(latl, lonl, africaMask1)
-newLats,newLons=np.meshgrid(np.radians(latsubsaharan[::-1])+1.2,np.radians(lonm)+1.2)
-africaMask1=lut.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(latsubsaharan))).T
+newLats,newLons=np.meshgrid(np.radians(lattmp[::-1])+1.2,np.radians(lonm)+1.2)
+africaMask1=lut.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(lattmp))).T
 #######################
 africaMask1=np.round(africaMask1,0)
-lonsubsaharan=lonm
 
 travel=np.ma.masked_array(travel,africaMask1)
 
@@ -447,6 +440,7 @@ plt.yticks([])
 plt.xticks([])
 plt.colorbar()
 plt.savefig(wdfigs+'travel',dpi=700)
+exit()
 
 
 ######################################
@@ -479,10 +473,10 @@ plt.savefig(wdfigs+'travel',dpi=700)
     
 
 cities=np.array(travel)
-cities=np.ma.masked_array(cities,africaMask1)
+cities=np.ma.masked_array(cities,africaMask)
 cities[cities>.5]=1
 cities[cities<1]=0
-cities=np.ma.masked_array(cities,africaMask1)
+cities=np.ma.masked_array(cities,africaMask)
 
 cityrad=np.zeros(shape=(cities.shape))
 citycenters=np.zeros(shape=(cities.shape))
@@ -498,17 +492,17 @@ for ilat in range(len(cities[:,0])-1,-1,-1):
 #         if 
 #     exit()
     
-gridsubsaharan=np.zeros(shape=(len(latsubsaharan),len(lonsubsaharan),2))
-for x in range(len(latsubsaharan)):
-	gridsubsaharan[x,:,0]=latsubsaharan[x]
+gridc=np.zeros(shape=(len(latc),len(lonc),2))
+for x in range(len(latc)):
+	gridc[x,:,0]=latc[x]
 	# lonz.append(lonc[x])
-for y in range(len(lonsubsaharan)):
-	gridsubsaharan[:,y,1]=lonsubsaharan[y]
+for y in range(len(lonc)):
+	gridc[:,y,1]=lonc[y]
 
-midpointsc=createMidpointGridlatlon(gridsubsaharan,pixelsize) # lon lat
+midpointsc=createMidpointGridlatlon(gridc,pixelsize) # lon lat
 
-citycenters=np.ma.masked_array(citycenters,africaMask1)
-centersLatLon=gridsubsaharan[citycenters==1]
+citycenters=np.ma.masked_array(citycenters,africaMask)
+centersLatLon=gridc[citycenters==1]
 
 closestcity,iclosestcity=nearestCity(majorcities,centersLatLon)
 
@@ -526,15 +520,11 @@ for cityindex in iclosestcity:
 #f.close()
 
 revisedcities=np.zeros(shape=(91,2))
-IDofmarketsheds=[]
-matchcountries=[]
 f=open(wddata+'travel_time/citymatches_coord.csv','r')
 i=-1
 for line in f:
     i+=1
     tmp=line.split(',')
-    IDofmarketsheds.append(tmp[0])
-    matchcountries.append(tmp[1])
     revisedcities[i,0]=tmp[2]
     revisedcities[i,1]=tmp[3]
 
@@ -547,77 +537,15 @@ closestcity2,iclosestcity2=nearestCity(majorcities,revisedcities)
 # African Marketsheds
 ######################################
 
-centersLonLat=np.zeros(shape=(revisedcities.shape))
-centersLonLat[:,0]=revisedcities[:,1]
-centersLonLat[:,1]=revisedcities[:,0]
+centersLonLat=np.zeros(shape=(centersLatLon.shape))
+centersLonLat[:,0]=centersLatLon[:,1]
+centersLonLat[:,1]=centersLatLon[:,0]
 marketSheds=np.zeros(shape=(travel.shape))
-africaMaskLonLat=np.swapaxes(africaMask1,0,1)
-midpointscLonLat=np.zeros(shape=(midpointsc.shape))
-midpointscLonLat[:,:,0]=midpointsc[:,:,1]
-midpointscLonLat[:,:,1]=midpointsc[:,:,0]
-midpointscLonLat=np.swapaxes(midpointscLonLat,0,1)
+africaMaskLonLat=np.swapaxes(africaMask,0,1)
 
-plt.clf()
-plt.plot(centersLonLat[:,0],centersLonLat[:,1],'*')
-plt.title('African Marketsheds')
-plt.savefig(wdfigs+'cities',dpi=700)
+shedsDist,isheds=findNearest(centersLonLat, midpointsc, africaMaskLonLat)
 
-shedsDist,isheds=findNearest(centersLonLat, midpointscLonLat, africaMaskLonLat)
-
-
-####### Sum Demand #######
-malnum=np.array(malnumber)
-malnum=np.ma.masked_array(malnum,africaMask1)
-
-malnum=malnum[latm<np.amax(latsubsaharan)+pixelsizem+0.0001]
-latms=latm[latm<np.amax(latsubsaharan)+pixelsizem+0.0001]
-malnum=malnum[latms>np.amin(latsubsaharan)]
-latms=latms[latms>np.amin(latsubsaharan)]
-
-pop=pop[:,lonp<np.amax(lonm)+pixelsize]
-lonp=lonp[lonp<np.amax(lonm)+pixelsize]
-pop=pop[:,lonp>np.amin(lonm)]
-lonp=lonp[lonp>np.amin(lonm)]
-
-#### Number of grammes per child
-tonnes=malnum*(365/75.)*(200)*(1/1000000.)*50
-
-plt.clf()
-plt.imshow(tonnes,cmap=cm.jet,vmin=0,vmax=10)
-plt.title('Tonnes of SC+ Required per Year')
-plt.yticks([])
-plt.xticks([])
-plt.colorbar()
-plt.savefig(wdfigs+'tonnesSCperyear',dpi=700)
-################################
-
-shedsDemand=np.zeros(shape=(np.amax(isheds)+1))
-ishedsDemand=np.zeros(shape=(isheds.shape))
-ishedsDemandScaled=np.zeros(shape=(isheds.shape))
-for i in range(np.amax(isheds)+1):
-	shedsDemand[i]=np.sum(tonnes[isheds==i])
-	ishedsDemand[isheds==i]=shedsDemand[i]
-	ishedsDemandScaled[isheds==i]=shedsDemand[i]/(float(np.where(isheds==i)[1].shape[0]))
-
-ishedsDemand=np.ma.masked_array(ishedsDemand,africaMask1)
-ishedsDemandScaled=np.ma.masked_array(ishedsDemandScaled,africaMask1)
-
-plt.clf()
-plt.imshow(ishedsDemand,cmap=cm.jet,vmin=0,vmax=20000)
-plt.title('Tonnes SC+ Required by Marketshed')
-plt.yticks([])
-plt.xticks([])
-plt.colorbar()
-plt.savefig(wdfigs+'ishedsDemand',dpi=700)
-
-plt.clf()
-plt.imshow(malnum,cmap=cm.jet,vmin=0,vmax=100)
-plt.title('Number of Malnurished')
-plt.yticks([])
-plt.xticks([])
-plt.colorbar()
-plt.savefig(wdfigs+'malnumsubsaharan',dpi=700)
-
+#for i in range(len(np.amax(isheds)+1)):
 
 plt.clf()
 plt.imshow(isheds,cmap=cm.nipy_spectral)
@@ -654,34 +582,28 @@ plt.savefig(wdfigs +'traveltime250k',dpi=700)
 ######################################
 # mapping between
 ######################################
-exit()
 gmaps = googlemaps.Client(key='AIzaSyAv4HITl2PsxqID8CX8xbOa8qMv6CU03hA')
-distanceArray=np.zeros(shape=(91,91))
+distanceArray=np.zeros(shape=(94,94))
 distanceDictionary={}
 counter=0
 listofcities=IDofmarketsheds
 for i in range(len(listofcities)):
-    print(listofcities[i])
     distanceDictionary[listofcities[i]]=[]
     for j in range(len(listofcities)):
         if listofcities[i]==listofcities[j]:
             distanceDictionary[listofcities[i]].append(0)
             distanceArray[i,j]=0
         else:
-            gmapreturn=(gmaps.distance_matrix(listofcities[i]+" "+matchcountries[i],listofcities[j]+" "+matchcountries[j])['rows'][0]['elements'][0])
+            gmapreturn=(gmaps.distance_matrix(listofcities[i]+matchcountries[i],listofcities[j]+matchcountries[j])['rows'][0]['elements'][0])
             if(gmapreturn=={u'status': u'ZERO_RESULTS'} or gmapreturn=={u'status': u'NOT_FOUND'}):
-                distanceDictionary[listofcities[i]].append(999999999)
-                distanceArray[i,j]=999999999
-                print('wrong!')
+                distanceDictionary[listofcities[i]].append(99999)
+                distanceArray[i,j]=99999
             else:
                 distanceDictionary[listofcities[i]].append(gmapreturn['distance']['value'])
                 distanceArray[i,j]=gmapreturn['distance']['value']
 
-for key in distanceDictionary:
-    for i in range(len(distanceDictionary[key])):
-        distanceDictionary[key][i]=(distanceDictionary[key][i]/1000.0)
-
-distanceArray=distanceArray/1000.0
+###convert to cost of transport per tonne
+# distanceDictionary.update((x, y/1000*) for x, y in distanceDictionary.items())
 
 ##9cents per metric tonne km
 transportcostArray=distanceArray*0.09
@@ -692,23 +614,6 @@ for i in range(len(listofcities)):
     networkDictionary[listofcities[i]]=[]
     for j in range(len(listofcities)):
         networkDictionary[listofcities[i]].append(transportcostArray[i,j])
-
-with open(wddata + 'travel_time/traveldictionary.json', 'w') as outfile:
-      json.dump(distanceDictionary, outfile)
-
-with open(wddata + 'travel_time/traveldictionary2.json', 'w') as outfile:
-      json.dump(networkDictionary, outfile)
-
-df = pd.DataFrame(distanceArray)
-df.to_csv(wddata+"travelarray.csv", header=None, index=None)
-
-with open(wddata + 'travel_time/traveldictionary.json') as f:
-      distanceDictionary=json.load(f)
-
-df = pd.DataFrame(distanceArray)
-df.to_csv(wddata+"travelarray.csv", header=None, index=None)
-
-distanceArray = np.genfromtxt(wddata+'travelarray.csv', delimiter=',')
 
 ###convert to cost of transport per tonne
 # distanceDictionary.update((x, y/1000*) for x, y in distanceDictionary.items())
@@ -759,3 +664,69 @@ f=open(wddata+'population/nationalcasenumbers.csv','w')
 for i in range(len(i)):
     f.write(str(subsaharancountry[i]) +','+ str(indexedwasting[i]) +','+ str(indexedSAM[i]) + "," + str(indexedMAM[i]) + "," + str(indexedstunting[i])+'\n')
 f.close()
+
+######################################
+# Countries
+######################################
+
+ds=gdal.Open(wddata+'boundaries/gpw-v4-national-identifier-grid-rev10_30_sec_tif/gpw_v4_national_identifier_grid_rev10_30_sec.tif')
+width = ds.RasterXSize
+height = ds.RasterYSize
+gt = ds.GetGeoTransform()
+minx = gt[0]
+miny = gt[3] + width*gt[4] + height*gt[5] 
+maxx = gt[0] + width*gt[1] + height*gt[2]
+maxy = gt[3] 
+pixelsize=abs(gt[-1])
+
+latc=np.ones(shape=(height))
+lonc=np.ones(shape=(width))
+for w in range(width):
+	lonc[w]=minx+w*pixelsize
+for h in range(height):
+	latc[h]=miny+h*pixelsize
+
+latc=latc[::-1]
+
+nations=ds.ReadAsArray()
+##### Scale to Africa #####
+nations=nations[latc<np.amax(latsubsaharan)+pixelsizem]
+latc=latc[latc<np.amax(latsubsaharan)+pixelsizem]
+nations=nations[latc>np.amin(latsubsaharan)]
+latc=latc[latc>np.amin(latsubsaharan)]
+
+nations=nations[:,lonc<np.amax(lonsubsaharan)+pixelsizem]
+lonc=lonc[lonc<np.amax(lonsubsaharan)+pixelsizem]
+nations=nations[:,lonc>np.amin(lonsubsaharan)]
+lonc=lonc[lonc>np.amin(lonsubsaharan)]
+
+##### Scale to 5km #####
+latl=np.radians(latc[::-1])+1.2
+lonl=np.radians(lonc)+1.2
+lut=RectSphereBivariateSpline(latl, lonl, nations)
+
+newLats,newLons=np.meshgrid(np.radians(latsubsaharan[::-1])+1.2,np.radians(lonsubsaharan)+1.2)
+nations=lut.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonsubsaharan),len(latsubsaharan))).T
+
+nations=np.ma.masked_array(nations,africaMask1)
+africaMask2=np.array(africaMask1)
+africaMask2[nations>3000]=1
+nations=np.ma.masked_array(nations,africaMask2)
+
+f=open(wddata+'boundaries/countries_countryCodes.csv')
+code=np.zeros(shape=(247),dtype=int)
+countryNames=[]
+i=-1
+for line in f:
+	i+=1
+	tmp=line.split(',')
+	code[i]=int(tmp[3])
+	countryNames.append(tmp[0])
+
+plt.clf()
+plt.imshow(nations,cmap=cm.nipy_spectral,vmin=230,vmax=235)
+plt.yticks([])
+plt.xticks([])
+plt.title('Countries')
+plt.colorbar()
+plt.savefig(wdfigs +'countries',dpi=700)

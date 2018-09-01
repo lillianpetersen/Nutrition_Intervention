@@ -91,6 +91,7 @@ def checkIfInPolygon(lon, lat,polygon):
 def findGridDataLays(shapePoints,grid):
 	'''Convert Vector To Raster'''
 	griddedHits=np.zeros(shape=(len(grid[:,0]),len(grid[0,:])))
+	stepsize=np.zeros(shape=(len(shapePoints)))
 	for i in range(len(shapePoints)-1):
 		x1,y1=shapePoints[i]
 		x2,y2=shapePoints[i+1]
@@ -102,11 +103,18 @@ def findGridDataLays(shapePoints,grid):
 			if dist>50:
 				continue
 			if x2<x1:
-				x=np.arange(x2,x1,abs(x2-x1)/(2*dist))
+				step=abs(x2-x1)/(2*dist)
+				if step==0:
+					step==0.004
+				x=np.arange(x2,x1,step)
 			else:
 				if x2==x1:
 					x2=x1+1e-4
-				x=np.arange(x1,x2,abs(x2-x1)/(2*dist))
+				step=abs(x2-x1)/(2*dist)
+				if step==0:
+					step==0.004
+				x=np.arange(x1,x2,step)
+			stepsize[i]=abs(x2-x1)/(2*dist)
 			slope,bInt=np.polyfit([x1,x2],[y1,y2],1)
 			yfit=slope*np.array(x)+bInt
 			linePoints=np.zeros(shape=(len(yfit),2))
@@ -125,7 +133,7 @@ def findGridDataLays(shapePoints,grid):
 			else:
 				yClosestGrid=np.where(grid[0,:,1]==yClosestL)[0][0]
 			griddedHits[xClosestGrid,yClosestGrid]=1
-	return griddedHits # lon lat
+	return griddedHits,stepsize # lon lat
 				
 		
 def findGridAndDistance(shapePoints,grid):
@@ -1547,78 +1555,82 @@ if makePlots:
 ###########################################
 # Religion
 ###########################################
-rStates=shapefile.Reader(wddata+'nigeria_landtype/NIR-level_1.shp')
+#rStates=shapefile.Reader(wddata+'nigeria_landtype/NIR-level_1.shp')
 #rRoads = shapefile.Reader(wddata+'nigeria_roads/part/nga_trs_roads_osm_wfpschema_sep2016/nga_trs_roads_osm_wfpschema_sep2016.shp')
+
+rStates=shapefile.Reader(wddata+'boundaries/MapLibraryCD/Data/Africa.shp')
 
 records=rStates.shapeRecords()
 records=MaskableList(records)
-stateName=[rec.record[3] for rec in records]
+stateName=[rec.record[3] for rec in records1]
 mask1=np.array([Type!='' for Type in stateName])
 records1=records[mask1]
+stateName=[rec.record[3] for rec in records1]
 
 for i in range(len(records1)):
-	shapePoints=np.array(records1[i].shape.points)
-	state=findGridDataLays(shapePoints,grid)
-	stateFilled=np.zeros(shape=(state.shape))
 
-	stateLons=np.where(state==1)[0]
-	stateLats=np.where(state==1)[1]
-	minLon,minLat=np.amin(stateLons),np.amin(stateLats)
-	maxLon,maxLat=np.amax(stateLons),np.amax(stateLats)
-	avgLon1=minLon+2
-	avgLat2=minLat+2
-	whereMinLon1=np.where(stateLons==minLon)[0][len(np.where(stateLons==minLon)[0])/2]
-	whereMinLat2=np.where(stateLats==minLat)[0][len(np.where(stateLats==minLat)[0])/2]
-	avgLat1=stateLats[whereMinLon1]
-	avgLon2=stateLons[whereMinLat2]
-	stateFilled[avgLon1,avgLat1]=3
-	stateFilled[avgLon2,avgLat2]=3
-	stateFilled=stateFilled[minLon:maxLon,minLat:maxLat]
-	state=state[minLon:maxLon,minLat:maxLat]
+shapePoints=np.array(records1[0].shape.points)
+state,stepsize=findGridDataLays(shapePoints,gridsubsaharan)
+stateFilled=np.zeros(shape=(state.shape))
 
-	for j in range(2):
-		for ilon in range(len(state[:,0])):
-			if ilon==0:
+stateLons=np.where(state==1)[0]
+stateLats=np.where(state==1)[1]
+minLon,minLat=np.amin(stateLons),np.amin(stateLats)
+maxLon,maxLat=np.amax(stateLons),np.amax(stateLats)
+avgLon1=minLon+2
+avgLat2=minLat+2
+whereMinLon1=np.where(stateLons==minLon)[0][len(np.where(stateLons==minLon)[0])/2]
+whereMinLat2=np.where(stateLats==minLat)[0][len(np.where(stateLats==minLat)[0])/2]
+avgLat1=stateLats[whereMinLon1]
+avgLon2=stateLons[whereMinLat2]
+stateFilled[avgLon1,avgLat1]=3
+stateFilled[avgLon2,avgLat2]=3
+stateFilled=stateFilled[minLon:maxLon,minLat:maxLat]
+state=state[minLon:maxLon,minLat:maxLat]
+
+for j in range(2):
+	for ilon in range(len(state[:,0])):
+		if ilon==0:
+			continue
+		for ilat in range(len(state[0,:])):
+			if ilat==0:
 				continue
-			for ilat in range(len(state[0,:])):
-				if ilat==0:
-					continue
-				if state[ilon,ilat]==1:
-					continue
-				for k in range(len(state[:,0])):
-					if np.amax(stateFilled[ilon-1:ilon+2,ilat-1:ilat+2])>=1 and np.amax(state[ilon,ilat:ilat+2])==0:
-						stateFilled[ilon,ilat]=1
-		for ilon in range(len(state[:,0]))[::-1]:
-			if ilon==0:
+			if state[ilon,ilat]==1:
 				continue
-			for ilat in range(len(state[0,:]))[::-1]:
-				if ilat==0:
-					continue
-				for k in range(len(state[:,0])):
-					if np.amax(stateFilled[ilon-1:ilon+2,ilat-1:ilat+2])>=1 and np.amax(state[ilon,ilat:ilat+2])==0:
-						stateFilled[ilon,ilat]=1
-
+			for k in range(len(state[:,0])):
+				if np.amax(stateFilled[ilon-1:ilon+2,ilat-1:ilat+2])>=1 and np.amax(state[ilon,ilat:ilat+2])==0:
+					stateFilled[ilon,ilat]=1
 	for ilon in range(len(state[:,0]))[::-1]:
 		if ilon==0:
 			continue
 		for ilat in range(len(state[0,:]))[::-1]:
 			if ilat==0:
 				continue
-			if ilon==len(state[:,0])-1 or ilat==len(state[0,:])-1:
-				continue
-			if stateFilled[ilon,ilat-1]>=1:
-				stateFilled[ilon,ilat]=1
-			if stateFilled[ilon-1,ilat]>=1:
-				stateFilled[ilon,ilat]=1
-			if np.sum([state[ilon,ilat-1],state[ilon,ilat+1],state[ilon-1,ilat],state[ilon+1,ilat]])>=3:
-				stateFilled[ilon,ilat]=1
-	state=np.array(state,dtype=int)
-	whereBound=np.where(state==1)
-	for k in range(len(whereBound[0])):
-		stateFilled[whereBound[0][k],whereBound[1][k]]=2
-	plt.clf()
-	plt.imshow(stateFilled)
-	plt.savefig(wdfigs+'nigeria_states_filled',dpi=700)
+			for k in range(len(state[:,0])):
+				if np.amax(stateFilled[ilon-1:ilon+2,ilat-1:ilat+2])>=1 and np.amax(state[ilon,ilat:ilat+2])==0:
+					stateFilled[ilon,ilat]=1
+
+for ilon in range(len(state[:,0]))[::-1]:
+	if ilon==0:
+		continue
+	for ilat in range(len(state[0,:]))[::-1]:
+		if ilat==0:
+			continue
+		if ilon==len(state[:,0])-1 or ilat==len(state[0,:])-1:
+			continue
+		if stateFilled[ilon,ilat-1]>=1:
+			stateFilled[ilon,ilat]=1
+		if stateFilled[ilon-1,ilat]>=1:
+			stateFilled[ilon,ilat]=1
+		if np.sum([state[ilon,ilat-1],state[ilon,ilat+1],state[ilon-1,ilat],state[ilon+1,ilat]])>=3:
+			stateFilled[ilon,ilat]=1
+state=np.array(state,dtype=int)
+whereBound=np.where(state==1)
+for k in range(len(whereBound[0])):
+	stateFilled[whereBound[0][k],whereBound[1][k]]=2
+plt.clf()
+plt.imshow(stateFilled)
+plt.savefig(wdfigs+'nigeria_states_filled',dpi=700)
 
 
 
@@ -1673,13 +1685,13 @@ for i in range(len(records1)):
 #	plt.plot(shapePoints[:,0],shapePoints[:,1])
 #plt.savefig(wdfigs+'nigeria_states.pdf')
 
-plt.clf()
-map = Basemap(llcrnrlon=lonM[0]-.5,llcrnrlat=np.amin(latM)-.5,urcrnrlon=lonM[-1],urcrnrlat=np.amax(latM), projection='lcc',lon_0=(lonM[-1]+lonM[0])/2,lat_0=(latM[-1]+latM[0])/2,resolution='i')
-map.drawcountries()
-map.readshapefile(wddata+'nigeria_landtype/NIR-level_1', name='admin', drawbounds=True,linewidth=1.5)
-ax = plt.gca()
-plt.title('Nigerian States')
-plt.savefig(wdfigs+'nigeria_states.pdf')
+#plt.clf()
+#map = Basemap(llcrnrlon=-19,llcrnrlat=-35,urcrnrlon=52,urcrnrlat=39, projection='lcc',lon_0=(-19+52)/2,lat_0=(-35+39)/2,resolution='c')
+#map.drawcountries()
+#map.readshapefile(wddata+'boundaries/MapLibraryCD/Data/Africa', name='admin', drawbounds=True,linewidth=1.5)
+#ax = plt.gca()
+#plt.title('States')
+#plt.savefig(wdfigs+'countires.pdf')
 
 '''
 ###########################################
