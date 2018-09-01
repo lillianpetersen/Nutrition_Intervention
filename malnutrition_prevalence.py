@@ -679,10 +679,10 @@ for line in f:
     i+=1
     tmp=line.split(',')
     subsaharancountry.append(tmp[0])
-    indexedwasting[i]=float(tmp[1])
-    indexedSAM[i]=float(tmp[2])
-    indexedMAM[i]=float(tmp[3])
-    indexedstunting[i]=float(tmp[4])
+    indexedwasting[i]=float(tmp[1]+tmp[2])
+    indexedSAM[i]=float(tmp[1])
+    indexedMAM[i]=float(tmp[1])
+    indexedstunting[i]=float(tmp[3])
 
 ######################################
 # Countries
