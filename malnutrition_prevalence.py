@@ -582,25 +582,25 @@ plt.savefig(wdfigs +'traveltime250k',dpi=700)
 ######################################
 # mapping between
 ######################################
-gmaps = googlemaps.Client(key='AIzaSyAv4HITl2PsxqID8CX8xbOa8qMv6CU03hA')
-distanceArray=np.zeros(shape=(94,94))
-distanceDictionary={}
-counter=0
-listofcities=IDofmarketsheds
-for i in range(len(listofcities)):
-    distanceDictionary[listofcities[i]]=[]
-    for j in range(len(listofcities)):
-        if listofcities[i]==listofcities[j]:
-            distanceDictionary[listofcities[i]].append(0)
-            distanceArray[i,j]=0
-        else:
-            gmapreturn=(gmaps.distance_matrix(listofcities[i]+matchcountries[i],listofcities[j]+matchcountries[j])['rows'][0]['elements'][0])
-            if(gmapreturn=={u'status': u'ZERO_RESULTS'} or gmapreturn=={u'status': u'NOT_FOUND'}):
-                distanceDictionary[listofcities[i]].append(99999)
-                distanceArray[i,j]=99999
-            else:
-                distanceDictionary[listofcities[i]].append(gmapreturn['distance']['value'])
-                distanceArray[i,j]=gmapreturn['distance']['value']
+#gmaps = googlemaps.Client(key='AIzaSyAv4HITl2PsxqID8CX8xbOa8qMv6CU03hA')
+#distanceArray=np.zeros(shape=(94,94))
+#distanceDictionary={}
+#counter=0
+#listofcities=IDofmarketsheds
+#for i in range(len(listofcities)):
+#    distanceDictionary[listofcities[i]]=[]
+#    for j in range(len(listofcities)):
+#        if listofcities[i]==listofcities[j]:
+#            distanceDictionary[listofcities[i]].append(0)
+#            distanceArray[i,j]=0
+#        else:
+#            gmapreturn=(gmaps.distance_matrix(listofcities[i]+matchcountries[i],listofcities[j]+matchcountries[j])['rows'][0]['elements'][0])
+#            if(gmapreturn=={u'status': u'ZERO_RESULTS'} or gmapreturn=={u'status': u'NOT_FOUND'}):
+#                distanceDictionary[listofcities[i]].append(99999)
+#                distanceArray[i,j]=99999
+#            else:
+#                distanceDictionary[listofcities[i]].append(gmapreturn['distance']['value'])
+#                distanceArray[i,j]=gmapreturn['distance']['value']
 
 ###convert to cost of transport per tonne
 # distanceDictionary.update((x, y/1000*) for x, y in distanceDictionary.items())
