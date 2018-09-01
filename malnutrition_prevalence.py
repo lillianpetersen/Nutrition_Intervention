@@ -683,12 +683,15 @@ for key in distanceDictionary:
 
 distanceArray=distanceArray/1000.0
 
+##9cents per metric tonne km
+transportcostArray=distanceArray*0.09
+
 networkDictionary={}
 ### array to dict
 for i in range(len(listofcities)):
     networkDictionary[listofcities[i]]=[]
     for j in range(len(listofcities)):
-        networkDictionary[listofcities[i]].append(distanceArray[i,j])
+        networkDictionary[listofcities[i]].append(transportcostArray[i,j])
 
 with open(wddata + 'travel_time/traveldictionary.json', 'w') as outfile:
       json.dump(distanceDictionary, outfile)
@@ -709,4 +712,50 @@ distanceArray = np.genfromtxt(wddata+'travelarray.csv', delimiter=',')
 
 ###convert to cost of transport per tonne
 # distanceDictionary.update((x, y/1000*) for x, y in distanceDictionary.items())
+subsaharancountry=[]
+f=open(wddata+'population/subsaharan.csv','r')
+i=-1
+for line in f:
+    i+=1
+    tmp=line.split(',')
+    subsaharancountry.append(tmp[0][:-1])
 
+countryW=[]
+wastingnational=np.zeros(shape=193)
+SAMnational=np.zeros(shape=193)
+stuntingnational=np.zeros(shape=193)
+f=open(wddata+'population/nationalwastingnumbers.csv','r')
+i=-1
+for line in f:
+    i+=1
+    tmp=line.split(',')
+    countryW.append(tmp[0])
+    try:
+        wastingnational[i]=float(tmp[1])
+    except:
+        wastingnational[i]=0
+    try:
+        SAMnational[i]=float(tmp[2])
+    except:
+        SAMnational[i]=0
+    try:
+        stuntingnational[i]=float(tmp[3])
+    except:
+        stuntingnational[i]=0
+  
+indexedwasting=np.zeros(shape=50)
+indexedSAM=np.zeros(shape=50)
+indexedstunting=np.zeros(shape=50)
+indexedMAM=np.zeros(shape=50)
+for j in range(len(subsaharancountry)):
+    for i in range(len(countryW)):
+        if(subsaharancountry[j] == countryW[i]):
+            indexedwasting[j]=wastingnational[i]*1000.0
+            indexedSAM[j]=SAMnational[i]*1000.0
+            indexedstunting[j]=stuntingnational[i]*1000.0
+            indexedMAM[j]=indexedwasting[j]-indexedSAM[j]
+
+f=open(wddata+'population/nationalcasenumbers.csv','w')
+for i in range(len(i)):
+    f.write(str(subsaharancountry[i]) +','+ str(indexedwasting[i]) +','+ str(indexedSAM[i]) + "," + str(indexedMAM[i]) + "," + str(indexedstunting[i])+'\n')
+f.close()
