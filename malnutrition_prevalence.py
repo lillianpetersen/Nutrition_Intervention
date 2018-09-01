@@ -673,8 +673,8 @@ indexedSAM=np.zeros(shape=50)
 indexedstunting=np.zeros(shape=50)
 indexedMAM=np.zeros(shape=50)
 
-f=open(wddata+'population/nationalwastingnumbers.csv','r')
-# i=-1
+f=open(wddata+'population/nationalcasenumbers.csv','r')
+i=-1
 for line in f:
     i+=1
     tmp=line.split(',')
@@ -749,3 +749,12 @@ plt.xticks([])
 plt.title('Countries')
 plt.colorbar()
 plt.savefig(wdfigs +'countries',dpi=700)
+
+#indexing the country codes
+indexedcodes=np.zeros(shape=50)
+for i in range(len(subsaharancountry)):
+    for j in range(len(countryNames)):
+        if(subsaharancountry[i]==countryNames[j]):
+            indexedcodes[i]=code[j]
+            print('got')
+            print(subsaharancountry[i])
