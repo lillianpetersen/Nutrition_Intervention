@@ -29,8 +29,7 @@ from scipy import ndimage
 from scipy.signal import convolve2d
 from sklearn import linear_model
 from scipy.interpolate import RectSphereBivariateSpline
-from libtiff import TIFF
-import googlemaps
+#import googlemaps
 
 ###############################################
 # Functions
@@ -422,7 +421,6 @@ try:
 	wddata='/Users/lilllianpetersen/iiasa/data/'
 	wdfigs='/Users/lilllianpetersen/iiasa/figs/'
 	wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
-	tifWasting=TIFF.open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2010_PREVALENCE_Y2018M02D28.TIF',mode='r')
 except:
 	wddata='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/data/'
 	wdfigs='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/figs/'
@@ -651,6 +649,42 @@ plt.yticks([])
 plt.title('Distance to Coastlines, km')
 plt.savefig(wdfigs+'distToCoasts'+str(1),dpi=700)
 
+###########################################
+# Conflicts
+###########################################
+def marketPotentials(pop,popCoord,gridMid,imageMask2):
+	lenLat=len(gridMid[:,0,0])
+	lenLon=len(gridMid[0,:,0])
+	MP=np.zeros(shape=(gridMid[:,:].shape))
+	for ilat in range(lenLat):
+		print np.round(100*ilat/float(lenLat),2),'%'
+		for ilon in range(lenLon):
+			if imageMask2[ilat,ilon]==True:
+				continue
+			dists=np.sqrt((gridMid[ilat,ilon,0]-popCoord[:,0])**2+(gridMid[ilat,ilon,1]-popCoord[:,1])**2)
+			MP[ilat,ilon]=np.sum(pop/(dists**1.2))
+	return MP
+
+conflictsAll=np.load(wdvars+'africa_fatalities')
+conflictCoordAll=np.load(wdvars+'conflictCoord')
+
+conflicts=np.ma.compressed(conflictsAll[113:116])
+conflictCoord=np.zeros(shape=(len(conflicts),2))
+conflictCoord[:,0]=np.ma.compressed(conflictCoordAll[113:116,:,:,0])
+conflictCoord[:,1]=np.ma.compressed(conflictCoordAll[113:116,:,:,1])
+
+MPconflicts=marketPotentials(conflicts,conflictCoord,gridMid,imageMask2)
+MPconflicts=MPconflicts[:,:,0]
+MPconflicts=np.ma.masked_array(MPconflicts,imageMask2)
+
+plt.clf()
+plt.imshow(MPconflicts,vmax=40000,cmap=cm.gist_heat_r)
+plt.colorbar()
+plt.xticks([])
+plt.yticks([])
+plt.title('Conflicts index')
+plt.savefig(wdfigs+'MPconflicts.png',dpi=700)
+
 ######################################################
 # Travel Time
 ######################################################
@@ -713,12 +747,10 @@ plt.colorbar()
 plt.savefig(wdfigs+'travel',dpi=700)
 
 
-
-
-exit()
+from sklearn import linear_model
 
 ##### Machine learning #####
-indicies=[pop5km,distToCoasts[:,:,0],distToCoasts[:,:,1]]
+indicies=[pop5km,distToCoasts[:,:,0],distToCoasts[:,:,1],MPconflicts,travel]
 #indicies=[distToCoasts[:,:,0]]
 xMulti=np.ma.zeros(shape=(len(latm),len(lonm),len(indicies)))
 ydata=np.ma.compressed(mal)
@@ -731,10 +763,31 @@ for i in range(len(xMulti[0,0,:])):
     xMulti[:,:,i]=scale(xMulti[:,:,i])
     xMultiC[:,i]=np.ma.compressed(xMulti[:,:,i])
 
-xMultiTrain, xMultiTest, ydataTrain, ydataTest = sklearn.model_selection.train_test_split(xMultiC,ydata,test_size=.2,train_size=.8)
+#xMultiTrain, xMultiTest, ydataTrain, ydataTest = sklearn.model_selection.train_test_split(xMultiC,ydata,test_size=.2,train_size=.8)
+#clf=RandomForestRegressor()
+#clf.fit(xMultiTrain,ydataTrain)
+clf=linear_model.LinearRegression()
+clf.fit(xMultiC,ydata)
 
-clf=RandomForestRegressor()
-clf.fit(xMultiTrain,ydataTrain)
+malPred=np.zeros(shape=(MPconflicts.shape))
+malPred=np.ma.masked_array(malPred,imageMask2)
+x1=0
+for i in range(len(malPred[:,0])):
+    x2=len(malPred[i][np.ma.getmask(malPred[i])==False])+x1
+	if x2==x1:
+		continue
+    malPred[i][np.ma.getmask(malPred[i])==False]=clf.predict(xMultiC[x1:x2])
+    x1=x2
+
+plt.clf()
+plt.imshow(malPred,cmap=cm.jet,vmin=0,vmax=0.3)
+plt.colorbar()
+plt.yticks([])
+plt.xticks([])
+plt.title('Predicted Malnutrition, Percent of Population')
+plt.savefig(wdfigs+'malPred_Africa',dpi=700)
+exit()
+
 
 malPred=clf.predict(xMultiTest)
 Corr=corr(malPred,ydataTest)

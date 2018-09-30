@@ -21,6 +21,11 @@ def checkIfInPolygon(lon, lat,polygon):
 	point = Point(lon, lat)
 	return polygon.contains(point)
 
+def scale(var):
+	varScaled=(var-np.amin(var))/(np.amax(var)-np.amin(var))
+	return varScaled
+
+
 wddata='/Users/lilllianpetersen/iiasa/data/'
 wdfigs='/Users/lilllianpetersen/iiasa/figs/'
 wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
@@ -30,18 +35,20 @@ f=open(wddata+'Africa_conflictss.csv','r')
 monthDict={'January':0,'February':1,'March':2,'April':3,'May':4,'June':5,'July':6,'August':7,'September':8,'October':9,'November':10,'December':11}
 
 allDataIDs=np.zeros(shape=(161939),dtype=int)
-timePrecision=np.zeros(shape=(161939))
+timePrecision=-9999*np.zeros(shape=(119,12,2000))
 eventTypeDict={}
 eventTypeCounter=0
 countriesAll=[]
 countryCodeAll=[]
-latAll=np.zeros(shape=(161939))
-lonAll=np.zeros(shape=(161939))
-fatalitiesAll=np.zeros(shape=(161939))
+latAll=-9999*np.zeros(shape=(119,12,2000))
+lonAll=-9999*np.ones(shape=(119,12,2000))
+fatalitiesAll=-9999*np.ones(shape=(119,12,2000))
 fatalitiesOver100=0
 
 i=-2
 g=-1
+d=-1
+lastMonth=0
 for line in f:
 	i+=1
 	if i==-1:
@@ -73,15 +80,19 @@ for line in f:
 	if dataID==allDataIDs[g-1]:
 		continue
 	g+=1
+	d+=1
 
 	date=tmp[4]
 	date=date.replace('"','')
 	date=date.split(' ')
 	day=int(date[0])
-	month=monthDict[date[1]]
-	year=int(date[2])
+	m=monthDict[date[1]]
+	year=int(date[2])-1900
+	if m!=lastMonth:
+		d=0
+	lastMonth=m
 
-	timePrecision[g]=tmp[6]
+	timePrecision[year,m,d]=tmp[6]
 	eventType=tmp[7].replace('"','')
 
 	try:
@@ -98,72 +109,90 @@ for line in f:
 	
 	lat=float(tmp[18])
 	lon=float(tmp[19])
-	latAll[g]=lat
-	lonAll[g]=lon
+	latAll[year,m,d]=lat
+	lonAll[year,m,d]=lon
 	geoAccuracy=tmp[20] #Probably not important
 
 	notes=tmp[23]
 
 	fatalities=int(tmp[24])
-	fatalitiesAll[g]=fatalities
+	fatalitiesAll[year,m,d]=fatalities
 
 	if fatalities>=88:
 		fatalitiesOver100+=1
-	if fatalitiesAll[g]>10000:
-		fatalitiesAll[g]=3000
-	if fatalitiesAll[g]>3000:
-		fatalitiesAll[g]=2500
 
 plt.clf()
-plt.plot(fatalitiesAll,'*')
+plt.plot(np.ma.compressed(fatalitiesAll[fatalitiesAll!=0]),'*')
 plt.title('Fatalities in All African Conflicts since 1997')
 plt.savefig(wdfigs+'fatalitiesAll.pdf')
 
+fatalitiesAll=np.array(fatalitiesAll)
+latAll=np.array(latAll)
+lonAll=np.array(lonAll)
+timePrecision=np.array(timePrecision)
+
+fatalMask=np.zeros(shape=(fatalitiesAll.shape),dtype=int)
+fatalMask[fatalitiesAll==-9999]=1
+fatalMask[fatalitiesAll==0]=1
+fatalitiesAll=np.ma.masked_array(fatalitiesAll,fatalMask)
+latAll=np.ma.masked_array(latAll,fatalMask)
+lonAll=np.ma.masked_array(lonAll,fatalMask)
+timePrecision=np.ma.masked_array(timePrecision,fatalMask)
+
 ################### Read in Ethipia Shape Files ########################
-r = shapefile.Reader(wddata+'night_light_ethiopia/2017/2013/Ethiopia_regions_2014/Ethiopia_regions_2014.shp')
-rCountry = shapefile.Reader(wddata+'night_light_ethiopia/2017/2013/Ethiopia_regions_2014/ETH_outline.shp')
-# Read in Regions
-for i in range(len(r.shapes())):
-	vars()['shapes'+str(i)] = r.shapes()[i]
-	vars()['shape_points'+str(i)]=vars()['shapes'+str(i)].points
-	vars()['polygon'+str(i)]=patches.Polygon(vars()['shape_points'+str(i)])
-	vars()['points'+str(i)]=np.array(vars()['shape_points'+str(i)])
-
-	plt.plot(vars()['points'+str(i)][:,0],vars()['points'+str(i)][:,1],'.')
-	plt.savefig(wdfigs+'regions',dpi=600)
-
-# Entire Country
-shapeC=rCountry.shapes()[0]
-shape_pointsC=shapeC.points
-polygonC=patches.Polygon(shape_pointsC)
-pointsC=np.array(shape_pointsC)
+#plt.clf()
+#r = shapefile.Reader(wddata+'night_light_ethiopia/2017/2013/Ethiopia_regions_2014/Ethiopia_regions_2014.shp')
+#rCountry = shapefile.Reader(wddata+'night_light_ethiopia/2017/2013/Ethiopia_regions_2014/ETH_outline.shp')
+## Read in Regions
+#for i in range(len(r.shapes())):
+#	vars()['shapes'+str(i)] = r.shapes()[i]
+#	vars()['shape_points'+str(i)]=vars()['shapes'+str(i)].points
+#	vars()['polygon'+str(i)]=patches.Polygon(vars()['shape_points'+str(i)])
+#	vars()['points'+str(i)]=np.array(vars()['shape_points'+str(i)])
+#
+#	plt.plot(vars()['points'+str(i)][:,0],vars()['points'+str(i)][:,1],'.')
+#	plt.savefig(wdfigs+'regions',dpi=600)
+#
+## Entire Country
+#shapeC=rCountry.shapes()[0]
+#shape_pointsC=shapeC.points
+#polygonC=patches.Polygon(shape_pointsC)
+#pointsC=np.array(shape_pointsC)
 ########################################################################
 
+
 ########################## Plot Fatalities #############################
-#m = Basemap(llcrnrlon=-20,llcrnrlat=-38,urcrnrlon=54,urcrnrlat=41, projection='lcc',lon_0=23.5,lat_0=3.5)
 plt.clf()
-m = Basemap(llcrnrlon=33,llcrnrlat=2.5,urcrnrlon=48.5,urcrnrlat=15.5, projection='lcc',lon_0=40.49,lat_0=9.145,resolution='i')
+m = Basemap(llcrnrlon=-20,llcrnrlat=-38,urcrnrlon=54,urcrnrlat=41, projection='lcc',lon_0=23.5,lat_0=3.5)
 m.drawcountries()
 m.drawcoastlines(linewidth=2)
-#m.fillcontinents(color='white',lake_color='black',zorder=0)
+#m.fillcontinents(color='white',lake_color='blue',zorder=0)
 
-latAllForPlot=np.zeros(shape=(fatalitiesOver100+1))
-lonAllForPlot=np.zeros(shape=(fatalitiesOver100+1))
-fatalitiesAllScaled=np.zeros(shape=(fatalitiesAll.shape))
-i=-1
-for k in range(len(latAll)):
-	fatalitiesAllScaled[k]=((fatalitiesAll[k]-np.amin(fatalitiesAll))/(np.amax(fatalitiesAll)-np.amin(fatalitiesAll)))*(300-1)+1
+fatalitiesScaled=scale(np.ma.compressed(fatalitiesAll[113:116]))*20
+fatalitiesPlot=np.ma.compressed(fatalitiesAll[113:116])
 
-x,y = m(lonAll, latAll)
-m.scatter(x,y,s=fatalitiesAllScaled,c=fatalitiesAll,cmap=cm.gist_heat_r,alpha=0.7,norm=colors.LogNorm())
+x,y = m(np.ma.compressed(lonAll[113:116]), np.ma.compressed(latAll[113:116]))
+m.scatter(x,y,s=fatalitiesScaled,c=fatalitiesPlot,cmap=cm.gist_heat_r,alpha=0.7,norm=colors.LogNorm())
 plt.colorbar()
-for i in range(len(r.shapes())):
-	x,y=m(vars()['points'+str(i)][:,0],vars()['points'+str(i)][:,1])
-	m.plot(x,y,linestyle='-')
-plt.title('African Fatalities from Conflicts, 1997-Today')
+plt.title('African Fatalities from Conflicts, 2013-2015')
 
-#plt.savefig(wdfigs+'africa_fatalities',dpi=700)
-plt.savefig(wdfigs+'ethiopia_fatalities',dpi=700)
+plt.savefig(wdfigs+'africa_fatalities',dpi=700)
+
+conflictCoord=np.zeros(shape=(119,12,2000,2))
+conflictCoord[:,:,:,0]=latAll
+conflictCoord[:,:,:,1]=lonAll
+
+fatalMask3=np.zeros(shape=(119,12,2000,2))
+for i in range(2):
+	fatalMask3[:,:,:,i]=fatalMask
+
+conflictCoord=np.ma.masked_array(conflictCoord,fatalMask3)
+
+fatalitiesAll.dump(wdvars+'africa_fatalities')
+conflictCoord.dump(wdvars+'conflictCoord')
+
+
+exit()
 ########################################################################
 
 ################ Divide Ethiopia Conflicts into Regions ################
