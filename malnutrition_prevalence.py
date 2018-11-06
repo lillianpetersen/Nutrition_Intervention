@@ -29,8 +29,7 @@ from scipy import ndimage
 from scipy.signal import convolve2d
 from sklearn import linear_model
 from scipy.interpolate import RectSphereBivariateSpline
-from libtiff import TIFF
-import googlemaps
+#import googlemaps
 
 ###############################################
 # Functions
@@ -229,7 +228,7 @@ try:
 	wddata='/Users/lilllianpetersen/iiasa/data/'
 	wdfigs='/Users/lilllianpetersen/iiasa/figs/'
 	wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
-	tifWasting=TIFF.open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2010_PREVALENCE_Y2018M02D28.TIF',mode='r')
+	tifWasting=gdal.Open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2010_PREVALENCE_Y2018M02D28.TIF')
 except:
 	wddata='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/data/'
 	wdfigs='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/figs/'
@@ -396,6 +395,7 @@ plt.savefig(wdfigs+'malnumber',dpi=900)
 ######################################
 # Travel time from 250k
 ######################################
+print 'travel time from 250k'
 
 ds=gdal.Open(wddata+'travel_time/TT_250K--SSA.tif')
 width = ds.RasterXSize
@@ -449,6 +449,12 @@ plt.yticks([])
 plt.xticks([])
 plt.colorbar()
 plt.savefig(wdfigs+'travel',dpi=700)
+
+latsubsaharan=lattmp
+lonsubsaharan=lonm
+np.save(wdvars+'latsubsaharan',latsubsaharan)
+np.save(wdvars+'lonsubsaharan',lonsubsaharan)
+np.save(wdvars+'africaMasksubsaharan',africaMask1)
 
 ######################################
 # Major Cities
@@ -526,16 +532,16 @@ plt.savefig(wdfigs+'travel',dpi=700)
 #    f.write(str(IDofmarketsheds[i]) +','+ str(matchcountries[i]) +','+ str(centersLatLon[i,0]) + "," + str(centersLatLon[i,1])+'\n')
 #f.close()
 
-revisedcities=np.zeros(shape=(91,2))
-f=open(wddata+'travel_time/citymatches_coord.csv','r')
-i=-1
-for line in f:
-    i+=1
-    tmp=line.split(',')
-    revisedcities[i,0]=tmp[2]
-    revisedcities[i,1]=tmp[3]
+#revisedcities=np.zeros(shape=(91,2))
+#f=open(wddata+'travel_time/citymatches_coord.csv','r')
+#i=-1
+#for line in f:
+#    i+=1
+#    tmp=line.split(',')
+#    revisedcities[i,0]=tmp[2]
+#    revisedcities[i,1]=tmp[3]
 
-closestcity2,iclosestcity2=nearestCity(majorcities,revisedcities)
+#closestcity2,iclosestcity2=nearestCity(majorcities,revisedcities)
 # findNearest2(centersLatLon,midpointsc)
 # closestcity,iclosestcity=nearestCity(majorcities,centersLatLon) OOF
 

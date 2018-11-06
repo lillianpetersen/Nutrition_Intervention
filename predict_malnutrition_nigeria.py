@@ -15,7 +15,7 @@ import random
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 from PIL import Image
-from libtiff import TIFF
+#from libtiff import TIFF
 from osgeo import gdal
 import ogr
 from IPython import embed
@@ -417,6 +417,20 @@ def moving_average_2d(data, window):
     # (boundary='symm').
     return convolve2d(data, window, mode='same', boundary='symm')
 
+def marketPotentials(pop,popCoord,gridMid,imageMask2):
+	lenLat=len(gridMid[:,0,0])
+	lenLon=len(gridMid[0,:,0])
+	MP=np.zeros(shape=(gridMid[:,:,0].shape))
+	for ilat in range(lenLat):
+		print np.round(100*ilat/float(lenLat),2),'%'
+		for ilon in range(lenLon):
+			if imageMask2[ilat,ilon]==True:
+				continue
+			dists=np.sqrt((gridMid[ilat,ilon,0]-popCoord[:,0])**2+(gridMid[ilat,ilon,1]-popCoord[:,1])**2)
+			MP[ilat,ilon]=np.sum(pop/(dists**1.2))
+	return MP
+
+
 ################################################
 
 wddata='/Users/lilllianpetersen/iiasa/data/'
@@ -431,7 +445,6 @@ makePlots=False
 i=1 #country=Nigeria
 country='Nigeria'
 
-tif125 = TIFF.open(wddata+'poverty/'+country+'/nga10povcons125.tif',mode='r')
 ds=gdal.Open(wddata+'poverty/'+country+'/nga10povcons125.tif')
 width = ds.RasterXSize
 height = ds.RasterYSize
@@ -451,7 +464,7 @@ for h in range(height):
 	lat[h]=miny+h*pixelsize
 lat=lat[::-1] # reverse the order
 
-pov125 = tif125.read_image()*100
+pov125 = ds.ReadAsArray()*100
 imageMask=pov125<0
 
 pov125=np.ma.masked_array(pov125,imageMask)
@@ -659,7 +672,6 @@ plt.savefig(wdfigs+'wasting',dpi=700)
 print 'Roads'
 
 #rRoads = shapefile.Reader(wddata+'openstreetmap/'+country+'/openstreetmap/nga_trs_roads_osm.shp')
-traveltif=TIFF.open(wddata+'travel_time/accessibility_to_cities_2015_v1.0.tif',mode='r')
 
 ds=gdal.Open(wddata+'travel_time/accessibility_to_cities_2015_v1.0.tif')
 width = ds.RasterXSize
@@ -682,7 +694,7 @@ latt=latt[::-1]
 if latm[0]<latm[-1]:
 	latm=latm[::-1]
 
-travelWorld=traveltif.read_image()
+travelWorld=ds.ReadAsArray()
 ##### Scale to Africa #####
 travel=travelWorld[latt<np.amax(latm)+pixelsize]
 latt=latt[latt<np.amax(latm)+pixelsize]
@@ -867,6 +879,18 @@ except:
 	np.save(wdvars+'NigeriaCityPop',cityPop)
 	np.save(wdvars+'NigeriaCityLatLon',cityLatLon)
 
+MPcities=marketPotentials(cityPop,cityLatLon,gridMid,imageMask2)
+MPcities=np.ma.masked_array(MPcities,imageMask2)
+plt.clf()
+plt.imshow(MPcities,cmap=cm.viridis,vmax=100000000)
+plt.colorbar()
+plt.yticks([])
+plt.xticks([])
+plt.title('Market Potentials from Cities')
+plt.savefig(wdfigs+'closestDist',dpi=700)
+
+
+
 ###### Dist To Cities and Pop of Closest City ######
 try:
 	closestDistCities=np.load(wdvars+'closestDist_to_nigerian_cities.npy')
@@ -956,10 +980,9 @@ try:
 	avgVisLogS=np.load(wdvars+'nigeria_avgVisLogS.npy')
 except:
 	print 'running Night Lights: Try command failed'
-	stableTif=TIFF.open(wddata+'nigeria_lights/nigeriaStable.tif',mode='r')
-	avgVisTif=TIFF.open(wddata+'nigeria_lights/nigeriaAvgVis.tif',mode='r')
 	
-	ds=gdal.Open(wddata+'nigeria_lights/nigeriaAvgVis.tif')
+	dsAvg=gdal.Open(wddata+'nigeria_lights/nigeriaAvgVis.tif')
+	dsStable=gdal.Open(wddata+'nigeria_lights/nigeriaStable.tif')
 	width = ds.RasterXSize
 	height = ds.RasterYSize
 	gt = ds.GetGeoTransform()
@@ -996,8 +1019,8 @@ except:
 	plt.savefig(wdfigs+'old_new_grid.pdf')
 	##
 	
-	stableSmall=stableTif.read_image()
-	avgVisSmall=avgVisTif.read_image()
+	stableSmall=dsStable.ReadAsArray()
+	avgVisSmall=dsAvg.ReasAsArray()
 		
 	latl=np.radians(latl)
 	lonl=np.radians(lonl)
@@ -1259,6 +1282,7 @@ if makePlots:
 ###########################################
 print 'Land Classification'
 try:
+	errorHere
 	landCover=np.load(wdvars+'nigeria_landcover.npy')
 except:
 	ds=gdal.Open(wddata+'nigeria_landtype/MODIS_land_cover/2016_01_01.LC_Type3.tif')
@@ -1291,11 +1315,37 @@ except:
 			continue
 		landCoversmall[x,y]=mode(around)[0][0]
 			
-	
-	plt.clf()
-	plt.imshow(landCoversmall)
-	plt.colorbar()
-	plt.savefig(wdfigs+'landCoversmall',dpi=700)
+	#latt=np.radians(latm[::-1])
+	#lont=np.radians(lonm)
+	#lut=RectSphereBivariateSpline(latt, lont, imageMask2)
+	#
+	#newLats=np.radians(latl)
+	#newLons=np.radians(lonl)
+	#newLats,newLons=np.meshgrid(newLats,newLons)
+	#imageMasktmp=lut.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonl),len(latl))).T
+	#
+	#imageMasktmp=np.round(imageMasktmp,0)
+	#imageMasktmp[imageMasktmp>0]=1
+	#imageMasktmp[imageMasktmp<0]=1
+	#imageMasktmp[2235:]=1
+	#imageMasktmp[:100]=1
+	#imageMasktmp[:,2880:]=1
+	#plt.clf()
+	#plt.imshow(imageMasktmp,cmap=cm.binary,vmin=0,vmax=1)
+	#plt.colorbar()
+	#plt.savefig(wdfigs+'imageMasktmp',dpi=700)
+	#
+	#landCoversmall=np.ma.masked_array(landCoversmall,landCoversmall==0)
+	#landCoversmall=np.ma.masked_array(landCoversmall,imageMasktmp)
+	#landCoversmall=landCoversmall[100:2235]
+	#landCoversmall=landCoversmall[:,200:2880]
+	#plt.clf()
+	#plt.imshow(landCoversmall,cmap=cm.terrain,vmin=1,vmax=10)
+	#plt.xticks([])
+	#plt.yticks([])
+	#plt.colorbar()
+	#plt.title('Nigeria Land Cover')
+	#plt.savefig(wdfigs+'landCoversmall',dpi=700)
 	
 	landCoverDict={
 		0:'Water Bodies',
@@ -1333,6 +1383,7 @@ plt.xticks([])
 plt.yticks([])
 plt.title('Nigeria Land Cover')
 plt.savefig(wdfigs+'landCover',dpi=700)
+exit()
 
 ###########################################
 # Trading Indicies
@@ -1468,9 +1519,12 @@ bordersInfluence=gdpPerCapitaDist*tradeDist
 plt.clf()
 plt.imshow(bordersInfluence,cmap=cm.jet)
 plt.colorbar()
+plt.xticks([])
+plt.yticks([])
 plt.title('Influence of Borders (GDP and Ease of Trading)')
 plt.gca().set_aspect('equal', adjustable='box')
 plt.savefig(wdfigs+'bordersInfluence',dpi=700)
+exit()
 	
 
 if makePlots:
