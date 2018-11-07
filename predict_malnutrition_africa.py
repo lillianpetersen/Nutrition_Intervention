@@ -458,25 +458,23 @@ print 'Malnutrition'
 try:
 	mal=np.load(wdvars+'malnutrition_prevalence_2000-2015.npy')
 	imageMask2=np.load(wdvars+'imageMask2.npy')
-
-	imageMask3=np.zeros(shape=(imageMask2.shape[0],imageMask2.shape[1],imageMask2.shape[2],10),dtype=bool)
+	
+	imageMask3=np.zeros(shape=(nyears,10,imageMask2.shape[1],imageMask2.shape[2]),dtype=bool)
 	for y in range(16):
 		for i in range(10):
-			imageMask3[y,:,:,i]=imageMask2[y] # imageMask2=(lat,lon,3)
-
+			imageMask3[y,i,:,:]=imageMask2[y] # imageMask2=(lat,lon,3)
+	
 	latm=latsubsaharan
 	lonm=lonsubsaharan
 	pixelsize=0.04166666666650246
-
+	
 	mal[y,:,:]=maltmp
 	
-	latm=latm[::-1]
 	gridm = np.zeros(shape=(len(latm),len(lonm),2))
 	for x in range(len(latm)):
 		gridm[x,:,0]=latm[x]
 	for x in range(len(lonm)):
 		gridm[:,x,1]=lonm[x]
-	latm=latm[::-1]
 	
 	gridMid=createMidpointGrid(gridm,pixelsize) # lon lat
 
@@ -546,7 +544,7 @@ except:
 		imageMask2[y,nationsMask==1]=1
 		
 		for i in range(10):
-			imageMask3[y,:,:,i]=imageMask2[y] # imageMask2=(lat,lon,3)
+			imageMask3[y,i,:,:]=imageMask2[y] # imageMask2=(lat,lon,3)
 		
 		mal[y][mal[y]<0]=0
 
@@ -578,7 +576,11 @@ if MakePlots:
 ##############################################
 print 'Population' 
 try:
-	pop5km=np.load(wdvars+'pop5km_2010.npy')
+	pop5km1year=np.load(wdvars+'pop5km_2010.npy')
+
+	pop5km=np.ma.zeros(shape=(nyears,len(latm),len(lonm)))
+	for y in range(nyears):
+		pop5km[y]=pop5km1year
 except:
 	print 'try command failed: retrieveing population'
 
@@ -655,7 +657,7 @@ except:
 	pop5km=pop1*area
 	np.save(wdvars+'pop5km_2010',pop5km)
 
-pop5km=np.ma.masked_array(pop5km,imageMask2[0])
+pop5km=np.ma.masked_array(pop5km,imageMask2)
 
 malnumber=mal*pop5km
 malnumber=np.ma.masked_array(malnumber,imageMask2)
@@ -1153,132 +1155,85 @@ plt.ylim([0,27])
 plt.savefig(wdfigs+'malnutrition_predictions_accuracy.pdf')
 
 for j in range(len(indices)):
-	vars()[indexNames[j]+'Grid']=np.zeros(shape=(nyears,len(latm),len(lonm)))
-	k=-1
-	for i in indexedcodes:
-		k+=1
-		for y in range(nyears):
-			vars()[indexNames[j]+'Grid'][y,nations==i]=indices[j][k,y]
-	
-	vars()[indexNames[j]+'Grid'] = np.ma.masked_array(vars()[indexNames[j]+'Grid'], imageMask2)
+	try:
+		vars()[indexNames[j]+'Grid']=np.load(wdvars+indexNames[j]+'Grid_2000-2015')
+	except:
+		print 'try command failed: calculating',indexNames[j]+'Grid'
+
+		vars()[indexNames[j]+'Grid']=np.zeros(shape=(nyears,len(latm),len(lonm)))
+		k=-1
+		for i in indexedcodes:
+			k+=1
+			for y in range(nyears):
+				vars()[indexNames[j]+'Grid'][y,nations==i]=indices[j][k,y]
 		
-	plt.clf()
-	plt.imshow(vars()[indexNames[j]+'Grid'][15],cmap=cm.jet_r)
-	plt.colorbar()
-	plt.yticks([])
-	plt.xticks([])
-	plt.title('2015 '+indexNames[j])
-	plt.savefig(wdfigs+indexNames[j]+'.png',dpi=700)
-exit()
+		vars()[indexNames[j]+'Grid'] = np.ma.masked_array(vars()[indexNames[j]+'Grid'], imageMask2)
+			
+		if MakePlots:
+			plt.clf()
+			plt.imshow(vars()[indexNames[j]+'Grid'][15],cmap=cm.jet_r)
+			plt.colorbar()
+			plt.yticks([])
+			plt.xticks([])
+			plt.title('2015 '+indexNames[j])
+			plt.savefig(wdfigs+indexNames[j]+'.png',dpi=700)
+		
+		vars()[indexNames[j]+'Grid'].dump(wdvars+indexNames[j]+'Grid_2000-2015')
 
 ###########################################
-
-
-###########################################
-# Coast Lines
-###########################################
-print 'Coasts'
-try:
-	distToCoasts=np.load(wdvars+'Africa_distToCoasts.npy')
-	coastLines=np.load(wdvars+'Africa_coastLines.npy')
-except:
-	print 'calculating distToCoasts: try command failed'
-	rCoasts0=shapefile.Reader(wddata+'nigeria_landtype/nigeria_coastline/noaa_gshhg/GSHHS_shp/f/GSHHS_f_L1.shp')
-	rCoasts1=shapefile.Reader(wddata+'nigeria_landtype/nigeria_coastline/noaa_gshhg/GSHHS_shp/f/GSHHS_f_L2.shp')
-	shapes0=rCoasts0.shapes
-	shapes1=rCoasts1.shapes
-	shapes0=shapes0()
-	shapes1=shapes1()
-	
-	coastLines=np.zeros(shape=(len(latm),len(lonm),2))
-	distToCoasts=np.zeros(shape=(len(latm),len(lonm),2))
-	for coastType in range(2):
-		print '\n Coast',coastType
-		for i in range(len(vars()['shapes'+str(coastType)])):
-			print round(100*i/float(len(vars()['shapes'+str(coastType)])),2),'%'
-			pointsLonLat=np.array(vars()['shapes'+str(coastType)][i].points)
-			points=np.array(pointsLonLat)
-			points[:,0]=pointsLonLat[:,1]
-			points[:,1]=pointsLonLat[:,0]
-		
-			if (points[:,1]>lonm[0]).any() and (points[:,1]<lonm[-1]).any():
-				if (latm[-1]<points[:,1]).any() and (points[:,1]<latm[0]).any():
-					# lon mask
-					moreThanLon=lonm[0]<points[:,1]
-					lessThanLon=points[:,1]<lonm[-1]
-					lonMask=moreThanLon==lessThanLon
-					# lat mask
-					moreThanLat=latm[-1]<points[:,0]
-					lessThanLat=points[:,0]<latm[0]
-					latMask=moreThanLat==lessThanLat
-					# total mask
-					nigeriaMask=np.zeros(shape=(len(latMask)),dtype=bool)
-					for i in range(len(latMask)):
-						if latMask[i]==True and lonMask[i]==True:
-							nigeriaMask[i]=True
-					if np.sum(nigeriaMask)==0:
-						continue
-		
-					pointsM=points[nigeriaMask]
-					coastLines[:,:,coastType]+=findGridDataLays(pointsM,gridMid)
-		coastLines[coastLines>1]=1
-	
-		coastsMidPoints=gridMid[coastLines[:,:,coastType]==1,:]
-		distToCoasts[:,:,coastType],iclosest=findNearest(coastsMidPoints,gridMid,imageMask2)
-	
-	np.save(wdvars+'Africa_coastLines.npy',coastLines)
-	np.save(wdvars+'Africa_distToCoasts.npy',distToCoasts)
-
-distToCoasts=np.ma.masked_array(distToCoasts,imageMask3[:,:,:2])
-coastLines=np.ma.masked_array(coastLines,imageMask3[:,:,:2])
-
-plt.clf()
-plt.xticks([])
-plt.imshow(np.clip(distToCoasts[:,:,1],0,200))
-plt.colorbar()
-plt.xticks([])
-plt.yticks([])
-plt.title('Distance to Coastlines, km')
-plt.savefig(wdfigs+'distToCoasts'+str(1),dpi=700)
 
 ###########################################
 # Conflicts
 ###########################################
-#try:
-#	errorHere
-#	MPconflicts=np.load(wdvars+'MPconficts')
-#except:
-conflictsAll=np.load(wdvars+'africa_fatalities')
-conflictCoordAll=np.load(wdvars+'conflictCoord')
-MPconflicts=np.zeros(shape=(120,len(latm),len(lonm)))
+print 'Conflicts'
+try:
+	MPconflicts=np.load(wdvars+'MPconficts.npy')
+except:
+	conflictsAll=np.load(wdvars+'africa_fatalities')
+	conflictCoordAll=np.load(wdvars+'conflictCoord')
+	MPconflicts=np.zeros(shape=(nyears,len(latm),len(lonm)))
+	
+	year=1999
+	k=-1
+	for y in range(100,116):
+		k+=1
+		year+=1
+		print '\n\n',year,'\n\n\n'
+		conflicts=np.ma.compressed(conflictsAll[y:y+1])
+		conflictCoord=np.zeros(shape=(len(conflicts),2))
+		conflictCoord[:,0]=np.ma.compressed(conflictCoordAll[y:y+1,:,:,0])
+		conflictCoord[:,1]=np.ma.compressed(conflictCoordAll[y:y+1,:,:,1])
+	
+		MPconflicts[k]=marketPotentials(conflicts,conflictCoord,gridMid,imageMask2[0,:,:])
+	
+	np.save(wdvars+'MPconficts',MPconflicts)
+	
+	year=1999
+	k=-1
+	for y in range(100,116):
+		k+=1
+		year+=1
+		
+		plt.clf()
+		plt.imshow(MPconflicts[k],vmax=10000,cmap=cm.gist_heat_r)
+		plt.colorbar()
+		plt.xticks([])
+		plt.yticks([])
+		plt.title(str(year)+': Conflicts index')
+		plt.savefig(wdfigs+'MPconflicts_'+str(year)+'.png',dpi=700)
 
-year=1999
-for y in range(100,116):
-	year+=1
-	print '\n\n',year,'\n\n\n'
-	conflicts=np.ma.compressed(conflictsAll[y:y+1])
-	conflictCoord=np.zeros(shape=(len(conflicts),2))
-	conflictCoord[:,0]=np.ma.compressed(conflictCoordAll[y:y+1,:,:,0])
-	conflictCoord[:,1]=np.ma.compressed(conflictCoordAll[y:y+1,:,:,1])
-
-	MPconflicts[y]=marketPotentials(conflicts,conflictCoord,gridMid,imageMask2)
-	MPconflicts[y]=np.ma.masked_array(MPconflicts[y],imageMask2)
-#MPconflicts.dump(wdvars+'MPconficts')
-
-	plt.clf()
-	plt.imshow(MPconflicts[y],vmax=40000,cmap=cm.gist_heat_r)
-	plt.colorbar()
-	plt.xticks([])
-	plt.yticks([])
-	plt.title(str(year)+': Conflicts index')
-	plt.savefig(wdfigs+'MPconflicts_'+str(year)+'.png',dpi=700)
+MPconflicts=np.ma.masked_array(MPconflicts,MPconflicts==0)
 
 ######################################################
 # Travel Time
 ######################################################
-print 'Roads'
+print 'Travel Time'
 try:
-	travel=np.load(wdvars+'travelAfrica')
+	travel1year=np.load(wdvars+'travelAfrica')
+	
+	travel=np.ma.zeros(shape=(nyears,len(latm),len(lonm)))
+	for y in range(nyears):
+		travel[y]=travel1year
 except: 
 	#rRoads = shapefile.Reader(wddata+'openstreetmap/'+country+'/openstreetmap/nga_trs_roads_osm.shp')
 	ds=gdal.Open(wddata+'travel_time/accessibility_to_cities_2015_v1.0.tif')
@@ -1331,15 +1286,89 @@ except:
 	travel.dump(wdvars+'travelAfrica')
 
 plt.clf()
-plt.imshow(travel,cmap=cm.gist_ncar_r,vmax=400)
+plt.imshow(travel[0],cmap=cm.gist_ncar_r,vmax=400)
 plt.title('Travel Time')
 plt.colorbar()
 plt.savefig(wdfigs+'travel',dpi=700)
 
-#
-############################################
-## Land Classification
-############################################
+###########################################
+# Coast Lines
+###########################################
+print 'Coasts'
+try:
+	distToCoasts1year=np.load(wdvars+'Africa_distToCoasts.npy')
+	coastLines=np.load(wdvars+'Africa_coastLines.npy')
+	
+	distToCoasts=np.ma.zeros(shape=(nyears,2,len(latm),len(lonm)))
+	for y in range(nyears):
+		for i in range(2):
+			distToCoasts[y,i]=distToCoasts1year[:,:,i]
+except:
+	print 'calculating distToCoasts: try command failed'
+	rCoasts0=shapefile.Reader(wddata+'nigeria_landtype/nigeria_coastline/noaa_gshhg/GSHHS_shp/f/GSHHS_f_L1.shp')
+	rCoasts1=shapefile.Reader(wddata+'nigeria_landtype/nigeria_coastline/noaa_gshhg/GSHHS_shp/f/GSHHS_f_L2.shp')
+	shapes0=rCoasts0.shapes
+	shapes1=rCoasts1.shapes
+	shapes0=shapes0()
+	shapes1=shapes1()
+	
+	coastLines=np.zeros(shape=(len(latm),len(lonm),2))
+	distToCoasts=np.zeros(shape=(len(latm),len(lonm),2))
+	for coastType in range(2):
+		print '\n Coast',coastType
+		for i in range(len(vars()['shapes'+str(coastType)])):
+			print round(100*i/float(len(vars()['shapes'+str(coastType)])),2),'%'
+			pointsLonLat=np.array(vars()['shapes'+str(coastType)][i].points)
+			points=np.array(pointsLonLat)
+			points[:,0]=pointsLonLat[:,1]
+			points[:,1]=pointsLonLat[:,0]
+		
+			if (points[:,1]>lonm[0]).any() and (points[:,1]<lonm[-1]).any():
+				if (latm[-1]<points[:,1]).any() and (points[:,1]<latm[0]).any():
+					# lon mask
+					moreThanLon=lonm[0]<points[:,1]
+					lessThanLon=points[:,1]<lonm[-1]
+					lonMask=moreThanLon==lessThanLon
+					# lat mask
+					moreThanLat=latm[-1]<points[:,0]
+					lessThanLat=points[:,0]<latm[0]
+					latMask=moreThanLat==lessThanLat
+					# total mask
+					nigeriaMask=np.zeros(shape=(len(latMask)),dtype=bool)
+					for i in range(len(latMask)):
+						if latMask[i]==True and lonMask[i]==True:
+							nigeriaMask[i]=True
+					if np.sum(nigeriaMask)==0:
+						continue
+		
+					pointsM=points[nigeriaMask]
+					coastLines[:,:,coastType]+=findGridDataLays(pointsM,gridMid)
+		coastLines[coastLines>1]=1
+	
+		coastsMidPoints=gridMid[coastLines[:,:,coastType]==1,:]
+		distToCoasts[:,:,coastType],iclosest=findNearest(coastsMidPoints,gridMid,imageMask2)
+	
+	np.save(wdvars+'Africa_coastLines.npy',coastLines)
+	np.save(wdvars+'Africa_distToCoasts.npy',distToCoasts)
+
+distToCoasts=np.ma.masked_array(distToCoasts,imageMask3[:,:2,:,:])
+coastLines=np.ma.masked_array(coastLines,imageMask3[0,:2,:,:])
+
+if MakePlots:
+	plt.clf()
+	plt.xticks([])
+	plt.imshow(np.clip(distToCoasts[0,0,:,:],0,200))
+	plt.colorbar()
+	plt.xticks([])
+	plt.yticks([])
+	plt.title('Distance to Coastlines, km')
+	plt.savefig(wdfigs+'distToCoasts'+str(1),dpi=700)
+
+
+###########################################
+# Land Classification
+###########################################
+'''
 print 'Land Classification'
 #try:
 #	landCover=np.load(wdvars+'africa_landcover.npy')
@@ -1456,20 +1485,22 @@ croplands=np.ma.masked_array(landCover,imageMask2)
 ##plt.yticks([])
 #plt.title('Nigeria Land Cover')
 #plt.savefig(wdfigs+'landCover',dpi=700)
-#exit()
+exit()
+'''
 
-######################################################
-##### Machine learning #####
-######################################################
+###########################################
+# Machine learning 
+###########################################
+print 'Machine Learning'
 #indices=[pop5km,distToCoasts[:,:,0],distToCoasts[:,:,1],MPconflicts,travel,GDPgrid,urban,forest,shrublands,croplands]
-indices=[pop5km,distToCoasts[:,:,0],distToCoasts[:,:,1],MPconflicts,travel]
+indices=[pop5km,distToCoasts[:,0,:,:],distToCoasts[:,1,:,:],MPconflicts,travel,girlEdGrid,electricityGrid,YieldGrid,iqGrid]
 #indices=[pop5km,np.clip(MPconflicts,0,40000),distToCoasts[:,:,1]]
 #indices=[distToCoasts[:,:,0]]
-xMulti=np.ma.zeros(shape=(len(latm),len(lonm),len(indices)))
+xMulti=np.ma.zeros(shape=(nyears,len(latm),len(lonm),len(indices)))
 ydata=np.ma.compressed(mal)
 
 for i in range(len(indices)):
-	xMulti[:,:,i]=indices[i]
+	xMulti[:,:,:,i]=indices[i]
 
 ###########################
 # Split into boxes 
@@ -1530,6 +1561,7 @@ testPixelsAll=[boxes==np.array(testNums)[i] for i in range(len(testNums))]
 testPixels=np.sum(testPixelsAll,axis=0) 
 trainPixels=1-trainPixels
 testPixels=1-testPixels
+exit()
 
 maltrain=np.ma.array(mal)
 maltrain=np.ma.masked_array(maltrain,trainPixels)
@@ -1559,6 +1591,7 @@ plt.imshow(boxes,cmap=cm.seismic)
 plt.title('Boxes')
 plt.colorbar()
 plt.savefig(wdfigs+'boxes.png',dpi=700)
+exit()
 
 trainMask=np.ma.getmask(maltrain)
 testMask=np.ma.getmask(maltest)
