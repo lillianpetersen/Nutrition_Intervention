@@ -468,8 +468,6 @@ try:
 	lonm=lonsubsaharan
 	pixelsize=0.04166666666650246
 	
-	mal[y,:,:]=maltmp
-	
 	gridm = np.zeros(shape=(len(latm),len(lonm),2))
 	for x in range(len(latm)):
 		gridm[x,:,0]=latm[x]
@@ -480,10 +478,10 @@ try:
 
 except:
 	print 'try command failed: retrieving malnutrition'
-
+	
 	mal=np.zeros(shape=(16,len(latsubsaharan),len(lonsubsaharan)))
 	imageMask2=np.zeros(shape=(mal.shape),dtype=bool)
-	imageMask3=np.zeros(shape=(imageMask2.shape[0],imageMask2.shape[1],imageMask2.shape[2],10),dtype=bool)
+	imageMask3=np.zeros(shape=(nyears,10,imageMask2.shape[1],imageMask2.shape[2]),dtype=bool)
 	nations=np.load(wdvars+'ID_grid')
 	nationsMask=np.ma.getmask(nations)
 	
@@ -543,15 +541,16 @@ except:
 		imageMask2[y,900:1300,1450:]=1
 		imageMask2[y,nationsMask==1]=1
 		
-		for i in range(10):
-			imageMask3[y,i,:,:]=imageMask2[y] # imageMask2=(lat,lon,3)
+		for y in range(16):
+			for i in range(10):
+				imageMask3[y,i,:,:]=imageMask2[y] # imageMask2=(lat,lon,3)
 		
 		mal[y][mal[y]<0]=0
-
-	np.save(wdvars+'malnutrition_prevalence_2000-2015.npy',mal)
-	np.save(wdvars+'imageMask2.npy',imageMask2)
+	mal=np.ma.masked_array(mal,imageMask2)
 	
-mal=np.ma.masked_array(mal,imageMask2)
+	mal.dump(wdvars+'malnutrition_prevalence_2000-2015y')
+	imageMask2.dump(wdvars+'imageMask2')
+	
 
 if MakePlots:
 	for y in range(nyears):
@@ -1060,7 +1059,6 @@ for line in f:
 	i+=1
 	if i==-1:
 		continue
-	line=line[:-2]
 	tmp=np.array(line.split(','))
 	country=tmp[0]
 	if np.amax(country==np.array(africanCountries[:]))==0:
@@ -1496,7 +1494,7 @@ print 'Machine Learning'
 indices=[pop5km,distToCoasts[:,0,:,:],distToCoasts[:,1,:,:],MPconflicts,travel,girlEdGrid,electricityGrid,YieldGrid,iqGrid]
 #indices=[pop5km,np.clip(MPconflicts,0,40000),distToCoasts[:,:,1]]
 #indices=[distToCoasts[:,:,0]]
-xMulti=np.ma.zeros(shape=(nyears,len(latm),len(lonm),len(indices)))
+xMulti=np.zeros(shape=(nyears,len(latm),len(lonm),len(indices)))
 ydata=np.ma.compressed(mal)
 
 for i in range(len(indices)):
@@ -1530,7 +1528,7 @@ plt.title('Longitude Boxes')
 plt.colorbar()
 plt.savefig(wdfigs+'lonboxes.pdf')
 
-boxes=np.zeros(shape=(boxesGrid[:,:,0].shape))
+boxes=np.zeros(shape=(len(latm),len(lonm)))
 k=-1
 for i in range(len(yboxes)):
 	for j in range(len(xboxes)):
@@ -1548,20 +1546,25 @@ boxMask=np.zeros(shape=(boxes.shape))
 for i in boxNums:
 	masktmp=np.zeros(shape=(boxes.shape),dtype=bool)
 	masktmp[boxes==i]=1
-	if np.sum(1-imageMask2[masktmp])<100:
+	if np.sum(1-imageMask2[0,masktmp])<100:
 		boxMask[masktmp==1]=1
 boxes=np.ma.masked_array(boxes,boxMask)
 
 boxNums=np.unique(boxes)
+boxNums=boxNums[np.ma.getmask(boxNums)==False]
+boxNums=np.array(boxNums)
 
 trainNums,testNums=sklearn.model_selection.train_test_split(boxNums,test_size=.2,train_size=.8)
-trainPixelsAll=[boxes==np.array(trainNums[i]) for i in range(len(trainNums))]
-trainPixels=np.sum(trainPixelsAll,axis=0)
-testPixelsAll=[boxes==np.array(testNums)[i] for i in range(len(testNums))] 
-testPixels=np.sum(testPixelsAll,axis=0) 
-trainPixels=1-trainPixels
-testPixels=1-testPixels
-exit()
+testPixelsAll=[boxes==trainNums[i] for i in range(len(trainNums))]
+testPixels1year=np.sum(testPixelsAll,axis=0) 
+trainPixelsAll=[boxes==testNums[i] for i in range(len(testNums))] 
+trainPixels1year=np.sum(trainPixelsAll,axis=0)
+
+trainPixels=np.zeros(shape=(nyears,len(latm),len(lonm)))
+testPixels=np.zeros(shape=(nyears,len(latm),len(lonm)))
+for y in range(nyears):
+	trainPixels[y]=trainPixels1year
+	testPixels[y]=testPixels1year
 
 maltrain=np.ma.array(mal)
 maltrain=np.ma.masked_array(maltrain,trainPixels)
@@ -1569,50 +1572,49 @@ maltest=np.ma.array(mal)
 maltest=np.ma.masked_array(maltest,testPixels)
 
 plt.clf()
-plt.imshow(maltrain,cmap=cm.jet,vmin=0,vmax=0.3)
-plt.title('Test Pixels')
+plt.imshow(maltrain[4],cmap=cm.jet,vmax=0.3)
+plt.title('Train Pixels')
 plt.colorbar()
 plt.savefig(wdfigs+'maltrain.png',dpi=700)
 plt.clf()
-plt.imshow(maltest,cmap=cm.jet,vmin=0,vmax=0.3)
+plt.imshow(maltest[4],cmap=cm.jet,vmax=0.3)
 plt.title('Test Pixels')
 plt.colorbar()
 plt.savefig(wdfigs+'maltest.png',dpi=700)
 
-boxMask=np.ma.masked_array(boxMask,testPixels)
-plt.clf()
-plt.imshow(boxMask,cmap=cm.seismic)
-plt.title('Boxes')
-plt.colorbar()
-plt.savefig(wdfigs+'trainboxes.png',dpi=700)
-
-plt.clf()
-plt.imshow(boxes,cmap=cm.seismic)
-plt.title('Boxes')
-plt.colorbar()
-plt.savefig(wdfigs+'boxes.png',dpi=700)
-exit()
+if MakePlots:
+	boxMask=np.ma.masked_array(boxMask,testPixels)
+	plt.clf()
+	plt.imshow(boxMask,cmap=cm.seismic)
+	plt.title('Boxes')
+	plt.colorbar()
+	plt.savefig(wdfigs+'trainboxes.png',dpi=700)
+	
+	plt.clf()
+	plt.imshow(boxes,cmap=cm.seismic)
+	plt.title('Boxes')
+	plt.colorbar()
+	plt.savefig(wdfigs+'boxes.png',dpi=700)
 
 trainMask=np.ma.getmask(maltrain)
 testMask=np.ma.getmask(maltest)
-trainMask3=np.zeros(shape=(len(latm),len(lonm),len(indices)),dtype=bool)
-testMask3=np.zeros(shape=(len(latm),len(lonm),len(indices)),dtype=bool)
-for i in range(len(xMulti[0,0,:])):
-	trainMask3[:,:,i]=trainMask
-	testMask3[:,:,i]=testMask
+trainMask3=np.zeros(shape=(nyears,len(latm),len(lonm),len(indices)),dtype=bool)
+testMask3=np.zeros(shape=(nyears,len(latm),len(lonm),len(indices)),dtype=bool)
+for i in range(len(indices)):
+	trainMask3[:,:,:,i]=trainMask
+	testMask3[:,:,:,i]=testMask
 
-xMultiTest=np.ma.masked_array(xMulti, trainMask3)
-xMultiTrain=np.ma.masked_array(xMulti, testMask3)
+xMultiTest=np.ma.masked_array(xMulti, testMask3)
+xMultiTrain=np.ma.masked_array(xMulti, trainMask3)
 
-xMultiTrainC=np.zeros(shape=(len(np.ma.compressed(xMultiTrain[:,:,0])),len(xMulti[0,0,:])))
-xMultiTestC=np.zeros(shape=(len(np.ma.compressed(xMultiTest[:,:,0])),len(xMulti[0,0,:])))
-for i in range(len(xMulti[0,0,:])):
-	xMultiTrainC[:,i]=np.ma.compressed(xMultiTrain[:,:,i])
-	xMultiTestC[:,i]=np.ma.compressed(xMultiTest[:,:,i])
-#ydataTrain=np.ma.compressed(maltrain)
-ydataTrain=np.ma.compressed(maltest)
-#ydataTest=np.ma.compressed(maltest)
-ydataTest=np.ma.compressed(maltrain)
+xMultiTrainC=np.zeros(shape=(len(np.ma.compressed(xMultiTrain[:,:,:,0])),len(indices)))
+xMultiTestC=np.zeros(shape=(len(np.ma.compressed(xMultiTest[:,:,:,0])),len(indices)))
+for i in range(len(indices)):
+	xMultiTrainC[:,i]=np.ma.compressed(xMultiTrain[:,:,:,i])
+	xMultiTestC[:,i]=np.ma.compressed(xMultiTest[:,:,:,i])
+ydataTrain=np.ma.compressed(maltrain)
+ydataTest=np.ma.compressed(maltest)
+exit()
 
 clf=RandomForestRegressor()
 clf.fit(xMultiTrainC,ydataTrain)
