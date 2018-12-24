@@ -1639,7 +1639,7 @@ ydata=np.ma.compressed(mal)
 
 for i in range(len(indices)):
 	xMulti[:,:,:,i]=indices[i]
-exit()
+	print i
 
 ###########################
 # Split into boxes 
