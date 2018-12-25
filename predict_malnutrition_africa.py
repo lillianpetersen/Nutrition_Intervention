@@ -1496,7 +1496,6 @@ try:
 	for y in range(nyears):
 		travel[y]=travel1year
 except: 
-	#rRoads = shapefile.Reader(wddata+'openstreetmap/'+country+'/openstreetmap/nga_trs_roads_osm.shp')
 	ds=gdal.Open(wddata+'travel_time/accessibility_to_cities_2015_v1.0.tif')
 	width = ds.RasterXSize
 	height = ds.RasterYSize
@@ -1641,6 +1640,12 @@ for i in range(len(indices)):
 	xMulti[:,:,:,i]=indices[i]
 	print i
 
+for i in range(len(indices)):
+	plt.clf()
+	plt.imshow(xMulti[10,:,:,i])
+	plt.title(indexNames[i])
+	plt.savefig(wdfigs+indexNames[i]+'2010',dpi=700)	
+
 ###########################
 # Split into boxes 
 ###########################
@@ -1744,6 +1749,7 @@ testMask3=np.zeros(shape=(nyears,len(latm),len(lonm),len(indices)),dtype=bool)
 for i in range(len(indices)):
 	trainMask3[:,:,:,i]=trainMask
 	testMask3[:,:,:,i]=testMask
+	print i
 
 xMultiTest=np.ma.masked_array(xMulti, testMask3)
 xMultiTrain=np.ma.masked_array(xMulti, trainMask3)
@@ -1753,19 +1759,20 @@ xMultiTestC=np.zeros(shape=(len(np.ma.compressed(xMultiTest[:,:,:,0])),len(indic
 for i in range(len(indices)):
 	xMultiTrainC[:,i]=np.ma.compressed(xMultiTrain[:,:,:,i])
 	xMultiTestC[:,i]=np.ma.compressed(xMultiTest[:,:,:,i])
+	print i
 ydataTrain=np.ma.compressed(maltrain)
 ydataTest=np.ma.compressed(maltest)
 
 exit()
 print 'fitting'
 ##############################
-#clf=RandomForestRegressor()
-#clf.fit(xMultiTrainC,ydataTrain)
-#malPred=clf.predict(xMultiTestC)
-
-clf=linear_model.LinearRegression()
+clf=RandomForestRegressor()
 clf.fit(xMultiTrainC,ydataTrain)
 malPred=clf.predict(xMultiTestC)
+
+#clf=linear_model.LinearRegression()
+#clf.fit(xMultiTrainC,ydataTrain)
+#malPred=clf.predict(xMultiTestC)
 ##############################
 
 Corr=corr(malPred,ydataTest)
@@ -1793,6 +1800,7 @@ exit()
 
 importances=clf.feature_importances_
 importanceOrder=np.argsort(importances)
+indexNames=np.array(indexNames)
 importanceVars=indexNames[importanceOrder][::-1]
 exit()
 
