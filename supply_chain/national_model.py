@@ -22,15 +22,15 @@ import shapefile
 #from shapely.geometry import shape, Point
 import matplotlib.patches as patches
 from math import sin, cos, sqrt, atan2, radians, pi, degrees
-from geopy.geocoders import Nominatim
-geolocator = Nominatim()
-import geopy.distance
+# from geopy.geocoders import Nominatim
+# geolocator = Nominatim()
+# import geopy.distance
 from scipy import ndimage
 from scipy.signal import convolve2d
 from sklearn import linear_model
 from scipy.interpolate import RectSphereBivariateSpline
-from libtiff import TIFF
-import googlemaps
+# from libtiff import TIFF
+# import googlemaps
 import json
 
 try:
@@ -39,9 +39,9 @@ try:
 	wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
 	tifWasting=TIFF.open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2010_PREVALENCE_Y2018M02D28.TIF',mode='r')
 except:
-	wddata='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/data/'
-	wdfigs='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/figs/'
-	wdvars='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/vars/'
+	wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/data/'
+	wdfigs='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/figs/'
+	wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
 
 ##capitalonly
 subsaharancountry=[]
@@ -57,8 +57,8 @@ for line in f:
     tmp=line.split(',')
     subsaharancountry.append(tmp[0])
     indexedwasting[i]=float(tmp[1])
-    indexedSAM[i]=float(tmp[2])
-    indexedMAM[i]=float(tmp[3])
+    indexedSAM[i]=float(tmp[2])*150*11.66
+    indexedMAM[i]=float(tmp[3])*50*(365/75)
     indexedstunting[i]=float(tmp[4])
     subsaharancapital.append(tmp[5][:-1])
 
@@ -135,7 +135,7 @@ rutfcostarray=np.zeros(shape=(24,43))
 for i in range(len(subsaharancountry)):
     if(indexedrutf[i]!=0):
         for j in range(len(indexedSAM)):
-                rutfcostarray[int(convertarray[i]),j]=indexedrutf[i]*150*11.66+150*11.66*100/1000000*transportcostArray[i,j]
+                rutfcostarray[int(convertarray[i]),j]=indexedrutf[i]+100/1000000*transportcostArray[i,j]
 
         # if(indexedscp[i]*2<indexedrusf[i]):
         #     for j in range(len(indexedSAM)):
@@ -172,11 +172,11 @@ for i in range(len(subsaharancountry)):
         for j in range(len(indexedSAM)):
                 if(indexedscp[i]*2<indexedrusf[i]):
                     for j in range(len(indexedSAM)):
-                        mamcostarray[int(convertarray[i]),j]=indexedscp[i]*50*(365/75)*2+50*(365/75)*200/1000000*transportcostArray[i,j]
+                        mamcostarray[int(convertarray[i]),j]=indexedscp[i]+200/1000000*transportcostArray[i,j]
                         print subsaharancountry[i] +' SC+'
                 else:
                     for j in range(len(indexedSAM)):
-                        mamcostarray[int(convertarray[i]),j]= indexedrusf[i]*50*(365/75)+50*(365/75)*100/1000000*transportcostArray[i,j]
+                        mamcostarray[int(convertarray[i]),j]=indexedrusf[i]+100/1000000*transportcostArray[i,j]
 
 np.savetxt(wddata + "foodstuffs/rutfcostarray.csv", rutfcostarray, delimiter=",")
 

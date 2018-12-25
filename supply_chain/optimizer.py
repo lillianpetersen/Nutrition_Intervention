@@ -28,13 +28,12 @@ def createMidpointGrid(grid,pixelsize):
 	return gridMid
 
 
-wddata='C:/Users/garyk/Documents/python_code/supply_chain/data/'
-wdvars='C:/Users/garyk/Documents/python_code/supply_chain/figuresvariables/'
-wdfigs='C:/Users/garyk/Documents/python_code/supply_chain/figures/'
-
+wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/data/'
+wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/variables/'
+wdfigs='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/figures/'
 
 ##population
-wddata='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/data/'
+wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/data/'
 # 
 pop20Tif=TIFF.open(wddata+'GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0\GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0.tif',mode='r')
 mc=gdal.Open(wddata+'GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0\GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0/GHS_SMOD_POP2015HDC_GLOBE_R2016A_54009_1k_v1_0.tif')

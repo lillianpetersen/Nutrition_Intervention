@@ -4,7 +4,7 @@ import json
 import numpy as np
 import re
 
-wddata='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/data/'
+wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/data/'
 
 facility = ['Angola',
  'Benin',
@@ -85,9 +85,9 @@ costM1 = 6000.0
 #machinery costs for production, large machinery
 costM2 = 10000.0
 #fixed capacity per piece of machinery, small machinery
-Capacity1 = 1372.0
+Capacity1 = 780000
 #fixed capacity per piece of machinery, large machinery
-Capacity2 = (1372.0*2.0)
+Capacity2 = (780000*2.0)
 #demand by location
 rutfdemandarray = np.genfromtxt(wddata+'optiarrays/SAMdemand.csv', delimiter=',')
 DemandRUTF = dict(zip(location, rutfdemandarray))
@@ -162,7 +162,7 @@ for v in prob.variables():
     if(v.varValue>0):
         varsdict[v.name] = v.varValue
 
-with open(wddata+'optiarrays/southafrica_resultjson.json', 'w') as fp:
+with open(wddata+'optiarrays/temp_results.json', 'w') as fp:
     json.dump(varsdict, fp, sort_keys=True)
 
     

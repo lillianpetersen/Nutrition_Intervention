@@ -231,9 +231,9 @@ try:
 	wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
 	tifWasting=TIFF.open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2010_PREVALENCE_Y2018M02D28.TIF',mode='r')
 except:
-	wddata='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/data/'
-	wdfigs='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/figs/'
-	wdvars='C:/Users/garyk/Documents/python_code/riskAssessmentFromPovertyEstimations/vars/'
+	wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/data/'
+	wdfigs='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/figs/'
+	wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/vars/'
 
 makePlots=False
 
