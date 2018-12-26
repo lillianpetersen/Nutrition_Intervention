@@ -34,10 +34,10 @@ from scipy.interpolate import RectSphereBivariateSpline
 import json
 
 try:
-	wddata='/Users/lilllianpetersen/iiasa/data/'
+	wddata='/Users/lilllianpetersen/iiasa/data/supply_chain/'
 	wdfigs='/Users/lilllianpetersen/iiasa/figs/'
 	wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
-	tifWasting=TIFF.open(wddata+'malnutrition/IHME_AFRICA_CGF_2000_2015_WASTING_MEAN_2010_PREVALENCE_Y2018M02D28.TIF',mode='r')
+	f=open(wddata+'population/CAPITALVERSIONcasenumbers.csv','r')
 except:
 	wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/data/'
 	wdfigs='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/figs/'
@@ -130,12 +130,41 @@ for line in f:
     for j in range(len(tmp)):
         transportcostArray[i,j]=tmp[j]
 
+# import and export costs
+importExportCosts=np.zeros(shape=(transportcostArray.shape))
+for x in range(len(subsaharancountry)):
+	exportCost=-9999
+	fx=open(wddata+'trading_across_borders2017.csv','r')
+	xCountry=subsaharancountry[x]
+	for line in fx:
+		tmp=line.split(',')
+		if tmp[0]==xCountry:
+			exportCost=float(tmp[4])+float(tmp[6])
+			break
+	print exportCost,xCountry
+
+	for y in range(len(subsaharancountry)):
+		importCost=-9999
+		yCountry=subsaharancountry[y]
+		if xCountry==yCountry:
+			continue
+
+		fy=open(wddata+'trading_across_borders2017.csv','r')
+		for line in fy:
+			tmp=line.split(',')
+			if tmp[0]==yCountry:
+				importCost=float(tmp[8])+float(tmp[10])
+				break
+
+		importExportCosts[x,y]=importCost+exportCost
+
 #cost dabber RUTF ########################################################################
 rutfcostarray=np.zeros(shape=(24,43))
 for i in range(len(subsaharancountry)):
     if(indexedrutf[i]!=0):
         for j in range(len(indexedSAM)):
-                rutfcostarray[int(convertarray[i]),j]=indexedrutf[i]+100/1000000*transportcostArray[i,j]
+			# sums ingredient and transport cost, converts to $/100g delivered
+            rutfcostarray[int(convertarray[i]),j]=indexedrutf[i]+100/1000000*transportcostArray[i,j]
 
         # if(indexedscp[i]*2<indexedrusf[i]):
         #     for j in range(len(indexedSAM)):
