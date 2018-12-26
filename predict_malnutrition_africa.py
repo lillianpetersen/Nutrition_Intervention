@@ -684,7 +684,7 @@ except:
 	for i in range(len(indices)):
 		vars()[indices[i]]=np.zeros(shape=(nyears,len(latm),len(lonm)))
 	
-	year=1999
+	year=1998
 	for y in range(16):
 		year+=1
 		print year
@@ -736,20 +736,21 @@ except:
 		vars()[fromMatt]=np.ma.masked_array(vars()[fromMatt],imageMask2)
 		vars()[fromMatt].dump(wdvars+fromMatt)
 		
-for i in range(len(indices)):
-	fromMatt=indices[i]
-
-	year=1999
-	for y in range(1):
-		year+=1
-
-		plt.clf()
-		plt.imshow(vars()[fromMatt][y],cmap=cm.nipy_spectral)
-		plt.yticks([])
-		plt.xticks([])
-		plt.title(fromMatt)
-		plt.colorbar()
-		plt.savefig(wdfigs +fromMatt+str(year),dpi=700)
+if MakePlots:
+	for i in range(len(indices)):
+		fromMatt=indices[i]
+	
+		year=1998
+		for y in range(1):
+			year+=1
+	
+			plt.clf()
+			plt.imshow(vars()[fromMatt][y],cmap=cm.nipy_spectral)
+			plt.yticks([])
+			plt.xticks([])
+			plt.title(fromMatt)
+			plt.colorbar()
+			plt.savefig(wdfigs +fromMatt+str(year),dpi=700)
 
 ######################################
 # Countries
@@ -904,7 +905,7 @@ except:
 	np.save(wdvars+'malCountry_2000-2015',malCountry)
 
 if MakePlots:
-	year=1999
+	year=1998
 	for y in range(nyears):
 		year+=1
 		plt.clf()
@@ -954,7 +955,7 @@ for line in f:
 	countries.append(country)
 	icountry=int(countryToi[country])
 	g+=1
-	j=43
+	j=42 # 1998
 	for y in range(nyears):
 		j+=1
 		try:
@@ -987,7 +988,7 @@ for line in f:
 	countries.append(country)
 	icountry=int(countryToi[country])
 	g+=1
-	j=43
+	j=42 # 1998
 	for y in range(nyears):
 		j+=1
 		try:
@@ -1049,7 +1050,7 @@ for line in f:
 	countries.append(country)
 	icountry=int(countryToi[country])
 	g+=1
-	j=43
+	j=42 # 1998
 	for y in range(nyears):
 		j+=1
 		try:
@@ -1082,7 +1083,7 @@ for line in f:
 	countries.append(country)
 	icountry=int(countryToi[country])
 	g+=1
-	j=43
+	j=42 # 1998
 	for y in range(nyears):
 		j+=1
 		try:
@@ -1115,7 +1116,7 @@ for line in f:
 	countries.append(country)
 	icountry=int(countryToi[country])
 	g+=1
-	j=43
+	j=42 # 1998
 	for y in range(nyears):
 		j+=1
 		try:
@@ -1150,7 +1151,7 @@ for line in f:
 	countries.append(country)
 	icountry=int(countryToi[country])
 	g+=1
-	j=43
+	j=42 # 1998
 	for y in range(nyears):
 		j+=1
 		try:
@@ -1181,7 +1182,7 @@ for line in f:
 	countries.append(country)
 	icountry=int(countryToi[country])
 	g+=1
-	j=43
+	j=42 # 1998
 	for y in range(nyears):
 		j+=1
 		try:
@@ -1204,25 +1205,25 @@ countries=[]
 corruption=np.zeros(shape=(len(africanCountries),nyears))
 corruptionMask=np.zeros(shape=(len(africanCountries),nyears),dtype=bool)
 for line in f:
-    i+=1
-    if i==-1:
-        continue
-    line=line[:-2]
-    line=line.replace('"','')
-    tmp=np.array(line.split(','))
-    country=tmp[0]
-    if np.amax(country==np.array(africanCountries[:]))==0:
-        continue
-    countries.append(country)
-    icountry=int(countryToi[country])
-    g+=1
-    j=43
-    for y in range(nyears):
-        j+=1
-        try:
-            corruption[icountry,y]=float(tmp[6])
-        except:
-            corruptionMask[icountry,y]=1
+	i+=1
+	if i==-1:
+		continue
+	line=line[:-2]
+	line=line.replace('"','')
+	tmp=np.array(line.split(','))
+	country=tmp[0]
+	if np.amax(country==np.array(africanCountries[:]))==0:
+		continue
+	countries.append(country)
+	icountry=int(countryToi[country])
+	g+=1
+	j=42 # 1998
+	for y in range(nyears):
+		j+=1
+		try:
+			corruption[icountry,y]=float(tmp[6])
+		except:
+			corruptionMask[icountry,y]=1
 
 Corr[index] = corr(np.ma.compressed(corruption),np.ma.compressed(malCountry))
 
@@ -1469,7 +1470,7 @@ except:
 	
 	np.save(wdvars+'MPconficts',MPconflicts)
 	
-	year=1999
+	year=1998
 	k=-1
 	for y in range(100,116):
 		k+=1
@@ -1485,6 +1486,7 @@ except:
 
 MPconflicts=np.ma.masked_array(MPconflicts,MPconflicts==0)
 
+'''
 ######################################################
 # Travel Time
 ######################################################
@@ -1552,6 +1554,7 @@ plt.colorbar()
 plt.xticks([])
 plt.yticks([])
 plt.savefig(wdfigs+'travel',dpi=700)
+'''
 
 ###########################################
 # Coast Lines
@@ -1617,7 +1620,7 @@ distToCoasts=np.ma.masked_array(distToCoasts,imageMask3[:,:2,:,:])
 coastLines=np.ma.masked_array(coastLines,imageMask3[0,:2,:,:])
 
 plt.clf()
-plt.imshow(np.clip(distToCoasts[0,0,:,:],0,700),cmap=cm.YlGnBu_r)
+plt.imshow(np.clip(distToCoasts[0,1,:,:],0,700),cmap=cm.YlGnBu_r)
 plt.colorbar()
 plt.xticks([])
 plt.yticks([])
@@ -1636,6 +1639,7 @@ indices = [ag_pct_gdp,assistance,bare,builtup,crop_prod,elevation,enrollment,fie
 xMulti=np.zeros(shape=(nyears,len(latm),len(lonm),len(indices)))
 ydata=np.ma.compressed(mal)
 
+exit()
 for i in range(len(indices)):
 	xMulti[:,:,:,i]=indices[i]
 	print i
