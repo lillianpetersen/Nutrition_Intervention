@@ -610,9 +610,9 @@ plt.savefig(wdfigs +'traveltime250k',dpi=700)
 # distanceDictionary.update((x, y/1000) for x, y in distanceDictionary.items())
 
 ##9cents per metric tonne km
-transportcostArray=distanceArray*0.11
-
-numpy.savetxt(wddata + "travel_time/transportationcostsarray.csv", transportcostArray, delimiter=",")
+# transportcostArray=distanceArray*0.11
+# 
+# numpy.savetxt(wddata + "travel_time/transportationcostsarray.csv", transportcostArray, delimiter=",")
 
 transportcostArray=transportcostArray*0.11/0.09
 transportcostArray=transportcostArray*0.12/0.11
