@@ -120,15 +120,22 @@ for i in range(len(countrycosted)):
             indexedscp[j]=scplusprice[i][:-1]
 
 
-#read in transport cost
+#multiply distance by average
+scaleaverage=np.zeros(shape=43)
+f=open(wddata+'travel_time/averagetkmcost.csv','r')
+i=-1
+for line in f:
+    i+=1
+    scaleaverage[i]=line
 transportcostArray=np.zeros(shape=(43,43))
-f=open(wddata+'travel_time/transportationcostsarray.csv','r')
+f=open(wddata+'travel_time/capitaldistanceArray.csv','r')
 i=-1
 for line in f:
     i+=1
     tmp=line.split(',')
     for j in range(len(tmp)):
-        transportcostArray[i,j]=tmp[j]
+        avg=(scaleaverage[i]+scaleaverage[j])/2
+        transportcostArray[i,j]=float(tmp[j])*avg
 
 # import and export costs
 importExportCosts=np.zeros(shape=(transportcostArray.shape))
@@ -164,7 +171,7 @@ for i in range(len(subsaharancountry)):
     if(indexedrutf[i]!=0):
         for j in range(len(indexedSAM)):
 			# sums ingredient and transport cost, converts to $/100g delivered
-            rutfcostarray[int(convertarray[i]),j]=indexedrutf[i]+100/1000000*transportcostArray[i,j]
+            rutfcostarray[int(convertarray[i]),j]=indexedrutf[i]+100/1000000*transportcostArray[i,j]+100/1000000*importExportCosts[i,j]/15
 
         # if(indexedscp[i]*2<indexedrusf[i]):
         #     for j in range(len(indexedSAM)):
@@ -201,13 +208,15 @@ for i in range(len(subsaharancountry)):
         for j in range(len(indexedSAM)):
                 if(indexedscp[i]*2<indexedrusf[i]):
                     for j in range(len(indexedSAM)):
-                        mamcostarray[int(convertarray[i]),j]=indexedscp[i]+200/1000000*transportcostArray[i,j]
+                        mamcostarray[int(convertarray[i]),j]=indexedscp[i]+200/1000000*transportcostArray[i,j]+200/1000000*importExportCosts[i,j]/15
+
                         print subsaharancountry[i] +' SC+'
                 else:
                     for j in range(len(indexedSAM)):
-                        mamcostarray[int(convertarray[i]),j]=indexedrusf[i]+100/1000000*transportcostArray[i,j]
+                        mamcostarray[int(convertarray[i]),j]=indexedrusf[i]+100/1000000*transportcostArray[i,j]+100/1000000*importExportCosts[i,j]/15
 
-np.savetxt(wddata + "foodstuffs/rutfcostarray.csv", rutfcostarray, delimiter=",")
+
+np.savetxt(wddata + "foodstuffs/mamcostarray.csv", mamcostarray, delimiter=",")
 
 mamdictionary={}
 ### array to dict
