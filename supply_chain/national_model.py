@@ -171,7 +171,7 @@ for i in range(len(subsaharancountry)):
     if(indexedrutf[i]!=0):
         for j in range(len(indexedSAM)):
 			# sums ingredient and transport cost, converts to $/100g delivered
-            rutfcostarray[int(convertarray[i]),j]=indexedrutf[i]+100/1000000*transportcostArray[i,j]+100/1000000*importExportCosts[i,j]/15
+            rutfcostarray[int(convertarray[i]),j]=indexedrutf[i]+100/1000000.*transportcostArray[i,j]+100/1000000.*importExportCosts[i,j]/15.
 
         # if(indexedscp[i]*2<indexedrusf[i]):
         #     for j in range(len(indexedSAM)):
@@ -208,12 +208,12 @@ for i in range(len(subsaharancountry)):
         for j in range(len(indexedSAM)):
                 if(indexedscp[i]*2<indexedrusf[i]):
                     for j in range(len(indexedSAM)):
-                        mamcostarray[int(convertarray[i]),j]=indexedscp[i]+200/1000000*transportcostArray[i,j]+200/1000000*importExportCosts[i,j]/15
+                        mamcostarray[int(convertarray[i]),j]=indexedscp[i]+200/1000000.*transportcostArray[i,j]+200/1000000.*importExportCosts[i,j]/15.
 
                         print subsaharancountry[i] +' SC+'
                 else:
                     for j in range(len(indexedSAM)):
-                        mamcostarray[int(convertarray[i]),j]=indexedrusf[i]+100/1000000*transportcostArray[i,j]+100/1000000*importExportCosts[i,j]/15
+                        mamcostarray[int(convertarray[i]),j]=indexedrusf[i]+100/1000000.*transportcostArray[i,j]+100/1000000.*importExportCosts[i,j]/15.
 
 
 np.savetxt(wddata + "foodstuffs/mamcostarray.csv", mamcostarray, delimiter=",")
