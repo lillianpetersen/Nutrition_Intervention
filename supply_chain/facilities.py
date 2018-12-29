@@ -183,7 +183,7 @@ for x in range(len(subsaharancountry)):
 
 		importExportCosts[x,y]=importCost+exportCost
 
-for z in np.arange(0.2,0.5,0.1):
+for z in np.arange(0,1):
     
     #cost dabber RUTF ########################################################################
     rutfcostarray=np.zeros(shape=(24,43))
@@ -236,7 +236,7 @@ for z in np.arange(0.2,0.5,0.1):
     for i in range(len(subsaharancountry)):
         if(indexedrutf[i]!=0):
             for j in range(len(indexedSAM)):
-                totaltransportcostarray[int(convertarray[i]),j]=109.5/1000000.*transportcostArray[i,j]*z+109.5/1000000.*importExportCosts[i,j]/15.
+                totaltransportcostarray[int(convertarray[i]),j]=109.5/1000000.*transportcostArray[i,j]+109.5/1000000.*importExportCosts[i,j]/15.
     
     totaltransportcostdictionary={}
     ### array to dict
@@ -325,7 +325,6 @@ for z in np.arange(0.2,0.5,0.1):
     # print(LpStatus[prob.status])
     # print("Objective:")
     print z
-    print totaltransportcostarray[0,1]
     print(value(prob.objective))
     # for v in prob.variables():
     #     if(v.varValue>0):
@@ -371,7 +370,7 @@ for z in np.arange(0.2,0.5,0.1):
     for i in range(len(subsaharancountry)):
         if(indexedrutf[i]!=0):
             for j in range(len(indexedSAM)):
-                totaltransportcostarray[int(convertarray[i]),j]=109.5/1000000.*transportcostArray[i,j]+z*109.5/1000000.*importExportCosts[i,j]/15.
+                totaltransportcostarray[int(convertarray[i]),j]=109.5/1000000.*transportcostArray[i,j]*109.5/1000000.*importExportCosts[i,j]/15.
     
     transportpercent = np.sum(totaltransportcostarray*rufsupplyarray)/value(prob.objective)
     
@@ -394,7 +393,7 @@ for z in np.arange(0.2,0.5,0.1):
     
     ingredientcosttotalpercent=np.sum(rutfsupplyarray*rutfcostarray+rusfsupplyarray*mamcostarray)/value(prob.objective)
     
-    f = open(wddata + 'truckingcostfactor'+str(np.round(z,2))+'.csv','w')
+    f = open(wddata + 'tarriflevel'+str(np.round(z,2))+'.csv','w')
     f.write('cost'+','+str(cost)+'\n')
     f.write('num_factories'+','+str(factorynum)+'\n')
     f.write('percent_transport'+','+str(transportpercent)+'\n')
