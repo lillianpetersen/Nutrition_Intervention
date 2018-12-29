@@ -439,7 +439,8 @@ latsubsaharan=np.load(wdvars+'latsubsaharan.npy')
 lonsubsaharan=np.load(wdvars+'lonsubsaharan.npy')
 africaMask1=np.load(wdvars+'africaMasksubsaharan.npy')
 
-nyears=16
+nyearsT=16
+nyears=22
 
 ##############################################
 # Gridded Malnutrition
@@ -447,13 +448,6 @@ nyears=16
 print 'Malnutrition' 
 try:
 	mal=np.load(wdvars+'malnutrition_prevalence_2000-2015.npy')
-	imageMask2=np.load(wdvars+'imageMask2.npy')
-	
-	imageMask3=np.zeros(shape=(nyears,10,imageMask2.shape[1],imageMask2.shape[2]),dtype=bool)
-	for y in range(16):
-		for i in range(10):
-			imageMask3[y,i,:,:]=imageMask2[y] # imageMask2=(lat,lon,3)
-	
 	latm=latsubsaharan
 	lonm=lonsubsaharan
 	pixelsize=0.04166666666650246
@@ -465,13 +459,24 @@ try:
 		gridm[:,x,1]=lonm[x]
 	
 	gridMid=createMidpointGrid(gridm,pixelsize) # lon lat
+	
+	imageMask2=np.load(wdvars+'imageMask2.npy')
+	imageMask2_1year=imageMask2[0]
+	imageMask2=np.zeros(shape=(nyears,len(latm),len(lonm)))
+	for y in range(nyears):
+		imageMask2[y]=imageMask2_1year
+	
+	imageMask3=np.zeros(shape=(nyears,10,imageMask2.shape[1],imageMask2.shape[2]),dtype=bool)
+	for y in range(nyears):
+		for i in range(10):
+			imageMask3[y,i,:,:]=imageMask2[y] # imageMask2=(lat,lon,3)
 
 except:
 	print 'try command failed: retrieving malnutrition'
 	
 	mal=np.zeros(shape=(16,len(latsubsaharan),len(lonsubsaharan)))
 	imageMask2=np.zeros(shape=(mal.shape),dtype=bool)
-	imageMask3=np.zeros(shape=(nyears,10,imageMask2.shape[1],imageMask2.shape[2]),dtype=bool)
+	imageMask3=np.zeros(shape=(nyearsT,10,imageMask2.shape[1],imageMask2.shape[2]),dtype=bool)
 	nationsM=np.load(wdvars+'nations')
 	nationsMask=np.ma.getmask(nationsM)
 	nationsMask[nationsM==818]=True
@@ -543,7 +548,7 @@ except:
 	imageMask2.dump(wdvars+'imageMask2')
 	
 if MakePlots:
-	for y in range(nyears):
+	for y in range(nyearsT):
 		plt.clf()
 		plt.imshow(mal[y],cmap=cm.jet,vmax=0.3)
 		plt.title(str(year)+': % Population with Severe Malnutrition')
@@ -559,6 +564,7 @@ if MakePlots:
 	plt.yticks([])
 	plt.colorbar()
 	plt.savefig(wdfigs+'malnutrition_avg',dpi=700)
+exit()
 
 ##############################################
 # Gridded Population
@@ -648,8 +654,8 @@ except:
 
 pop5km=np.ma.masked_array(pop5km,imageMask2)
 
-malnumber=mal*pop5km
-malnumber=np.ma.masked_array(malnumber,imageMask2)
+malnumber=mal*pop5km[:nyearsT]
+malnumber=np.ma.masked_array(malnumber,imageMask2[:nyearsT])
 
 if MakePlots:
 	plt.clf()
@@ -660,7 +666,7 @@ if MakePlots:
 	plt.yticks([])
 	plt.savefig(wdfigs+'pop5km',dpi=700)
 
-	for y in range(nyears):
+	for y in range(nyearsT):
 		plt.clf()
 		plt.imshow(malnumber,cmap=cm.nipy_spectral_r,vmax=500)
 		plt.title('malnutrition number')
@@ -685,7 +691,7 @@ except:
 		vars()[indices[i]]=np.zeros(shape=(nyears,len(latm),len(lonm)))
 	
 	year=1998
-	for y in range(16):
+	for y in range(nyears):
 		year+=1
 		print year
 		for i in range(len(indices)):
@@ -740,7 +746,7 @@ if MakePlots:
 	for i in range(len(indices)):
 		fromMatt=indices[i]
 	
-		year=1998
+		year=2019
 		for y in range(1):
 			year+=1
 	
@@ -882,23 +888,23 @@ try:
 	malCountry = np.load(wdvars+'malCountry_2000-2015.npy')
 except:
 	print 'try command failed: calculating malCountry'
-	malCountry=np.zeros(shape=(len(africanCountries),nyears))
+	malCountry=np.zeros(shape=(len(africanCountries),nyearsT))
 	j=-1
 	for i in indexedcodes:
 		j+=1
 		popWhole=np.sum(pop5km[nations==i])
 		poptmp=np.ma.masked_array(pop5km,nations!=i)
-		for y in range(nyears):
+		for y in range(nyearsT):
 			maltmp=np.ma.masked_array(mal[y],nations!=i)
 			malnumtmp=maltmp*poptmp
 			malCountry[j,y]=np.sum(malnumtmp)/popWhole
 	malCountry=malCountry*100
 	
-	malCountryGrid=np.zeros(shape=(nyears,len(latm),len(lonm)))
+	malCountryGrid=np.zeros(shape=(nyearsT,len(latm),len(lonm)))
 	j=-1
 	for i in indexedcodes:
 		j+=1
-		for y in range(nyears):
+		for y in range(nyearsT):
 			malCountryGrid[y,nations==i]=malCountry[j,y]
 	
 	malCountryGrid=np.ma.masked_array(malCountryGrid,imageMask2)
@@ -906,7 +912,7 @@ except:
 
 if MakePlots:
 	year=1998
-	for y in range(nyears):
+	for y in range(nyearsT):
 		year+=1
 		plt.clf()
 		plt.imshow(malCountryGrid[y],cmap=cm.jet,vmax=20)
@@ -937,9 +943,7 @@ latsS=scale(lats)
 index=0
 
 f=open(wddata+'country_indices/gdp_per_cap.csv','r')
-
 i=-2
-g=-1
 countries=[]
 GDPperCap=np.zeros(shape=(len(africanCountries),nyears))
 for line in f:
@@ -954,16 +958,46 @@ for line in f:
 		continue
 	countries.append(country)
 	icountry=int(countryToi[country])
-	g+=1
 	j=42 # 1998
-	for y in range(nyears):
+	for y in range(19):
 		j+=1
 		try:
 			GDPperCap[icountry,y]=float(tmp[j])
 		except:
 			exit()
-Corr=np.zeros(shape=8)
-Corr[index] = corr(np.ma.compressed(GDPperCap),np.ma.compressed(malCountry))
+
+f=open(wddata+'country_indices/gdp_per_cap2018.csv','r')
+for line in f:
+	line=line[:-1]
+	line=line.replace('"','')
+	tmp=np.array(line.split(','))
+	country=tmp[0]
+	if np.amax(country==np.array(africanCountries[:]))==0:
+		continue
+	icountry=int(countryToi[country])
+	GDPperCap[icountry,19]=float(tmp[1])
+
+f=open(wddata+'country_indices/gdp_per_cap2019.csv','r')
+for line in f:
+	line=line[:-1]
+	line=line.replace('"','')
+	tmp=np.array(line.split(','))
+	country=tmp[0]
+	if np.amax(country==np.array(africanCountries[:]))==0:
+		continue
+	icountry=int(countryToi[country])
+	GDPperCap[icountry,20]=float(tmp[1])
+
+f=open(wddata+'country_indices/gdp_per_cap2020.csv','r')
+for line in f:
+	line=line[:-1]
+	line=line.replace('"','')
+	tmp=np.array(line.split(','))
+	country=tmp[0]
+	if np.amax(country==np.array(africanCountries[:]))==0:
+		continue
+	icountry=int(countryToi[country])
+	GDPperCap[icountry,21]=float(tmp[1])
 
 ################
 index+=1
@@ -1012,57 +1046,28 @@ for i in range(len(girlEd[:,0])):
 
 			if ed1!=0 and ed2!=0:
 				diff=ed2-ed1
-				missingyears=j2-j1-1
+				missingyears=j2-j1
 				for k in range(y,j2):
 					girlEd[i,k]=diff/missingyears+girlEd[i,k-1]
 					girlEdMask[i,k]=0
-			elif ed1!=0:
-				girlEd[i,y]=girlEd[i,j1]
-				girlEdMask[i,y]=0
+			#elif ed1!=0:
+			#	girlEd[i,y]=girlEd[i,j1]
+			#	girlEdMask[i,y]=0
 			elif ed2!=0:
 				girlEd[i,y]=girlEd[i,j2]
 				girlEdMask[i,y]=0
-
-girlEd=np.ma.masked_array(girlEd,girlEdMask)
-malCountrytmp=np.ma.masked_array(malCountry,girlEdMask)
-Corr[index] = corr(np.ma.compressed(girlEd),np.ma.compressed(malCountrytmp))
-
-################
-index+=1
-
-f=open(wddata+'country_indices/fertility.csv','r')
-
-i=-2
-g=-1
-countries=[]
-fertility=np.zeros(shape=(len(africanCountries),nyears))
-fertilityMask=np.zeros(shape=(len(africanCountries),nyears),dtype=bool)
-for line in f:
-	i+=1
-	if i==-1:
-		continue
-	line=line[:-2]
-	line=line.replace('"','')
-	tmp=np.array(line.split(','))
-	country=tmp[0]
-	if np.amax(country==np.array(africanCountries[:]))==0:
-		continue
-	countries.append(country)
-	icountry=int(countryToi[country])
-	g+=1
-	j=42 # 1998
+	ed1=girlEd[i,0]
 	for y in range(nyears):
-		j+=1
-		try:
-			fertility[icountry,y]=float(tmp[j])
-		except:
-			fertilityMask[icountry,y]=1
+		if girlEdMask[i,y+1]==1:
+			ed2=girlEd[i,y]
+			j=y
+			break
+	diff=ed2-ed1
+	years=j-0
+	for k in range(j+1,nyears):
+		girlEd[i,k]=diff/years+girlEd[i,k-1]
 
-Corr[index] = corr(np.ma.compressed(fertility),np.ma.compressed(malCountry))
-
-################
-index+=1
-
+#################
 f=open(wddata+'country_indices/electricity.csv','r')
 
 i=-2
@@ -1090,12 +1095,23 @@ for line in f:
 			electricity[icountry,y]=float(tmp[j])
 		except:
 			electricityMask[icountry,y]=1
-
-Corr[index] = corr(np.ma.compressed(electricity),np.ma.compressed(malCountry))
+	
+	if electricityMask[icountry,0]==0:
+		e1=electricity[icountry,0]
+	else:
+		print 'hmmmm'
+		exit()
+	for y in range(nyears):
+		if electricityMask[icountry,y+1]==1:
+			e2=electricity[icountry,y]
+			j=y
+			break
+	diff=e2-e1
+	years=j-0
+	for k in range(j+1,nyears):
+		electricity[icountry,k]=diff/years+electricity[icountry,k-1]
 
 ################
-index+=1
-
 f=open(wddata+'country_indices/cereal_yield.csv','r')
 
 i=-2
@@ -1124,46 +1140,22 @@ for line in f:
 		except:
 			yieldMask[icountry,y]=1
 
-Yield=np.ma.masked_array(Yield,yieldMask)
-malCountrytmp=np.ma.masked_array(malCountry,yieldMask)
-Corr[index] = corr(np.ma.compressed(Yield),np.ma.compressed(malCountrytmp))
-
-################
-index+=1
-
-f=open(wddata+'country_indices/under5mortality.csv','r')
-
-i=-2
-g=-1
-countries=[]
-mortality5=np.zeros(shape=(len(africanCountries),nyears))
-mortality5Mask=np.zeros(shape=(len(africanCountries),nyears),dtype=bool)
-for line in f:
-	i+=1
-	if i==-1:
-		continue
-	line=line[:-2]
-	line=line.replace('"','')
-	tmp=np.array(line.split(','))
-	country=tmp[0]
-	if np.amax(country==np.array(africanCountries[:]))==0:
-		continue
-	countries.append(country)
-	icountry=int(countryToi[country])
-	g+=1
-	j=42 # 1998
+	if yieldMask[icountry,11]==0: # yield in 2010
+		yield1=Yield[icountry,11]
+	else:
+		print 'hmmmm'
+		exit()
 	for y in range(nyears):
-		j+=1
-		try:
-			mortality5[icountry,y]=float(tmp[j])
-		except:
-			mortality5Mask[icountry,y]=1
-
-Corr[index] = corr(np.ma.compressed(mortality5),np.ma.compressed(malCountry))
+		if yieldMask[icountry,y+1]==1:
+			yield2=Yield[icountry,y]
+			j=y
+			break
+	diff=yield2-yield1
+	years=j-11
+	for k in range(j+1,nyears):
+		Yield[icountry,k]=diff/years+Yield[icountry,k-1]
 
 ################
-index+=1
-
 f=open(wddata+'country_indices/iq.csv','r')
 
 i=-2
@@ -1190,104 +1182,164 @@ for line in f:
 		except:
 			iqMask[icountry,y]=1
 
-iq=np.ma.masked_array(iq,iqMask)
-malCountrytmp=np.ma.masked_array(malCountry,iqMask)
-Corr[index] = corr(np.ma.compressed(iq),np.ma.compressed(malCountry))
-
 ################
-index+=1
-
-f=open(wddata+'country_indices/corruption.csv','r')
-
-i=-2
-g=-1
-countries=[]
-corruption=np.zeros(shape=(len(africanCountries),nyears))
-corruptionMask=np.zeros(shape=(len(africanCountries),nyears),dtype=bool)
-for line in f:
-	i+=1
-	if i==-1:
-		continue
-	line=line[:-2]
-	line=line.replace('"','')
-	tmp=np.array(line.split(','))
-	country=tmp[0]
-	if np.amax(country==np.array(africanCountries[:]))==0:
-		continue
-	countries.append(country)
-	icountry=int(countryToi[country])
-	g+=1
-	j=42 # 1998
-	for y in range(nyears):
-		j+=1
-		try:
-			corruption[icountry,y]=float(tmp[6])
-		except:
-			corruptionMask[icountry,y]=1
-
-Corr[index] = corr(np.ma.compressed(corruption),np.ma.compressed(malCountry))
-
+#f=open(wddata+'country_indices/fertility.csv','r')
+#
+#i=-2
+#g=-1
+#countries=[]
+#fertility=np.zeros(shape=(len(africanCountries),nyears))
+#fertilityMask=np.zeros(shape=(len(africanCountries),nyears),dtype=bool)
+#for line in f:
+#	i+=1
+#	if i==-1:
+#		continue
+#	line=line[:-2]
+#	line=line.replace('"','')
+#	tmp=np.array(line.split(','))
+#	country=tmp[0]
+#	if np.amax(country==np.array(africanCountries[:]))==0:
+#		continue
+#	countries.append(country)
+#	icountry=int(countryToi[country])
+#	g+=1
+#	j=42 # 1998
+#	for y in range(nyears):
+#		j+=1
+#		try:
+#			fertility[icountry,y]=float(tmp[j])
+#		except:
+#			fertilityMask[icountry,y]=1
+#
+#Corr[index] = corr(np.ma.compressed(fertility),np.ma.compressed(malCountry))
+#
+################
+#index+=1
+#
+#f=open(wddata+'country_indices/under5mortality.csv','r')
+#
+#i=-2
+#g=-1
+#countries=[]
+#mortality5=np.zeros(shape=(len(africanCountries),nyears))
+#mortality5Mask=np.zeros(shape=(len(africanCountries),nyears),dtype=bool)
+#for line in f:
+#	i+=1
+#	if i==-1:
+#		continue
+#	line=line[:-2]
+#	line=line.replace('"','')
+#	tmp=np.array(line.split(','))
+#	country=tmp[0]
+#	if np.amax(country==np.array(africanCountries[:]))==0:
+#		continue
+#	countries.append(country)
+#	icountry=int(countryToi[country])
+#	g+=1
+#	j=42 # 1998
+#	for y in range(nyears):
+#		j+=1
+#		try:
+#			mortality5[icountry,y]=float(tmp[j])
+#		except:
+#			mortality5Mask[icountry,y]=1
+#
+#Corr[index] = corr(np.ma.compressed(mortality5),np.ma.compressed(malCountry))
+#
+################
+#index+=1
+#
+#f=open(wddata+'country_indices/corruption.csv','r')
+#
+#i=-2
+#g=-1
+#countries=[]
+#corruption=np.zeros(shape=(len(africanCountries),nyears))
+#corruptionMask=np.zeros(shape=(len(africanCountries),nyears),dtype=bool)
+#for line in f:
+#	i+=1
+#	if i==-1:
+#		continue
+#	line=line[:-2]
+#	line=line.replace('"','')
+#	tmp=np.array(line.split(','))
+#	country=tmp[0]
+#	if np.amax(country==np.array(africanCountries[:]))==0:
+#		continue
+#	countries.append(country)
+#	icountry=int(countryToi[country])
+#	g+=1
+#	j=42 # 1998
+#	for y in range(nyears):
+#		j+=1
+#		try:
+#			corruption[icountry,y]=float(tmp[6])
+#		except:
+#			corruptionMask[icountry,y]=1
+#
+#Corr[index] = corr(np.ma.compressed(corruption),np.ma.compressed(malCountry))
+#
 ################
 
-
-indices=[GDPperCap,girlEd,fertility,electricity,Yield,mortality5,iq,corruption]
-indexNames=['GDPperCap','girlEd','fertility','electricity','Yield','mortality','iq','corruption']
-xMulti=np.ma.zeros(shape=(len(africanCountries),nyears,len(indices)))
-
-Mask = yieldMask + girlEdMask 
-ydata=np.ma.compressed(np.ma.masked_array(malCountry,Mask))
-
-xMultiC=np.zeros(shape=(len(ydata),len(indices)))
-for i in range(len(indices)):
-	xMultiC[:,i]=np.ma.compressed(np.ma.masked_array(indices[i],Mask))
-
-malPred=np.zeros(shape=(10,141))
-malActual=np.zeros(shape=(10,141))
-for i in range(10):
-	Xtrain,Xtest,Ytrain,Ytest=sklearn.model_selection.train_test_split(xMultiC,ydata,test_size=.2,train_size=.8)
-	
-	clf=linear_model.LinearRegression()
-	clf.fit(Xtrain,Ytrain)
-	#clf=RandomForestRegressor()
-	#clf.fit(Xtrain,Ytrain)
-	
-	malPred[i]=clf.predict(Xtest)
-	malActual[i]=Ytest
-
-MultiCorr=corr(np.ma.compressed(malPred),np.ma.compressed(malActual))
-print MultiCorr
-
-### Yield Correlations
-i=13 #ethiopia for now
-
-# detrend
-YieldD=np.zeros(shape=(Yield.shape))
-
-x=np.arange(2000,2016)
-slope,b=np.polyfit(x,Yield[i],1)
-yfit=slope*x+b
-
-YieldD[i]=Yield[i]-yfit
-
+#indices=[GDPperCap[:nyearsT],girlEd[:nyearsT],electricity[:nyearsT],Yield[:nyearsT],iq[:nyearsT]]
+#indexNames=['GDPperCap','girlEd','electricity','Yield','iq']
+#xMulti=np.ma.zeros(shape=(len(africanCountries),nyears,len(indices)))
+#
+#Mask = yieldMask + girlEdMask 
+#ydata=np.ma.compressed(np.ma.masked_array(malCountry,Mask[:,:nyearsT]))
+#
+#xMultiC=np.zeros(shape=(len(ydata),len(indices)))
+#for i in range(len(indices)):
+#	xMultiC[:,i]=np.ma.compressed(np.ma.masked_array(indices[i],Mask[:,:nyearsT]))
+#
+#malPred=np.zeros(shape=(10,141))
+#malActual=np.zeros(shape=(10,141))
+#for i in range(10):
+#	Xtrain,Xtest,Ytrain,Ytest=sklearn.model_selection.train_test_split(xMultiC,ydata,test_size=.2,train_size=.8)
+#	
+#	clf=linear_model.LinearRegression()
+#	clf.fit(Xtrain,Ytrain)
+#	#clf=RandomForestRegressor()
+#	#clf.fit(Xtrain,Ytrain)
+#	
+#	malPred[i]=clf.predict(Xtest)
+#	malActual[i]=Ytest
+#
+#MultiCorr=corr(np.ma.compressed(malPred),np.ma.compressed(malActual))
+#print MultiCorr
+#
+#### Yield Correlations
+#i=13 #ethiopia for now
+#
+## detrend
+#YieldD=np.zeros(shape=(Yield.shape))
+#
+#x=np.arange(2000,2016)
+#slope,b=np.polyfit(x,Yield[i],1)
+#yfit=slope*x+b
+#
+#YieldD[i]=Yield[i]-yfit
+#
 ######################
 
-plt.clf()
-plt.plot(np.ma.compressed(malActual),np.ma.compressed(malPred),'b*')
-plt.title('Acuracy of Malnutrition Predictions, Corr = '+str(round(MultiCorr,2)))
-plt.xlabel('Actual Prevalence')
-plt.ylabel('Predicted Prevalence')
-plt.gca().set_aspect('equal', adjustable='box')
-plt.grid(True)
-plt.xlim([0,27])
-plt.ylim([0,27])
-plt.savefig(wdfigs+'world_bank_malnutrition_predictions.pdf')
+#plt.clf()
+#plt.plot(np.ma.compressed(malActual),np.ma.compressed(malPred),'b*')
+#plt.title('Acuracy of Malnutrition Predictions, Corr = '+str(round(MultiCorr,2)))
+#plt.xlabel('Actual Prevalence')
+#plt.ylabel('Predicted Prevalence')
+#plt.gca().set_aspect('equal', adjustable='box')
+#plt.grid(True)
+#plt.xlim([0,27])
+#plt.ylim([0,27])
+#plt.savefig(wdfigs+'world_bank_malnutrition_predictions.pdf')
 
-#titles=['% Females with Secondary School Education','Access to Electricity (% Pop)','Cereal Yield (kg/ha)','']
-titles=['GDP per cap','% Females with Secondary School Education','Fertility Rate','% Population with Access to Electricity','Cereal Yield','Under 5 Mortality','iq','Corruption']
+indices=[GDPperCap,girlEd,electricity,Yield,iq]
+indexNames=['GDPperCap','girlEd','electricity','Yield','iq']
+titles=['GDP per cap','% Females with Secondary School Education','% Population with Access to Electricity','Cereal Yield','iq']
 
 for j in range(len(indices)):
 	try:
-		vars()[indexNames[j]+'Grid']=np.load(wdvars+indexNames[j]+'Grid_2000-2015')
+		vars()[indexNames[j]+'Grid']=np.load(wdvars+indexNames[j]+'Grid_1999-2020')
 	except:
 		print 'try command failed: calculating',indexNames[j]+'Grid'
 
@@ -1303,16 +1355,16 @@ for j in range(len(indices)):
 			
 		#if MakePlots:
 		
-		vars()[indexNames[j]+'Grid'].dump(wdvars+indexNames[j]+'Grid_2000-2015')
+		vars()[indexNames[j]+'Grid'].dump(wdvars+indexNames[j]+'Grid_1999-2020')
 
 j=3
 plt.clf()
-plt.imshow(vars()[indexNames[j]+'Grid'][15],cmap=cm.jet_r)
+plt.imshow(vars()[indexNames[j]+'Grid'][21],cmap=cm.jet_r)
 plt.colorbar()
 plt.yticks([])
 plt.xticks([])
-plt.title(titles[j]+', 2015')
-plt.savefig(wdfigs+indexNames[j]+'.png',dpi=700)
+plt.title(titles[j]+', 2020')
+plt.savefig(wdfigs+indexNames[j]+'2020.png',dpi=700)
 
 ###########################################
 
@@ -1322,7 +1374,7 @@ plt.savefig(wdfigs+indexNames[j]+'.png',dpi=700)
 print 'SAM and MAM from UNICEF'
 
 #### MAM ####
-MAMcaseload=np.zeros(shape=(44,nyears))
+MAMcaseload=np.zeros(shape=(44,nyearsT))
 
 with open(wddata+'unicef_caseload/UNICEF_Wasting_2018_May/Trend-Table1.csv', 'rb') as csvfile:
 	k=0
@@ -1346,7 +1398,7 @@ malCountryM=np.ma.masked_array(malCountry,MAMmask)
 CorrM=corr(np.ma.compressed(MAMcaseload),np.ma.compressed(malCountryM))
 
 #### SAM ####
-SAMcaseload=np.zeros(shape=(44,nyears))
+SAMcaseload=np.zeros(shape=(44,nyearsT))
 
 with open(wddata+'unicef_caseload/UNICEF_Severe_Wasting_2018_May/Trend-Table1.csv', 'rb') as csvfile:
 	k=0
@@ -1455,9 +1507,9 @@ except:
 	conflictCoordAll=np.load(wdvars+'conflictCoord')
 	MPconflicts=np.zeros(shape=(nyears,len(latm),len(lonm)))
 	
-	year=1999
+	year=1998
 	k=-1
-	for y in range(100,116):
+	for y in range(99,118):
 		k+=1
 		year+=1
 		print '\n\n',year,'\n\n\n'
@@ -1468,11 +1520,14 @@ except:
 	
 		MPconflicts[k]=marketPotentials(conflicts,conflictCoord,gridMid,imageMask2[0,:,:])
 	
+	for k in range(19,nyears):
+		MPconflicts[k]=np.mean(MPconflicts[15:19],axis=0)
+
 	np.save(wdvars+'MPconficts',MPconflicts)
 	
 	year=1998
 	k=-1
-	for y in range(100,116):
+	for y in range(99,121):
 		k+=1
 		year+=1
 		
@@ -1481,7 +1536,7 @@ except:
 		plt.colorbar()
 		plt.xticks([])
 		plt.yticks([])
-		plt.title(str(year)+': Conflicts index')
+		plt.title(str(year)+': Conflicts index, '+str(k))
 		plt.savefig(wdfigs+'MPconflicts_'+str(year)+'.png',dpi=700)
 
 MPconflicts=np.ma.masked_array(MPconflicts,MPconflicts==0)
@@ -1632,24 +1687,114 @@ plt.savefig(wdfigs+'distToCoasts',dpi=700)
 ###########################################
 print 'Machine Learning'
 
-indexNames = ['ag_pct_gdp','assistance','bare','builtup','crop_prod','elevation','enrollment','fieldsize','forest','government_effectiveness','grid_gdp','grid_hdi','high_settle','low_settle','imports_percap','irrig_aai','irrig_aei','market_dist','mean_annual_precip','ndvi','nutritiondiversity','population','roughness','stability_violence','female_education','pop5km','distToCoasts','distToInlandCoastsi','MPconflicts','girlEdGrid','electricityGrid','YieldGrid','iqGrid']
+indices = ['ag_pct_gdp','assistance','bare','builtup','crop_prod','elevation','enrollment','fieldsize','forest','government_effectiveness','grid_gdp','grid_hdi','high_settle','low_settle','imports_percap','irrig_aai','irrig_aei','market_dist','mean_annual_precip','ndvi','nutritiondiversity','population','roughness','stability_violence','female_education','pop5km','distToCoasts','distToInlandCoastsi','MPconflicts','girlEdGrid','electricityGrid','YieldGrid','iqGrid']
 
 indices = [ag_pct_gdp,assistance,bare,builtup,crop_prod,elevation,enrollment,fieldsize,forest,government_effectiveness,grid_gdp,grid_hdi,high_settle,low_settle,imports_percap,irrig_aai,irrig_aei,market_dist,mean_annual_precip,ndvi,nutritiondiversity,population,roughness,stability_violence,female_education,pop5km,distToCoasts[:,0,:,:],distToCoasts[:,1,:,:],MPconflicts,girlEdGrid,electricityGrid,YieldGrid,iqGrid]
 
 xMulti=np.zeros(shape=(nyears,len(latm),len(lonm),len(indices)))
-ydata=np.ma.compressed(mal)
 
 exit()
 for i in range(len(indices)):
 	xMulti[:,:,:,i]=indices[i]
 	print i
 
-for i in range(len(indices)):
-	plt.clf()
-	plt.imshow(xMulti[10,:,:,i])
-	plt.title(indexNames[i])
-	plt.savefig(wdfigs+indexNames[i]+'2010',dpi=700)	
+if MakePlots:
+	for i in range(len(indices)):
+		plt.clf()
+		plt.imshow(xMulti[10,:,:,i])
+		plt.title(indexNames[i])
+		plt.savefig(wdfigs+indexNames[i]+'2010',dpi=700)	
 
+np.save(wdvars+'xMulti.npy',xMulti)
+
+#if nyears==22:
+xMultiMask=np.zeros(shape=(nyears,len(latm),len(lonm),len(indices)),dtype=bool)
+for i in range(len(indices)):
+	xMultiMask[:,:,:,i]=imageMask2
+	print i
+xMultiMask=np.array(xMultiMask,dtype=bool)
+
+np.save(wdvars+'xMultiMask.npy',xMultiMask)
+
+xMulti = np.load(wdvars+'xMulti.npy')
+xMultiMask = np.load(wdvars+'xMultiMask.npy')
+
+xMultiTrain=np.ma.masked_array(xMulti[:nyearsT], xMultiMask[:nyearsT])
+xMultiTest=np.ma.masked_array(xMulti[nyearsT:], xMultiMask[nyearsT:])
+ydata=np.ma.compressed(mal)
+
+tmp=np.ma.compressed(xMultiTrain[:,:,:,0])
+xMultiTrainC=np.zeros(shape=(len(tmp),len(indices)))
+tmp=np.ma.compressed(xMultiTest[:,:,:,0])
+xMultiTestC=np.zeros(shape=(len(tmp),len(indices)))
+for i in range(len(indices)):
+	xMultiTrainC[:,i]=np.ma.compressed(xMultiTrain[:,:,:,i])
+	#xMultiTestC[:,i]=np.ma.compressed(xMultiTest[:,:,:,i])
+	print i
+
+tmp=np.ma.compressed(xMultiTest[0,:,:,0])
+xMultiTestC2016=np.zeros(shape=(len(tmp),len(indices)))
+xMultiTestC2017=np.zeros(shape=(len(tmp),len(indices)))
+xMultiTestC2018=np.zeros(shape=(len(tmp),len(indices)))
+xMultiTestC2019=np.zeros(shape=(len(tmp),len(indices)))
+xMultiTestC2020=np.zeros(shape=(len(tmp),len(indices)))
+xMultiTestC2021=np.zeros(shape=(len(tmp),len(indices)))
+for i in range(len(indices)):
+	xMultiTestC2016[:,i]=np.ma.compressed(xMultiTest[0,:,:,i])
+	xMultiTestC2017[:,i]=np.ma.compressed(xMultiTest[1,:,:,i])
+	xMultiTestC2018[:,i]=np.ma.compressed(xMultiTest[2,:,:,i])
+	xMultiTestC2019[:,i]=np.ma.compressed(xMultiTest[3,:,:,i])
+	xMultiTestC2020[:,i]=np.ma.compressed(xMultiTest[4,:,:,i])
+	xMultiTestC2021[:,i]=np.ma.compressed(xMultiTest[5,:,:,i])
+	print i
+
+print 'fitting'
+##############################
+clf=RandomForestRegressor()
+clf.fit(xMultiTrainC,ydata)
+
+pickle.dump(clf, open(wdvars+'randomForest_trained1999-2014all', 'wb'))
+
+malPred2016=clf.predict(xMultiTestC2016)
+malPred2017=clf.predict(xMultiTestC2017)
+malPred2018=clf.predict(xMultiTestC2018)
+malPred2019=clf.predict(xMultiTestC2019)
+malPred2020=clf.predict(xMultiTestC2020)
+malPred2021=clf.predict(xMultiTestC2021)
+
+### Plot
+y=0 #2016
+
+imageMask2=np.load(wdvars+'imageMask2.npy')
+traintmp=imageMask2[y]==testMask[y]
+testtmp=imageMask2[y]==trainMask[y]
+ydata=maltrain[y]
+ydata=ydata.filled(0)
+ydata=np.ma.masked_array(ydata,imageMask2[y])
+
+xMultiPlot=np.ma.array(xMultiTest[y])
+for i in range(len(indices)):
+	xMultiPlot[:,:,i]=np.ma.masked_array(xMultiPlot[:,:,i],imageMask2[y])
+
+malPred=np.zeros(shape=(len(latm),len(lonm)))
+malPred=np.ma.masked_array(malPred,imageMask2[y])
+malPredMask=np.zeros(shape=(len(latm),len(lonm)),dtype=bool)
+
+for i in range(len(latm)):
+	xplot=np.zeros(shape=(len(np.ma.compressed(xMultiPlot[i,:,0])),len(indices)))
+	for k in range(len(indices)):
+		xplot[:,k]=np.ma.compressed(xMultiPlot[i,:,k])
+	malPred[i][ydata[i]==0]=clf.predict(xplot)
+	malPredMask[i][ydata[i]==0][0]=0
+	malPredMask[i][ydata[i]==0][-1]=0
+	
+plt.clf()
+plt.imshow(malPred,cmap=cm.jet,vmin=0,vmax=0.3)
+plt.colorbar()
+plt.yticks([])
+plt.xticks([])
+plt.title('Predicted Malnutrition, Percent of Population')
+plt.savefig(wdfigs+'malPred_Africa',dpi=700)
 ###########################
 # Split into boxes 
 ###########################
