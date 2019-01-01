@@ -1876,6 +1876,8 @@ for i in range(3):
 	MAMburden[i,:,:]=(MAMcountry[i]/100.)*countryPop
 	SAMburden[i,:,:]=(SAMcountry[i]/100.)*countryPop
 
+np.save(wdvars+'MAMcountry.npy',MAMcountry)
+np.save(wdvars+'SAMcountry.npy',SAMcountry)
 np.save(wdvars+'MAMburden.npy',MAMburden)
 np.save(wdvars+'SAMburden.npy',SAMburden)
 
