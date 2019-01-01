@@ -39,9 +39,9 @@ try:
 	wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
 	f=open(wddata+'population/CAPITALVERSIONcasenumbers.csv','r')
 except:
-	wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/data/'
-	wdfigs='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/figs/'
-	wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
+	wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/data/'
+	wdfigs='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/figs/'
+	wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/vars/'
 
 subsaharancountry = np.load(wdvars+'subsaharancountry.npy')
 for i in range(len(subsaharancountry)):

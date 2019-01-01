@@ -17,11 +17,11 @@ except:
 
 wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/data/'
 
-
-optiLevel = ['AllarOpti','LocalOpti']
-loopvar = ['shipcost','impexp','strtup','truckfactor']
+optiLevel = ['AllarOpti','LocalOpti','AllIntl_opti_trf','AllIntl_trf','LocalOpti_trf','AllarOpti_trf','AllIntl_opti','AllIntl']
+loopvar = ['shipcost', 'impexp','strtup','truckfactor']
 
 factor = np.array([0.2,0.2,0.5,0.2])
+
 maxs = np.array([2.01,4.01,9.51,4.01])
 
 for k in range(len(optiLevel)):
@@ -153,6 +153,24 @@ for k in range(len(optiLevel)):
                	    rusfprice.append(tmp[2])
                	    scplusprice.append(tmp[3])
                	    capitalcosted.append(tmp[4][:-1])
+            elif (optiLevel[k]=='AllarOpti_trf'):
+                ### cost per country
+                countrycosted=[]
+                rutfprice=[]
+                rusfprice=[]
+                scplusprice=[]
+                capitalcosted=[]
+                f=open(wddata+'foodstuffs/pricesCorrected_intl_opti_trf.csv')
+                code=np.zeros(shape=(247),dtype=int)
+                i=-1
+                for line in f:
+               	    i+=1
+               	    tmp=line.split(',')
+               	    countrycosted.append(tmp[0])
+               	    rutfprice.append(tmp[1])
+               	    rusfprice.append(tmp[2])
+               	    scplusprice.append(tmp[3])
+               	    capitalcosted.append(tmp[4][:-1])
             elif (optiLevel[k]=='LocalOpti'):
                 ### cost per country
                 countrycosted=[]
@@ -171,7 +189,96 @@ for k in range(len(optiLevel)):
                	    rusfprice.append(tmp[2])
                	    scplusprice.append(tmp[3])
                	    capitalcosted.append(tmp[4][:-1])
-            
+            elif (optiLevel[k]=='LocalOpti_trf'):
+                ### cost per country
+                countrycosted=[]
+                rutfprice=[]
+                rusfprice=[]
+                scplusprice=[]
+                capitalcosted=[]
+                f=open(wddata+'foodstuffs/pricesCorrected_intl_trf.csv')
+                code=np.zeros(shape=(247),dtype=int)
+                i=-1
+                for line in f:
+               	    i+=1
+               	    tmp=line.split(',')
+               	    countrycosted.append(tmp[0])
+               	    rutfprice.append(tmp[1])
+               	    rusfprice.append(tmp[2])
+               	    scplusprice.append(tmp[3])
+               	    capitalcosted.append(tmp[4][:-1])
+            elif (optiLevel[k]=='AllIntl'):
+                ### cost per country
+                countrycosted=[]
+                rutfprice=[]
+                rusfprice=[]
+                scplusprice=[]
+                capitalcosted=[]
+                f=open(wddata+'foodstuffs/pricesCorrected_AllIntl.csv')
+                code=np.zeros(shape=(247),dtype=int)
+                i=-1
+                for line in f:
+               	    i+=1
+               	    tmp=line.split(',')
+               	    countrycosted.append(tmp[0])
+               	    rutfprice.append(tmp[1])
+               	    rusfprice.append(tmp[2])
+               	    scplusprice.append(tmp[3])
+               	    capitalcosted.append(tmp[4][:-1])
+            elif (optiLevel[k]=='AllIntl_trf'):
+                ### cost per country
+                countrycosted=[]
+                rutfprice=[]
+                rusfprice=[]
+                scplusprice=[]
+                capitalcosted=[]
+                f=open(wddata+'foodstuffs/pricesCorrected_AllIntl_trf.csv')
+                code=np.zeros(shape=(247),dtype=int)
+                i=-1
+                for line in f:
+               	    i+=1
+               	    tmp=line.split(',')
+               	    countrycosted.append(tmp[0])
+               	    rutfprice.append(tmp[1])
+               	    rusfprice.append(tmp[2])
+               	    scplusprice.append(tmp[3])
+               	    capitalcosted.append(tmp[4][:-1])
+            elif (optiLevel[k]=='AllIntl_opti'):
+                ### cost per country
+                countrycosted=[]
+                rutfprice=[]
+                rusfprice=[]
+                scplusprice=[]
+                capitalcosted=[]
+                f=open(wddata+'foodstuffs/pricesCorrected_AllIntl_opti.csv')
+                code=np.zeros(shape=(247),dtype=int)
+                i=-1
+                for line in f:
+               	    i+=1
+               	    tmp=line.split(',')
+               	    countrycosted.append(tmp[0])
+               	    rutfprice.append(tmp[1])
+               	    rusfprice.append(tmp[2])
+               	    scplusprice.append(tmp[3])
+               	    capitalcosted.append(tmp[4][:-1])
+            elif (optiLevel[k]=='AllIntl_opti_trf'):
+                ### cost per country
+                countrycosted=[]
+                rutfprice=[]
+                rusfprice=[]
+                scplusprice=[]
+                capitalcosted=[]
+                f=open(wddata+'foodstuffs/pricesCorrected_AllIntl_opti_trf.csv')
+                code=np.zeros(shape=(247),dtype=int)
+                i=-1
+                for line in f:
+               	    i+=1
+               	    tmp=line.split(',')
+               	    countrycosted.append(tmp[0])
+               	    rutfprice.append(tmp[1])
+               	    rusfprice.append(tmp[2])
+               	    scplusprice.append(tmp[3])
+               	    capitalcosted.append(tmp[4][:-1])
             countrycosted[6]="Congo (Republic of the)"
             countrycosted[7]="Cote d'Ivoire"
             
@@ -257,7 +364,7 @@ for k in range(len(optiLevel)):
         	       for line in fx:
         		  tmp=line.split(',')
         		  if tmp[0]==xCountry:
-        		      exportCost=mImpExpV*(float(tmp[4])+float(tmp[6]))+mShipV*3330.
+        		      exportCost=mImpExpV*(float(tmp[4])+float(tmp[6]))+mShipV*2550.
         		      break
         	       for y in range(len(subsaharancountry)):
         		  importCost=-9999
@@ -492,14 +599,17 @@ for k in range(len(optiLevel)):
                         # print v.name[15:]
                         sourcenum+=1
                         countries.append(v.name[15:])
-                        if(v.name[15:17]!='I_'):
+                        if('I_' not in v.name):
                             factorynum+=1
                     if (v.name[0:9]=="Machine_2"):
                         sizes.append(value(v))
-                    if (v.name[0:10]=="Supply_of_"):
+                    if (v.name[0:10]=="Supply_of_" and not ('I_' in v.name)):
                         averageshipments+=1
-            
-            averageshipments=(averageshipments/2.)/sourcenum
+                        
+            if(factorynum!=0):
+                averageshipments=(averageshipments/2.)/factorynum
+            else:
+                averageshipments=0
         
             rutfsupplyarray=np.zeros(shape=(33,43))
             
@@ -512,7 +622,7 @@ for k in range(len(optiLevel)):
                         j+=1
             
             rutftotaled=np.sum(rutfsupplyarray,axis=1)
-            
+
             rusfsupplyarray=np.zeros(shape=(33,43))
             for i in countrycosted:
                 j=0
@@ -540,12 +650,14 @@ for k in range(len(optiLevel)):
             transportpercent = np.sum(MAMtransportcostarray*rusfsupplyarray+RUTFtransportcostarray*rutfsupplyarray)/value(prob.objective)
             
             ##recipetype_factorchanged
+            if not os.path.exists(wddata+'/results/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/'):
+                os.makedirs(wddata+'/results/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/')
             f = open(wddata+'/results/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/' +str(optiLevel[k])+'_'+str(loopvar[z])+str(np.round(s,2))+'.csv','w')
             f.write('cost'+','+str(cost)+'\n')
             f.write('num_factories'+','+str(factorynum)+'\n')
             f.write('percent_transport'+','+str(transportpercent)+'\n')
             f.write('percent_ingredient'+','+str(ingredientcosttotalpercent)+'\n')
-            f.write('average_shipments'+','+str(averageshipments)+'\n')
+            f.write('average_shipments_per_local+factory'+','+str(averageshipments)+'\n')
             for i in range(len(countrycosted)):
                 if(rutftotaled[i]!=0 or rusftotaled[i]!=0):
                     f.write(str(countrycosted[i])+','+str(rutftotaled[i])+','+str(rusftotaled[i])+'\n')
