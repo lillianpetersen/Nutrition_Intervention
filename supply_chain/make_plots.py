@@ -405,6 +405,7 @@ for L in range(len(optiLevel)):
 			ax.set_extent([-19, 53, -37, 39], ccrs.PlateCarree())
 			ax.coastlines()
 
+			# for the legend
 			plt.plot(capitalLatLon[1,8], capitalLatLon[0,8], marker='*', markersize=7, color='g',label='Factories')
 			plt.plot(capitalLatLon[1,8], capitalLatLon[0,8], marker='*', markersize=5, color='darkred', label='Possible Factories (Not Producing)')
 			plt.plot(capitalLatLon[1,30], capitalLatLon[0,30], marker='o', markersize=7, color='g', label = 'Intl Shipment Port')
@@ -478,9 +479,10 @@ for L in range(len(optiLevel)):
 			ax.set_extent([-19, 53, -37, 39], ccrs.PlateCarree())
 			ax.coastlines()
 
-			plt.plot(capitalLatLon[1,8], capitalLatLon[0,8], marker='*', markersize=8, color='slateblue', label='Possible Factories')
-			plt.plot(capitalLatLon[1,30], capitalLatLon[0,30], marker='o', markersize=8, color='c', label = 'Possible Intl Shipment Ports')
-			
+			plt.plot(capitalLatLon[1,8], capitalLatLon[0,8], marker='*', markersize=9, color='orangered', label='Possible Factories')
+			plt.plot(capitalLatLon[1,30], capitalLatLon[0,30], marker='o', markersize=8, color='dodgerblue', label = 'Possible Intl Shipment Ports')
+			plt.plot(SScapitalLatLon[1,9],SScapitalLatLon[0,9], marker='^', markersize=8, color='mediumpurple', label = 'Recieves Treatment')
+
 			for country in shpreader.Reader(countries_shp).records():
 				cName=country.attributes['NAME_LONG']
 				if cName[-6:]=='Ivoire':
@@ -493,24 +495,60 @@ for L in range(len(optiLevel)):
 					cName='Swaziland'
 				if cName=='The Gambia':
 					cName='Gambia'
+				if cName=='Somaliland':
+					cName='Somalia'
 				if np.amax(cName==subsaharancountry)==0:
 					continue
-				plt.plot()
+				if np.amax(cName==countrycosted)!=0:
+					c=np.where(cName==countrycosted)[0][0]
+					lon1=capitalLatLon[1,c]
+					lat1=capitalLatLon[0,c]
+					for iSS in range(len(subsaharancountry)):
+						lat2=SScapitalLatLon[0,iSS]
+						lon2=SScapitalLatLon[1,iSS]
+						dist=np.sqrt((lat2-lat1)**2+(lon2-lon1)**2)
+						if dist<15:
+							plt.plot([lon1,lon2] , [lat1,lat2], color='gray', linestyle='--', linewidth = 0.5, transform=ccrs.PlateCarree() )
+			
+			for icoast in range(24,len(countrycosted)):
+				lon1=capitalLatLon[1,icoast]
+				lat1=capitalLatLon[0,icoast]
+				for iSS in range(len(subsaharancountry)):
+					lat2=SScapitalLatLon[0,iSS]
+					lon2=SScapitalLatLon[1,iSS]
+					dist=np.sqrt((lat2-lat1)**2+(lon2-lon1)**2)
+					if dist<17:
+						plt.plot([lon1,lon2] , [lat1,lat2], color='gray', linestyle='--', linewidth = 0.5, transform=ccrs.PlateCarree() )
+
+			for country in shpreader.Reader(countries_shp).records():
+				cName=country.attributes['NAME_LONG']
+				if cName[-6:]=='Ivoire':
+					cName="Ivory Coast"
+				if cName=='Democratic Republic of the Congo':
+					cName='DRC'
+				if cName=='Republic of the Congo':
+					cName='Congo'
+				if cName=='eSwatini':
+					cName='Swaziland'
+				if cName=='The Gambia':
+					cName='Gambia'
+				if cName=='Somaliland':
+					cName='Somalia'
+				if np.amax(cName==subsaharancountry)==0:
+					continue
 				if np.amax(cName==countrycosted)==0:
 					ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black',
 						facecolor='lightgray')
+					c=np.where(cName==subsaharancountry)[0][0]
+					plt.plot(SScapitalLatLon[1,c],SScapitalLatLon[0,c], marker='^', markersize=8, color='mediumpurple')
 				else:
 					c=np.where(cName==countrycosted)[0][0]
 					ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black', facecolor='lightgreen',label=cName)
+					plt.plot(capitalLatLon[1,c], capitalLatLon[0,c], marker='*', markersize=9, color='orangered')
 
-					plt.plot(capitalLatLon[1,c], capitalLatLon[0,c], marker='*', markersize=8, color='slateblue')
-
-			
 			for icoast in range(24,len(countrycosted)):
 				x=factoryPctOne[0,icoast]
-				plt.plot(capitalLatLon[1,icoast], capitalLatLon[0,icoast], marker='o', markersize=8, color='c')
-
-			#for l in range(len(
+				plt.plot(capitalLatLon[1,icoast], capitalLatLon[0,icoast], marker='o', markersize=8, color='dodgerblue')
 
 			plt.title('Multi-Product Capacitated Facility Location Model\nPossible Factory Locations')
 			plt.legend(loc = 'lower left')
@@ -730,6 +768,17 @@ for i in range(len(Rcountry)):
 Rcountry2=np.array(Rcountry2)
 for i in range(len(Rcountry2)):
 	Rcountry2[i]=Rcountry2[i].replace('_',' ')
+
+#Rcountry2=[]
+#for i in range(len(Rcountry)):
+#	country=Rcountry[i]
+#	if country[:2]=='I_':
+#		countrytmp=country[:2].replace('_',' ')
+#		Rcountry2.append('I_'+countrytmp)
+#	else:
+#		countrytmp=country.replace('_',' ')
+#		Rcountry2.append(country)
+#Rcountry2=np.array(Rcountry2)
 
 plt.clf()
 fig = plt.figure(figsize=(13, 8))
