@@ -4,6 +4,7 @@ import json
 import numpy as np
 import re
 from sys import exit
+import matplotlib.cm as cm
 
 try:
 	wddata='/Users/lilllianpetersen/iiasa/data/supply_chain/'
@@ -17,13 +18,20 @@ except:
 
 wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/data/'
 
-optiLevel = ['AllarOpti','LocalOpti','AllIntl_opti_trf','AllIntl_trf','LocalOpti_trf','AllarOpti_trf','AllIntl_opti','AllIntl']
-loopvar = ['shipcost', 'impexp','strtup','truckfactor']
+bigloop=False
 
-factor = np.array([0.2,0.2,0.5,0.2])
-
-maxs = np.array([2.01,4.01,9.51,4.01])
-
+if(bigloop): 
+    optiLevel = ['AllIntl_trf','AllarOpti','LocalOpti','AllIntl_opti_trf', 'LocalOpti_trf','AllarOpti_trf','AllIntl_opti','AllIntl']
+    loopvar = ['shipcost', 'impexp','strtup','truckfactor']
+    factor = np.array([0.2,0.2,0.5,0.2])
+    maxs = np.array([2.01,4.01,9.51,4.01])
+else:
+    import matplotlib.pyplot as plt
+    optiLevel=['AllIntl_trf','AllarOpti','LocalOpti','AllIntl_opti_trf', 'LocalOpti_trf','AllarOpti_trf','AllIntl_opti','AllIntl']
+    loopvar=['shipcost']
+    factor=np.array([1])
+    maxs=np.array([1.1])
+    
 for k in range(len(optiLevel)):
         # for x in range(len(countrycosted)):
         #     if(tmp[0]==countrycosted[x] or tmp[0][2:]==countrycosted[x]):
@@ -649,20 +657,134 @@ for k in range(len(optiLevel)):
             
             transportpercent = np.sum(MAMtransportcostarray*rusfsupplyarray+RUTFtransportcostarray*rutfsupplyarray)/value(prob.objective)
             
-            ##recipetype_factorchanged
-            if not os.path.exists(wddata+'/results/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/'):
-                os.makedirs(wddata+'/results/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/')
-            f = open(wddata+'/results/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/' +str(optiLevel[k])+'_'+str(loopvar[z])+str(np.round(s,2))+'.csv','w')
-            f.write('cost'+','+str(cost)+'\n')
-            f.write('num_factories'+','+str(factorynum)+'\n')
-            f.write('percent_transport'+','+str(transportpercent)+'\n')
-            f.write('percent_ingredient'+','+str(ingredientcosttotalpercent)+'\n')
-            f.write('average_shipments_per_local+factory'+','+str(averageshipments)+'\n')
-            for i in range(len(countrycosted)):
-                if(rutftotaled[i]!=0 or rusftotaled[i]!=0):
-                    f.write(str(countrycosted[i])+','+str(rutftotaled[i])+','+str(rusftotaled[i])+'\n')
-            f.close()
-            
+            if(bigloop):
+                ##recipetype_factorchanged
+                if not os.path.exists(wddata+'/results/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/'):
+                    os.makedirs(wddata+'/results/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/')
+                f = open(wddata+'/results/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/' +str(optiLevel[k])+'_'+str(loopvar[z])+str(np.round(s,2))+'.csv','w')
+                f.write('cost'+','+str(cost)+'\n')
+                f.write('num_factories'+','+str(factorynum)+'\n')
+                f.write('percent_transport'+','+str(transportpercent)+'\n')
+                f.write('percent_ingredient'+','+str(ingredientcosttotalpercent)+'\n')
+                f.write('average_shipments_per_local+factory'+','+str(averageshipments)+'\n')
+                for i in range(len(countrycosted)):
+                    if(rutftotaled[i]!=0 or rusftotaled[i]!=0):
+                        f.write(str(countrycosted[i])+','+str(rutftotaled[i])+','+str(rusftotaled[i])+'\n')
+                f.close()
+            else:
+                
+                Rcountrycosted=[]
+                lngth=max(len(np.where(rutftotaled>0)[0]), len(np.where(rusftotaled>0)[0]))
+                Rrutfsupplyarray=np.zeros(shape=(lngth,43))
+                Rrusfsupplyarray=np.zeros(shape=(lngth,43))
+                o=0
+                for i in range(len(countrycosted)):
+                    if(rutftotaled[i]!=0 or rusftotaled[i]!=0):
+                        Rcountrycosted.append(countrycosted[i])
+                        Rrutfsupplyarray[o,:]=rutfsupplyarray[i,:]
+                        Rrusfsupplyarray[o,:]=rusfsupplyarray[i,:]
+                        o+=1
+                
+                Rcountrycosted=np.array(Rcountrycosted)
+                countryToiF = {}
+                iToCountryF = {}
+                for i in range(len(Rcountrycosted)):
+                    countryToiF[Rcountrycosted[i]] = i
+                    iToCountryF[i]=Rcountrycosted[i]
+                    
+                countryToiC = {}
+                iToCountryC = {}
+                for i in range(len(subsaharancountry)):
+                    countryToiC[subsaharancountry[i]] = i
+                    iToCountryC[i]=subsaharancountry[i]
+                    
+                lonsF=np.zeros(shape=(lngth))
+                f = open(wddata+'boundaries/countryLats.csv')
+                for line in f:
+                    line=line[:-1]
+                    tmp=line.split(',')
+                    if np.amax(tmp[3]==np.array(Rcountrycosted))==0:
+                        continue
+                    i=countryToiF[tmp[3]]
+                    lonsF[i]=float(tmp[2])
+                    
+                            
+                lonsC=np.zeros(shape=(43))
+                f = open(wddata+'boundaries/countryLats_noI.csv')
+                for line in f:
+                    line=line[:-1]
+                    tmp=line.split(',')
+                    if np.amax(tmp[3]==np.array(subsaharancountry))==0:
+                        continue
+                    i=countryToiC[tmp[3]]
+                    lonsC[i]=float(tmp[2])
+                
+                
+                iSortedF = np.argsort(lonsF)
+                iSortedC = np.argsort(lonsC)
+                
+                subsaharancountry =  np.array(subsaharancountry)
+                
+                Rcountrycosted = Rcountrycosted[iSortedF]
+                Rsubsaharancountry = subsaharancountry[iSortedC]
+                
+                Rrutfsupplyarray=Rrutfsupplyarray[iSortedF]
+                Rrutfsupplyarray=Rrutfsupplyarray[:,iSortedC]
+                
+                Rrusfsupplyarray=Rrusfsupplyarray[iSortedF]
+                Rrusfsupplyarray=Rrusfsupplyarray[:,iSortedC]
+                
+                if not os.path.exists(wddata+'/results/example/'+str(optiLevel[k])+'/'):
+                    os.makedirs(wddata+'/results/example/'+str(optiLevel[k])+'/')
+                
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+"/Rcountry", Rcountrycosted)
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+"/Rsubsaharancountry", Rsubsaharancountry)
+                
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/Rrutfarray", Rrutfsupplyarray)
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/Rrusfarray", Rrusfsupplyarray)
+                
+                rusfarray = np.load(wddata+'/results/example/'+str(optiLevel[k])+'/Rrusfarray.npy')
+                rutfarray = np.load(wddata+'/results/example/'+str(optiLevel[k])+'/Rrutfarray.npy')
+                Rcountry = np.load(wddata+'/results/example/'+str(optiLevel[k])+'/Rcountry.npy')
+                Rcountry[Rcountry=='Congo']='DRC'
+                Rcountry[Rcountry=='Congo_(Republic_of_the)']='Congo'
+                Rcountry[Rcountry=='Cote_d\'Ivoire']='Ivory Coast'
+                
+                Rcountry2=[]
+                for i in range(len(Rcountry)):
+                    country=Rcountry[i]
+                    if country[:2]=='I_':
+                        if country=="I_Cote_d'Ivoire":
+                            country='I_Ivory_Coast'
+                        Rcountry2.append('Intl ('+country[2:]+')')
+                    else:
+                        Rcountry2.append(country)
+                Rcountry2=np.array(Rcountry2)
+                for i in range(len(Rcountry2)):
+                    Rcountry2[i]=Rcountry2[i].replace('_',' ')
+                
+                plt.clf()
+                fig = plt.figure(figsize=(13, 8))
+                plt.imshow(rutfarray,cmap=cm.terrain_r,vmax=2.5e8)
+                plt.colorbar()
+                plt.xticks(np.arange(43), Rsubsaharancountry, rotation='vertical')
+                plt.yticks(np.arange(len(Rcountry2)), Rcountry2)
+                plt.title('Imports and Exports RUTF (Packets, Ordered by Lon)')
+                plt.savefig(wddata+'/results/example/'+str(optiLevel[k])+'/impexp_array.pdf')
+                
+            #     plt.clf()
+            #     plt.imshow(Rrutfsupplyarray,cmap=cm.terrain_r)
+            #     plt.colorbar()
+            #     plt.title('RUTF Imports and Exports ordered by Lon')
+            #     plt.savefig(wdfigs+'rutfimpexp.png')
+            #     
+            #     plt.clf()
+            #     plt.imshow(Rrusfsupplyarray,cmap=cm.terrain_r)
+            #     plt.colorbar()
+            #     plt.title('RUSF treatment Imports and Exports ordered by Lon')
+            #     plt.savefig(wdfigs+'rusfimpexp.png')
+            # 
+
                     # if v.name[0,5]="
                 
             # resultsarray=np.zeros(shape=(86,2))
