@@ -10,13 +10,12 @@ try:
 	wddata='/Users/lilllianpetersen/iiasa/data/supply_chain/'
 	wdfigs='/Users/lilllianpetersen/iiasa/figs/'
 	wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
-	f=open(wddata+'population/CAPITALVERSIONcasenumbers.csv','r')
+	f=open(wddata+'trading_across_borders2017.csv','r')
 except:
 	wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/data/'
 	wdfigs='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/figs/'
 	wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
 
-wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/data/'
 
 bigloop=False
 
@@ -121,7 +120,7 @@ for k in range(len(optiLevel)):
             mImpExp=False
             mStrt=False
             mTruck=True
-        for s in np.arange(factor[z],maxs[z],factor[z]):
+        for s in np.arange(9.5,maxs[z],factor[z]):
             print 's=',s
             print 'optiLevel=',optiLevel[k],k
             print 'loopvar=',loopvar[z] ,z
@@ -142,7 +141,7 @@ for k in range(len(optiLevel)):
                 indexedSAM[i]=float(tmp[2])*150*11.66
                 indexedMAM[i]=float(tmp[3])*50*(365/75)
                 indexedstunting[i]=float(tmp[4])
-                subsaharancapital.append(tmp[5][:-1])     
+                subsaharancapital.append(tmp[5][:-2])     
             if (optiLevel[k]=='AllarOpti'):
                 ### cost per country
                 countrycosted=[]
@@ -160,7 +159,7 @@ for k in range(len(optiLevel)):
                	    rutfprice.append(tmp[1])
                	    rusfprice.append(tmp[2])
                	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-1])
+               	    capitalcosted.append(tmp[4][:-2])
             elif (optiLevel[k]=='AllarOpti_trf'):
                 ### cost per country
                 countrycosted=[]
@@ -178,7 +177,7 @@ for k in range(len(optiLevel)):
                	    rutfprice.append(tmp[1])
                	    rusfprice.append(tmp[2])
                	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-1])
+               	    capitalcosted.append(tmp[4][:-2])
             elif (optiLevel[k]=='LocalOpti'):
                 ### cost per country
                 countrycosted=[]
@@ -196,7 +195,7 @@ for k in range(len(optiLevel)):
                	    rutfprice.append(tmp[1])
                	    rusfprice.append(tmp[2])
                	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-1])
+               	    capitalcosted.append(tmp[4][:-2])
             elif (optiLevel[k]=='LocalOpti_trf'):
                 ### cost per country
                 countrycosted=[]
@@ -214,7 +213,7 @@ for k in range(len(optiLevel)):
                	    rutfprice.append(tmp[1])
                	    rusfprice.append(tmp[2])
                	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-1])
+               	    capitalcosted.append(tmp[4][:-2])
             elif (optiLevel[k]=='AllIntl'):
                 ### cost per country
                 countrycosted=[]
@@ -232,7 +231,7 @@ for k in range(len(optiLevel)):
                	    rutfprice.append(tmp[1])
                	    rusfprice.append(tmp[2])
                	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-1])
+               	    capitalcosted.append(tmp[4][:-2])
             elif (optiLevel[k]=='AllIntl_trf'):
                 ### cost per country
                 countrycosted=[]
@@ -250,7 +249,7 @@ for k in range(len(optiLevel)):
                	    rutfprice.append(tmp[1])
                	    rusfprice.append(tmp[2])
                	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-1])
+               	    capitalcosted.append(tmp[4][:-2])
             elif (optiLevel[k]=='AllIntl_opti'):
                 ### cost per country
                 countrycosted=[]
@@ -268,7 +267,7 @@ for k in range(len(optiLevel)):
                	    rutfprice.append(tmp[1])
                	    rusfprice.append(tmp[2])
                	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-1])
+               	    capitalcosted.append(tmp[4][:-2])
             elif (optiLevel[k]=='AllIntl_opti_trf'):
                 ### cost per country
                 countrycosted=[]
@@ -286,7 +285,7 @@ for k in range(len(optiLevel)):
                	    rutfprice.append(tmp[1])
                	    rusfprice.append(tmp[2])
                	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-1])
+               	    capitalcosted.append(tmp[4][:-2])
             countrycosted[6]="Congo (Republic of the)"
             countrycosted[7]="Cote d'Ivoire"
             

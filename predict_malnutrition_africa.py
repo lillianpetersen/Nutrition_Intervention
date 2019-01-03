@@ -838,11 +838,9 @@ if MakePlots:
 
 lats=np.zeros(shape=(43,16))
 f = open(wddata+'boundaries/countryLats.csv')
-k=-1
 for line in f:
 	line=line[:-1]
 	tmp=line.split(',')
-	k+=1
 	if np.amax(tmp[3]==np.array(africanCountries))==0:
 		continue
 	i=countryToi[tmp[3]]
