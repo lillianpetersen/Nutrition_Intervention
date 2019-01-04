@@ -97,9 +97,7 @@ for k in range(len(optiLevel)):
     # 				break
     # 
     # 		    importExportCosts[x,y]=importCost+exportCost
-    
     for z in range(len(loopvar)):
-
         if(loopvar[z]=='shipcost'):
             mShip=True
             mImpExp=False
@@ -120,7 +118,7 @@ for k in range(len(optiLevel)):
             mImpExp=False
             mStrt=False
             mTruck=True
-        for s in np.arange(9.5,maxs[z],factor[z]):
+        for s in np.arange(factor[z],maxs[z],factor[z]):
             print 's=',s
             print 'optiLevel=',optiLevel[k],k
             print 'loopvar=',loopvar[z] ,z
@@ -724,6 +722,11 @@ for k in range(len(optiLevel)):
                 
                 subsaharancountry =  np.array(subsaharancountry)
                 
+                RNcountrycosted = Rcountrycosted
+                RNsubsaharancountry = subsaharancountry
+                RNrutfsupplyarray = Rrutfsupplyarray
+                RNrusfsupplyarray = Rrusfsupplyarray
+                
                 Rcountrycosted = Rcountrycosted[iSortedF]
                 Rsubsaharancountry = subsaharancountry[iSortedC]
                 
@@ -736,9 +739,13 @@ for k in range(len(optiLevel)):
                 if not os.path.exists(wddata+'/results/example/'+str(optiLevel[k])+'/'):
                     os.makedirs(wddata+'/results/example/'+str(optiLevel[k])+'/')
                 
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+"/RNcountry", RNcountrycosted)
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+"/RNsubsaharancountry", RNsubsaharancountry)
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/RNrutfarray", RNrutfsupplyarray)
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/RNrusfarray", RNrusfsupplyarray)
+                
                 np.save(wddata+'/results/example/'+str(optiLevel[k])+"/Rcountry", Rcountrycosted)
                 np.save(wddata+'/results/example/'+str(optiLevel[k])+"/Rsubsaharancountry", Rsubsaharancountry)
-                
                 np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/Rrutfarray", Rrutfsupplyarray)
                 np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/Rrusfarray", Rrusfsupplyarray)
                 
