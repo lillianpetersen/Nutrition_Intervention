@@ -595,9 +595,9 @@ for L in range(len(optiLevel)):
 		###########################
 		# Supply Zones
 		###########################
-		productarray = np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/Rrutfarray.npy')
-		Rcountrycosted1=np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/Rcountry.npy')
-		Rsubsaharancountry1=np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/Rsubsaharancountry.npy')
+		productarray = np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/RNrutfarray.npy')
+		Rcountrycosted1=np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/RNcountry.npy')
+		Rsubsaharancountry1=np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/RNsubsaharancountry.npy')
 		Rcountrycosted=[]
 		for i in range(len(Rcountrycosted1)):
 			country=Rcountrycosted1[i]
@@ -630,8 +630,9 @@ for L in range(len(optiLevel)):
 		shapename = 'admin_0_countries'
 		countries_shp = shpreader.natural_earth(resolution='110m',
 			category='cultural', name=shapename)
-
-		colors = [(128,0,0),(170,110,40),(128,128,0),(0,128,128),(0,0,128),(0,0,128),(0,0,0),(230,25,75),(245,130,48),(255,225,25),(210,245,60),(60,180,75),(70,240,240),(0,130,200),(145,30,180),(240,50,230),(128,128,128),(250,190,190),(255,215,180),(255,250,200),(170,255,195),(230,190,255),(255,255,255)]
+                colors = [(240,59,32),(252,146,114),(254,178,76),(255,237,160),(35,132,67),(49,163,84),(229,245,224),(0,0,139),(49,130,189),(158,202,225),(136,86,167),(158,188,218)]                
+                # colors = [(240,59,32),(252,146,114),(254,178,76),(255,237,160),(49,163,84),(161,217,155),(229,245,224),(49,130,189),(158,202,225),(136,86,167),(158,188,218)]
+		# colors = [(128,0,0),(170,110,40),(128,128,0),(0,128,128),(0,0,128),(0,0,128),(0,0,0),(230,25,75),(245,130,48),(255,225,25),(210,245,60),(60,180,75),(70,240,240),(0,130,200),(145,30,180),(240,50,230),(128,128,128),(250,190,190),(255,215,180),(255,250,200),(170,255,195),(230,190,255),(255,255,255)]
 		colors=colors[:len(Rcountrycosted)+1]
 		my_cmap = make_cmap(colors,bit=True)
 		
@@ -745,6 +746,7 @@ for L in range(len(optiLevel)):
 
 				if np.amax(cName==countrycosted)>0:
 					p=np.where(cName==countrycosted)[0][0]
+
 					#print cName, factoryPctOne[0,p], c
 	
 					if factoryPctOne[0,p]!=0:
@@ -779,7 +781,7 @@ for L in range(len(optiLevel)):
 		plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally\nTotal Cost = $'+costOne+' Million', bbox=dict(fc="none", boxstyle="round"), size = 10)
 		plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'supplyzone_map.pdf')
 
-		exit()
+        exit()
 
 fig = plt.figure(figsize=(9, 6))
 LTitles = ['All Optimized','Local Optimized','Optimized Intl','None Optimized']
