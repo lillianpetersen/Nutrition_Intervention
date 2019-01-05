@@ -784,8 +784,8 @@ for L in range(len(optiLevel)):
 				#if x==0:
 				#	plt.plot(capitalLatLon[1,icoast], capitalLatLon[0,icoast], marker='o', markersize=7, color='darkred')
 
-			local = str(int(np.round(100*np.sum(factoryPctOne[0,:24])/np.sum(factoryPctOne[0,:]),0)))
-			intl = str(np.round(100*np.sum(factoryPctOne[0,24:])/np.sum(factoryPctOne[0,:]),0))
+			local = str(int(np.round(100*np.sum(factoryPctOne[g,:24])/np.sum(factoryPctOne[g,:]),0)))
+			intl = str(np.round(100*np.sum(factoryPctOne[g,24:])/np.sum(factoryPctOne[g,:]),0))
 			# costOne = str(int(round(costOne/1000000.,0)))
 
 			plt.title(SMtitles[g]+' Treatment: Primary Supplier by Country\n' + LTitles[L] + TTitles[T])
