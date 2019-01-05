@@ -411,102 +411,114 @@ for L in range(len(optiLevel)):
 		# MAPS
 		##################################################################
 
-		##### Export #####
 		countrycosted=np.load(wdvars+'countrycosted.npy')
 		countrycosted[countrycosted=='Congo']='DRC'
 		countrycosted[countrycosted=='Congo (Republic of the)']='Congo'
 		countrycosted[countrycosted=="I_Cote d'Ivoire"]='I_Ivory Coast'
 		countrycosted[countrycosted=="Cote d'Ivoire"]='Ivory Coast'
 
+		###########################
+		# Export
+		###########################
+		colors = [(255,255,255),(152, 240, 152), (97, 218, 97), (65, 196, 65), (42, 175, 42), (28, 162, 28), (17, 149, 17), (7, 135, 7), (0, 118, 0)]
+		my_cmap = make_cmap(colors,bit=True)
 		shapename = 'admin_0_countries'
 		countries_shp = shpreader.natural_earth(resolution='110m',
 			category='cultural', name=shapename)
 		
-		plt.clf()
-		cmapArray=plt.cm.hot_r(np.arange(256))
-		cmin=0
-		cmax=np.amax(factoryPctOne[0,:]) #*0.9
-		y1=0
-		y2=255
-		
-		fig = plt.figure(figsize=(10, 8))
-		MinMaxArray=np.ones(shape=(3,2))
-		subPlot1 = plt.axes([0.61, 0.07, 0.2, 0.8])
-		MinMaxArray[0,0]=cmin
-		MinMaxArray[1,0]=cmax
-		plt.imshow(MinMaxArray,cmap='hot_r')
-		plt.colorbar()
-		plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'_export_map.pdf')
-		
-		ax = plt.axes([0.05,0.05,0.8,0.85],projection=ccrs.PlateCarree())
-		ax.set_extent([-19, 53, -37, 39], ccrs.PlateCarree())
-		ax.coastlines()
-
-		# for the legend
-		plt.plot(capitalLatLon[1,8], capitalLatLon[0,8], marker='*', markersize=7, color='g',label='Factories')
-		plt.plot(capitalLatLon[1,8], capitalLatLon[0,8], marker='*', markersize=5, color='darkred', label='Possible Factories (Not Producing)')
-		plt.plot(capitalLatLon[1,30], capitalLatLon[0,30], marker='o', markersize=7, color='g', label = 'Intl Shipment Port')
-		plt.plot(capitalLatLon[1,30], capitalLatLon[0,30], marker='o', markersize=5, color='darkred', label = 'Intl Shipment Port (No Shipments)')
-
-		factoryNumOne=0
-		IntlNumOne=0
-		
-		for country in shpreader.Reader(countries_shp).records():
-			cName=country.attributes['NAME_LONG']
-			if cName[-6:]=='Ivoire':
-				cName="Ivory Coast"
-			if cName=='Democratic Republic of the Congo':
-				cName='DRC'
-			if cName=='Republic of the Congo':
-				cName='Congo'
-			if cName=='eSwatini':
-				cName='Swaziland'
-			if cName=='The Gambia':
-				cName='Gambia'
-			if np.amax(cName==subsaharancountry)==0:
-				continue
-			if np.amax(cName==countrycosted)==0:
-				x=0
+		for g in range(2): # SAM MAM treatment
+			plt.clf()
+			cmapArray=my_cmap(np.arange(256))
+			cmin=0
+			cmax=np.amax(factoryPctOne[g,:]) #*0.9
+			y1=0
+			y2=255
+			
+			fig = plt.figure(figsize=(10, 8))
+			MinMaxArray=np.ones(shape=(3,2))
+			subPlot1 = plt.axes([0.61, 0.07, 0.2, 0.8])
+			MinMaxArray[0,0]=cmin
+			MinMaxArray[1,0]=cmax
+			plt.imshow(MinMaxArray,cmap=my_cmap)
+			plt.colorbar()
+			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'_export_map.pdf')
+			
+			ax = plt.axes([0.05,0.05,0.8,0.85],projection=ccrs.PlateCarree())
+			ax.set_extent([-19, 53, -37, 39], ccrs.PlateCarree())
+			ax.coastlines()
+	
+			plt.plot(capitalLatLon[1,8], capitalLatLon[0,8], marker='*', markersize=12, color=[97/255., 218/255., 97/255.], markeredgewidth=1.5, markeredgecolor='k',label='Factories')
+			plt.plot(capitalLatLon[1,8], capitalLatLon[0,8], marker='*', markersize=7, color='darkred', label='Possible Factories (Not Producing)')
+			plt.plot(capitalLatLon[1,30], capitalLatLon[0,30], marker='o', markersize=12, color=[97/255., 218/255., 97/255.], markeredgewidth=1.5, markeredgecolor='k', label = 'Intl Shipment Port')
+			plt.plot(capitalLatLon[1,30], capitalLatLon[0,30], marker='o', markersize=7, color='darkred', label = 'Intl Shipment Port (No Shipments)')
+	
+			factoryNumOne=0
+			IntlNumOne=0
+			
+			for country in shpreader.Reader(countries_shp).records():
+				cName=country.attributes['NAME_LONG']
+				if cName[-6:]=='Ivoire':
+					cName="Ivory Coast"
+				if cName=='Democratic Republic of the Congo':
+					cName='DRC'
+				if cName=='Republic of the Congo':
+					cName='Congo'
+				if cName=='eSwatini':
+					cName='Swaziland'
+				if cName=='The Gambia':
+					cName='Gambia'
+				if cName=='Somaliland':
+					cName='Somalia'
+				if np.amax(cName==subsaharancountry)==0:
+					continue
+				if np.amax(cName==countrycosted)==0:
+					x=0
+					y=y1+(y2-y1)/(cmax-cmin)*(x-cmin)
+					icmap=min(255,int(round(y,1)))
+					icmap=max(0,int(round(icmap,1)))
+					ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black',
+						facecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]],label=cName)
+				else:
+					c=np.where(cName==countrycosted)[0][0]
+					x=factoryPctOne[g,c]
+					y=y1+(y2-y1)/(cmax-cmin)*(x-cmin)
+					icmap=min(255,int(round(y,1)))
+					icmap=max(0,int(round(icmap,1)))
+					ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black', facecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]],label=cName)
+	
+					if x!=0:
+						size = 10*(1+factoryPctOne[g,c]/cmax)
+						plt.plot(capitalLatLon[1,c], capitalLatLon[0,c], marker='*', markersize=size, color=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]], markeredgewidth=1.5, markeredgecolor='k')
+						factoryNumOne+=1
+					if x==0:
+						plt.plot(capitalLatLon[1,c], capitalLatLon[0,c], marker='*', markersize=7, color='darkred')
+	
+			
+			for icoast in range(24,len(countrycosted)):
+				x=factoryPctOne[g,icoast]
 				y=y1+(y2-y1)/(cmax-cmin)*(x-cmin)
 				icmap=min(255,int(round(y,1)))
 				icmap=max(0,int(round(icmap,1)))
-				ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black',
-					facecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]],label=cName)
-			else:
-				c=np.where(cName==countrycosted)[0][0]
-				x=factoryPctOne[0,c]
-				y=y1+(y2-y1)/(cmax-cmin)*(x-cmin)
-				icmap=min(255,int(round(y,1)))
-				icmap=max(0,int(round(icmap,1)))
-				ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black', facecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]],label=cName)
-
 				if x!=0:
-					size = 10*(1+factoryPctOne[0,c]/cmax)
-					plt.plot(capitalLatLon[1,c], capitalLatLon[0,c], marker='*', markersize=size, color='g')
-					factoryNumOne+=1
+					size = 10*(1+factoryPctOne[g,icoast]/cmax)
+					plt.plot(capitalLatLon[1,icoast], capitalLatLon[0,icoast], marker='o', markersize=size, color=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]], markeredgewidth=1.5, markeredgecolor='k')
+					IntlNumOne+=1
 				if x==0:
-					plt.plot(capitalLatLon[1,c], capitalLatLon[0,c], marker='*', markersize=7, color='darkred')
+					plt.plot(capitalLatLon[1,icoast], capitalLatLon[0,icoast], marker='o', markersize=7, color='darkred')
+	
+			local = str(int(np.round(100*np.sum(factoryPctOne[g,:24])/np.sum(factoryPctOne[g,:]),0)))
+			intl = str(np.round(100*np.sum(factoryPctOne[g,24:])/np.sum(factoryPctOne[g,:]),0))
+			#costOne = str(int(round(costOne/1000000.,0)))
+	
+			plt.title('Production of '+SMtitles[g]+' Treatment by Factory and Port\n' + LTitles[L] + TTitles[T])
+			plt.legend(loc = 'lower left')
+			#plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally\nTotal Cost = $'+costOne+' Million', bbox=dict(fc="none", boxstyle="round"), size = 10)
+			plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally', bbox=dict(fc="none", boxstyle="round"), size = 10)
+			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/geographical/'+SMtitles[g]+'_export_map.pdf')
 
-		
-		for icoast in range(24,len(countrycosted)):
-			x=factoryPctOne[0,icoast]
-			if x!=0:
-				size = 10*(1+factoryPctOne[0,icoast]/cmax)
-				plt.plot(capitalLatLon[1,icoast], capitalLatLon[0,icoast], marker='o', markersize=size, color='g')
-				IntlNumOne+=1
-			if x==0:
-				plt.plot(capitalLatLon[1,icoast], capitalLatLon[0,icoast], marker='o', markersize=7, color='darkred')
-
-		local = str(int(np.round(100*np.sum(factoryPctOne[0,:24])/np.sum(factoryPctOne[0,:]),0)))
-		intl = str(np.round(100*np.sum(factoryPctOne[0,24:])/np.sum(factoryPctOne[0,:]),0))
-		costOne = str(int(round(costOne/1000000.,0)))
-
-		plt.title('Exports of RUTF by Factory, Packets \n' + LTitles[L] + TTitles[T])
-		plt.legend(loc = 'lower left')
-		plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally\nTotal Cost = $'+costOne+' Million', bbox=dict(fc="none", boxstyle="round"), size = 10)
-		plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'_export_map.pdf')
-
-		##### Skeleton #####
+		###########################
+		# Skeleton
+		###########################
 		shapename = 'admin_0_countries'
 		countries_shp = shpreader.natural_earth(resolution='110m',
 			category='cultural', name=shapename)
@@ -650,7 +662,7 @@ for L in range(len(optiLevel)):
 		MinMaxArray[1,0]=cmax
 		plt.imshow(MinMaxArray,cmap=my_cmap)
 		plt.colorbar()
-		plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'_export_map.pdf')
+		plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'supplyzone_map.pdf')
 		
 		ax = plt.axes([0.05,0.05,0.8,0.85],projection=ccrs.PlateCarree())
 		ax.set_extent([-19, 53, -37, 39], ccrs.PlateCarree())
@@ -782,6 +794,133 @@ for L in range(len(optiLevel)):
 		plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'supplyzone_map.pdf')
 
         exit()
+		###########################
+		# By factory import/export
+		###########################
+		productarray = np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/RNrutfarray.npy')
+		Rcountrycosted1=np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/RNcountry.npy')
+		Rsubsaharancountry1=np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/Rsubsaharancountry.npy')
+		Rcountrycosted=[]
+		for i in range(len(Rcountrycosted1)):
+			country=Rcountrycosted1[i]
+			if country[:2]=='I_':
+				countrytmp=country[2:].replace('_',' ')
+				Rcountrycosted.append('I_'+countrytmp)
+			else:
+				countrytmp=country.replace('_',' ')
+				Rcountrycosted.append(countrytmp)
+		Rcountrycosted=np.array(Rcountrycosted)
+		Rsubsaharancountry=[]
+		for i in range(len(Rsubsaharancountry1)):
+			country=Rsubsaharancountry1[i]
+			if country[:2]=='I_':
+				countrytmp=country[2:].replace('_',' ')
+				Rsubsaharancountry.append('I_'+countrytmp)
+			else:
+				countrytmp=country.replace('_',' ')
+				Rsubsaharancountry.append(countrytmp)
+		Rsubsaharancountry=np.array(Rsubsaharancountry)
+
+		Rsubsaharancountry[Rsubsaharancountry=='Congo']='DRC'
+		Rsubsaharancountry[Rsubsaharancountry=='Congo (Republic of the)']='Congo'
+		Rsubsaharancountry[Rsubsaharancountry=="Cote d'Ivoire"]='Ivory Coast'
+		Rcountrycosted[Rcountrycosted=='Congo']='DRC'
+		Rcountrycosted[Rcountrycosted=='Congo (Republic of the)']='Congo'
+		Rcountrycosted[Rcountrycosted=="I_Cote d'Ivoire"]='I_Ivory Coast'
+		Rcountrycosted[Rcountrycosted=="Cote d'Ivoire"]='Ivory Coast'
+		
+		colors = [(255,255,255), (203,208,255), (160,169,255), (121,133,255), (79, 95, 255), (43, 62, 255), (0, 23, 255)]
+		my_cmap = make_cmap(colors,bit=True)
+		shapename = 'admin_0_countries'
+		countries_shp = shpreader.natural_earth(resolution='110m',
+			category='cultural', name=shapename)
+		
+		for f in range(len(productarray)):
+
+			factory = Rcountrycosted[f]
+
+			plt.clf()
+			cmapArray=my_cmap(np.arange(256))
+			cmin=0
+			cmax=np.amax(productarray[f,:]) #*0.9
+			if cmax==0:
+				continue
+			y1=0
+			y2=255
+			
+			fig = plt.figure(figsize=(10, 8))
+			MinMaxArray=np.ones(shape=(3,2))
+			subPlot1 = plt.axes([0.61, 0.07, 0.2, 0.8])
+			MinMaxArray[0,0]=cmin
+			MinMaxArray[1,0]=cmax
+			plt.imshow(MinMaxArray,cmap=my_cmap)
+			plt.colorbar()
+			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'_'+factory+'_exports.pdf')
+			
+			ax = plt.axes([0.05,0.05,0.8,0.85],projection=ccrs.PlateCarree())
+			ax.set_extent([-19, 53, -37, 39], ccrs.PlateCarree())
+			ax.coastlines()
+	
+			factoryNumOne=0
+			IntlNumOne=0
+
+			plt.plot(-16.1, -34.7, marker='*', markersize=9, color='limegreen', label='Factory')
+			plt.plot(-16.1, -34.7, marker='o', markersize=8, color='limegreen', label = 'Intl Shipment Port')
+			plt.plot(-16.1, -34.7, marker='^', markersize=8, color='mediumpurple', label = 'Recieves Treatment')
+			
+			for country in shpreader.Reader(countries_shp).records():
+				cName=country.attributes['NAME_LONG']
+				if cName[-6:]=='Ivoire':
+					cName="Ivory Coast"
+				if cName=='Democratic Republic of the Congo':
+					cName='DRC'
+				if cName=='Republic of the Congo':
+					cName='Congo'
+				if cName=='eSwatini':
+					cName='Swaziland'
+				if cName=='The Gambia':
+					cName='Gambia'
+				if np.amax(cName==subsaharancountry)==0:
+					continue
+				impc=np.where(cName==subsaharancountry)[0][0]
+				x=productarray[f,impc]
+				y=y1+(y2-y1)/(cmax-cmin)*(x-cmin)
+				icmap=min(255,int(round(y,1)))
+				icmap=max(0,int(round(icmap,1)))
+				ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black', facecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]],label=cName)
+	
+				if x!=0:
+					size = 10*(1+x/cmax)
+					plt.plot(SScapitalLatLon[1,impc], SScapitalLatLon[0,impc], marker='^', markersize=8, color='mediumpurple')
+					facc=np.where(factory==countrycosted)[0][0]
+					if factory[:2]=='I_':
+						plt.plot(capitalLatLon[1,facc], capitalLatLon[0,facc], marker='o', markersize=12, color='limegreen')
+					else:
+						plt.plot(capitalLatLon[1,facc], capitalLatLon[0,facc], marker='*', markersize=13, color='limegreen')
+
+					factoryNumOne+=1
+	
+			
+			#for icoast in range(24,len(countrycosted)):
+			#	x=factoryPctOne[0,icoast]
+			#	if x!=0:
+			#		size = 10*(1+factoryPctOne[0,icoast]/cmax)
+			#		plt.plot(capitalLatLon[1,icoast], capitalLatLon[0,icoast], marker='o', markersize=size, color='g')
+			#		IntlNumOne+=1
+			#	if x==0:
+			#		plt.plot(capitalLatLon[1,icoast], capitalLatLon[0,icoast], marker='o', markersize=7, color='darkred')
+	
+			#local = str(int(np.round(100*np.sum(factoryPctOne[0,:24])/np.sum(factoryPctOne[0,:]),0)))
+			#intl = str(np.round(100*np.sum(factoryPctOne[0,24:])/np.sum(factoryPctOne[0,:]),0))
+			#costOne = str(int(round(costOne/1000000.,0)))
+	
+			plt.title('Exports of RUTF for '+factory+', Packets \n' + LTitles[L] + TTitles[T])
+			plt.legend(loc = 'lower left')
+			#plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally\nTotal Cost = $'+costOne+' Million', bbox=dict(fc="none", boxstyle="round"), size = 10)
+			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/exports_by_country/'+Ltitles[L]+'_'+factory+'_exports.pdf')
+	
+exit()
+>>>>>>> by country export maps
 
 fig = plt.figure(figsize=(9, 6))
 LTitles = ['All Optimized','Local Optimized','Optimized Intl','None Optimized']
