@@ -733,40 +733,22 @@ for L in range(len(optiLevel)):
 					if dlat!=0:
 						plt.arrow(lon1, lat1, dlon, dlat, color='k', linestyle='-', width=width, head_width=2.5*width, head_length=width*2, length_includes_head=True, transform=ccrs.PlateCarree() )
 
-			for country in shpreader.Reader(countries_shp).records():
-				cName=country.attributes['NAME_LONG']
-				if cName[-6:]=='Ivoire':
-					cName="Ivory Coast"
-				if cName=='Democratic Republic of the Congo':
-					cName='DRC'
-				if cName=='Republic of the Congo':
-					cName='Congo'
-				if cName=='eSwatini':
-					cName='Swaziland'
-				if cName=='The Gambia':
-					cName='Gambia'
-				if cName=='Somaliland':
-					cName='Somalia'
-				if np.amax(cName==Rsubsaharancountry)==0:
+			for f in range(len(Rcountrycosted)):
+				factory=Rcountrycosted[f]
+				if factory[:2]=='I_':
 					continue
-				else:
-					poz=np.where(cName==Rsubsaharancountry)[0][0]
-					c=np.where(productarray[:,poz]==np.amax(productarray[:,poz]))[0][0]
-					y=y1+(y2-y1)/(cmax-cmin)*(c-cmin)
-					icmap=min(255,int(round(y,1)))
-					icmap=max(0,int(round(icmap,1)))
+				y=y1+(y2-y1)/(cmax-cmin)*(f-cmin)
+				icmap=min(255,int(round(y,1)))
+				icmap=max(0,int(round(icmap,1)))
 
-					if np.amax(cName==countrycosted)>0:
-						p=np.where(cName==countrycosted)[0][0]
+				p=np.where(factory==countrycosted)[0][0]
 
-						#print cName, factoryPctOne[0,p], c
-		
-						if factoryPctOne[0,p]!=0:
-							size = 10*(1+factoryPctOne[0,p]/np.amax(factoryPctOne[0,:]))
-							plt.plot(capitalLatLon[1,p], capitalLatLon[0,p], marker='*', markersize=size, markerfacecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]], markeredgewidth=1.5, markeredgecolor='k')
-							factoryNumOne+=1
-						#if x==0:
-						#	plt.plot(capitalLatLon[1,p], capitalLatLon[0,p], marker='*', markersize=7, color='darkred')
+				if factoryPctOne[0,p]!=0:
+					size = 10*(1+factoryPctOne[0,p]/np.amax(factoryPctOne[0,:]))
+					plt.plot(capitalLatLon[1,p], capitalLatLon[0,p], marker='*', markersize=size, markerfacecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]], markeredgewidth=1.5, markeredgecolor='k')
+					factoryNumOne+=1
+				#if x==0:
+				#	plt.plot(capitalLatLon[1,p], capitalLatLon[0,p], marker='*', markersize=7, color='darkred')
 			
 
 			for icoast in range(24,len(countrycosted)):
