@@ -596,7 +596,6 @@ for L in range(len(optiLevel)):
 				plt.plot(capitalLatLon[1,c], capitalLatLon[0,c], marker='*', markersize=9, color='orangered')
 
 		for icoast in range(24,len(countrycosted)):
-			x=factoryPctOne[0,icoast]
 			plt.plot(capitalLatLon[1,icoast], capitalLatLon[0,icoast], marker='o', markersize=8, color='dodgerblue')
 
 		plt.title('Multi-Product Capacitated Facility Location Model\nPossible Factory Locations')
@@ -735,6 +734,22 @@ for L in range(len(optiLevel)):
 
 			for f in range(len(Rcountrycosted)):
 				factory=Rcountrycosted[f]
+				if factory[:2]!='I_':
+					continue
+
+				y=y1+(y2-y1)/(cmax-cmin)*(f-cmin)
+				icmap=min(255,int(round(y,1)))
+				icmap=max(0,int(round(icmap,1)))
+
+				p=np.where(factory==countrycosted)[0][0]
+
+				if factoryPctOne[g,p]!=0:
+					size = 10*(1+factoryPctOne[g,p]/np.amax(factoryPctOne[g,:]))
+					plt.plot(capitalLatLon[1,p], capitalLatLon[0,p], marker='o', markersize=size, markerfacecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]], markeredgewidth=1.5, markeredgecolor='k')
+					IntlNumOne+=1
+
+			for f in range(len(Rcountrycosted)):
+				factory=Rcountrycosted[f]
 				if factory[:2]=='I_':
 					continue
 				y=y1+(y2-y1)/(cmax-cmin)*(f-cmin)
@@ -743,28 +758,13 @@ for L in range(len(optiLevel)):
 
 				p=np.where(factory==countrycosted)[0][0]
 
-				if factoryPctOne[0,p]!=0:
-					size = 10*(1+factoryPctOne[0,p]/np.amax(factoryPctOne[0,:]))
+				if factoryPctOne[g,p]!=0:
+					size = 10*(1+factoryPctOne[g,p]/np.amax(factoryPctOne[g,:]))
 					plt.plot(capitalLatLon[1,p], capitalLatLon[0,p], marker='*', markersize=size, markerfacecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]], markeredgewidth=1.5, markeredgecolor='k')
 					factoryNumOne+=1
 				#if x==0:
 				#	plt.plot(capitalLatLon[1,p], capitalLatLon[0,p], marker='*', markersize=7, color='darkred')
 			
-
-			for icoast in range(24,len(countrycosted)):
-				x=factoryPctOne[0,icoast]
-				country=countrycosted[icoast]
-				if np.amax(country==Rcountrycosted)>0:
-					c=np.where(country==Rcountrycosted)[0][0]
-					y=y1+(y2-y1)/(cmax-cmin)*(c-cmin)
-					icmap=min(255,int(round(y,1)))
-					icmap=max(0,int(round(icmap,1)))
-					if x!=0:
-						size = 10*(1+factoryPctOne[0,c]/np.amax(factoryPctOne[0,:]))
-						plt.plot(capitalLatLon[1,icoast], capitalLatLon[0,icoast], marker='o', markersize=size, markerfacecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]], markeredgewidth=1.5, markeredgecolor='k')
-						IntlNumOne+=1
-				#if x==0:
-				#	plt.plot(capitalLatLon[1,icoast], capitalLatLon[0,icoast], marker='o', markersize=7, color='darkred')
 
 			local = str(int(np.round(100*np.sum(factoryPctOne[g,:24])/np.sum(factoryPctOne[g,:]),0)))
 			intl = str(np.round(100*np.sum(factoryPctOne[g,24:])/np.sum(factoryPctOne[g,:]),0))
@@ -885,9 +885,9 @@ for L in range(len(optiLevel)):
 		
 				
 				#for icoast in range(24,len(countrycosted)):
-				#	x=factoryPctOne[0,icoast]
+				#	x=factoryPctOne[g,icoast]
 				#	if x!=0:
-				#		size = 10*(1+factoryPctOne[0,icoast]/cmax)
+				#		size = 10*(1+factoryPctOne[g,icoast]/cmax)
 				#		plt.plot(capitalLatLon[1,icoast], capitalLatLon[0,icoast], marker='o', markersize=size, color='g')
 				#		IntlNumOne+=1
 				#	if x==0:
@@ -900,8 +900,8 @@ for L in range(len(optiLevel)):
 				impPct=impPct[order][::-1]
 				impCountries=np.array(impCountries)[order][::-1]
 				totalshipments = str(int(round(np.sum(productarray[f])/1000000.)))
-				#local = str(int(np.round(100*np.sum(factoryPctOne[0,:24])/np.sum(factoryPctOne[0,:]),0)))
-				#intl = str(np.round(100*np.sum(factoryPctOne[0,24:])/np.sum(factoryPctOne[0,:]),0))
+				#local = str(int(np.round(100*np.sum(factoryPctOne[g,:24])/np.sum(factoryPctOne[g,:]),0)))
+				#intl = str(np.round(100*np.sum(factoryPctOne[g,24:])/np.sum(factoryPctOne[g,:]),0))
 				#costOne = str(int(round(costOne/1000000.,0)))
 		
 				plt.title('Exports of RUTF for '+factory+', Packets \n' + LTitles[L] + TTitles[T])
