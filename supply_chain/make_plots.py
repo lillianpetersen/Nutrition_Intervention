@@ -86,7 +86,7 @@ except:
 	wdfigs='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/figs/'
 	wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
 
-MakePlots=False
+MakePlots=True
 
 subsaharancountry = np.load(wdvars+'subsaharancountry.npy')
 
@@ -277,7 +277,7 @@ for L in range(len(optiLevel)):
 				plt.xlabel(VTitles[V]+' Cost, % of Today')
 				plt.ylabel('Total Procurement Cost for One Year')
 				plt.grid(True)
-				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+Ttitles[T]+'__totalCost_vs_'+Vtitles[V]+'.pdf')
+				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+Ttitles[T]+'__totalCost_vs_'+Vtitles[V]+'.png',dpi=700)
 			
 				#### factoryNum ####
 				ydata=np.ma.compressed(np.ma.masked_array(factoryNum[L,T,V,:],Mask[L,T,V,:]))
@@ -287,7 +287,7 @@ for L in range(len(optiLevel)):
 				plt.xlabel(VTitles[V]+' Cost, % of Today')
 				plt.ylabel('Number of Factories')
 				plt.grid(True)
-				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+Ttitles[T]+'__factoryNum_vs_'+Vtitles[V]+'.pdf')
+				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+Ttitles[T]+'__factoryNum_vs_'+Vtitles[V]+'.png',dpi=700)
 				
 				#### factorySize ####
 				plt.clf()
@@ -301,7 +301,7 @@ for L in range(len(optiLevel)):
 				plt.xlabel(VTitles[V]+' Cost, % of Today')
 				plt.ylabel('Avg Factory Size')
 				plt.grid(True)
-				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factorySize_vs_'+Vtitles[V]+'.pdf')
+				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factorySize_vs_'+Vtitles[V]+'.png',dpi=700)
 				
 				#### factorySizeAll ####
 				for g in range(2):
@@ -311,7 +311,7 @@ for L in range(len(optiLevel)):
 					plt.xlabel(''+VTitles[V]+' Cost, % of Today')
 					plt.ylabel('Factory Size')
 					plt.grid(True)
-					plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factorySize'+str(g)+'_vs_'+Vtitles[V]+'Cost.pdf')
+					plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factorySize'+str(g)+'_vs_'+Vtitles[V]+'Cost.png',dpi=700)
 				
 				#### PctTrans ####
 				plt.clf()
@@ -320,7 +320,7 @@ for L in range(len(optiLevel)):
 				plt.xlabel(''+VTitles[V]+' Cost, % of Today')
 				plt.ylabel('% of Total Cost that is Transport')
 				plt.grid(True)
-				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'pctTrans_vs_'+Vtitles[V]+'Cost.pdf')
+				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'pctTrans_vs_'+Vtitles[V]+'Cost.png',dpi=700)
 				
 				#### PctIngredient ####
 				plt.clf()
@@ -329,7 +329,7 @@ for L in range(len(optiLevel)):
 				plt.xlabel(VTitles[V]+' Cost, % of Today')
 				plt.ylabel('% of Total Cost that is Ingredient')
 				plt.grid(True)
-				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'pctIngredient_vs_'+Vtitles[V]+'Cost.pdf')
+				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'pctIngredient_vs_'+Vtitles[V]+'Cost.png',dpi=700)
 			
 			#### FactoryPct ####
 			SMtitles=['SAM','MAM']
@@ -405,7 +405,7 @@ for L in range(len(optiLevel)):
 					plt.xlabel(''+VTitles[V]+' Cost, % of Today')
 					plt.ylabel('% of Total Production')
 					ax.legend((pvars[::-1]),(Otitles[::-1]),bbox_to_anchor=(0.97, 0.6),prop=fontP)
-					plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factoryPct'+str(g)+'_vs_'+Vtitles[V]+'Cost.pdf')
+					plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factoryPct'+str(g)+'_vs_'+Vtitles[V]+'Cost.png',dpi=700)
 
 		##################################################################
 		# MAPS
@@ -441,7 +441,7 @@ for L in range(len(optiLevel)):
 			MinMaxArray[1,0]=cmax
 			plt.imshow(MinMaxArray,cmap=my_cmap)
 			plt.colorbar()
-			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'_export_map.pdf')
+			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'_export_map.png',dpi=700)
 			
 			ax = plt.axes([0.05,0.05,0.8,0.85],projection=ccrs.PlateCarree())
 			ax.set_extent([-19, 53, -37, 39], ccrs.PlateCarree())
@@ -514,7 +514,7 @@ for L in range(len(optiLevel)):
 			plt.legend(loc = 'lower left')
 			#plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally\nTotal Cost = $'+costOne+' Million', bbox=dict(fc="none", boxstyle="round"), size = 10)
 			plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally', bbox=dict(fc="none", boxstyle="round"), size = 10)
-			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/geographical/'+SMtitles[g]+'_export_map.pdf')
+			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/geographical/'+SMtitles[g]+'_export_map.png',dpi=700)
 
 		###########################
 		# Skeleton
@@ -601,7 +601,7 @@ for L in range(len(optiLevel)):
 		plt.title('Multi-Product Capacitated Facility Location Model\nPossible Factory Locations')
 		plt.legend(loc = 'lower left')
 		plt.text(-15,-10,'24 Possible Factories\n9 Possible Ports', bbox=dict(fc="none", boxstyle="round"), size = 10)
-		plt.savefig(wdfigs+'skeleton_map.pdf')
+		plt.savefig(wdfigs+'skeleton_map.png',dpi=700)
 
 		###########################
 		# Supply Zones
@@ -773,7 +773,7 @@ for L in range(len(optiLevel)):
 			plt.title(SMtitles[g]+' Treatment: Primary Supplier by Country\n' + LTitles[L] + TTitles[T])
 			plt.legend(loc = 'lower left')
 			plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally', bbox=dict(fc="none", boxstyle="round"), size = 10)
-			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/geographical/'+SMtitles[g]+'supplyzone_map.pdf')
+			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/geographical/'+SMtitles[g]+'supplyzone_map.png',dpi=700)
 
 		###########################
 		# By factory import/export
@@ -837,7 +837,7 @@ for L in range(len(optiLevel)):
 				MinMaxArray[1,0]=cmax
 				plt.imshow(MinMaxArray,cmap=my_cmap)
 				plt.colorbar()
-				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'_'+factory+'_exports.pdf')
+				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'_'+factory+'_exports.png',dpi=700)
 				
 				ax = plt.axes([0.05,0.05,0.8,0.85],projection=ccrs.PlateCarree())
 				ax.set_extent([-19, 53, -37, 39], ccrs.PlateCarree())
@@ -917,9 +917,8 @@ for L in range(len(optiLevel)):
 						plt.text(-13,-10.4-1.7*r,'- '+impCountries[r]+', '+str(int(round(impPct[r])))+'%',size=10)
 
 				plt.legend(loc = 'lower left')
-				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/exports_by_country/'+Ltitles[L]+'_'+factory+'_exports.pdf')
+				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/exports_by_country/'+Ltitles[L]+'_'+factory+'_exports.png',dpi=700)
 	
-			exit()
 
 fig = plt.figure(figsize=(9, 6))
 LTitles = ['All Optimized','Local Optimized','Optimized Intl','None Optimized']
@@ -931,7 +930,7 @@ for T in range(len(trfLevel)):
 		plt.clf()
 		plt.plot(x,np.ma.compressed(np.ma.masked_array(cost[0,T,V,:],Mask[0,T,V,:])),'g*-',label=LTitles[0])
 		plt.plot(x,np.ma.compressed(np.ma.masked_array(cost[1,T,V,:],Mask[1,T,V,:])),'c*-',label=LTitles[1])
-		plt.plot(x,np.ma.compressed(np.ma.masked_array(cost[2,T,V,:],Mask[2,T,V,:])),'b*-',label=LTitles[2])
+		#plt.plot(x,np.ma.compressed(np.ma.masked_array(cost[2,T,V,:],Mask[2,T,V,:])),'b*-',label=LTitles[2])
 		try:
 			plt.plot(x,np.ma.compressed(np.ma.masked_array(cost[3,T,V,:],Mask[3,T,V,:])),'r*-',label=LTitles[3])
 		except:
@@ -943,7 +942,7 @@ for T in range(len(trfLevel)):
 		#plt.ylim([0,2e9])
 		plt.grid(True)
 		plt.legend()
-		plt.savefig(wdfigs+'totalCost_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.pdf')
+		plt.savefig(wdfigs+'totalCost_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.png',dpi=700)
 
 for T in range(len(trfLevel)):
 	for V in range(len(loopvar)):
@@ -952,7 +951,7 @@ for T in range(len(trfLevel)):
 		plt.clf()
 		plt.plot(x,np.ma.compressed(np.ma.masked_array(factoryNum[0,T,V,:],Mask[0,T,V,:])),'g*-',label=LTitles[0])
 		plt.plot(x,np.ma.compressed(np.ma.masked_array(factoryNum[1,T,V,:],Mask[1,T,V,:])),'c*-',label=LTitles[1])
-		plt.plot(x,np.ma.compressed(np.ma.masked_array(factoryNum[2,T,V,:],Mask[2,T,V,:])),'b*-',label=LTitles[2])
+		#plt.plot(x,np.ma.compressed(np.ma.masked_array(factoryNum[2,T,V,:],Mask[2,T,V,:])),'b*-',label=LTitles[2])
 		plt.plot(x,np.ma.compressed(np.ma.masked_array(factoryNum[3,T,V,:],Mask[3,T,V,:])),'r*-',label=LTitles[3])
 
 		plt.title('Effect of '+VTitles[V]+' on Number of Factories'+TTitles[T])
@@ -961,7 +960,7 @@ for T in range(len(trfLevel)):
 		#plt.ylim([0,2e9])
 		plt.grid(True)
 		plt.legend()
-		plt.savefig(wdfigs+'factoryNum_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.pdf')
+		plt.savefig(wdfigs+'factoryNum_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.png',dpi=700)
 
 for T in range(len(trfLevel)):
 	for V in range(len(loopvar)):
@@ -970,7 +969,7 @@ for T in range(len(trfLevel)):
 		plt.clf()
 		plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[0,T,V,:,0],Mask[0,T,V,:])),'g*-',label=LTitles[0])
 		plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[1,T,V,:,0],Mask[1,T,V,:])),'c*-',label=LTitles[1])
-		plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[2,T,V,:,0],Mask[2,T,V,:])),'b*-',label=LTitles[2])
+		#plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[2,T,V,:,0],Mask[2,T,V,:])),'b*-',label=LTitles[2])
 		try:
 			plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[3,T,V,:,0],Mask[3,T,V,:])),'r*-',label=LTitles[3])
 		except:
@@ -981,7 +980,7 @@ for T in range(len(trfLevel)):
 		plt.ylim([0,101])
 		plt.grid(True)
 		plt.legend()
-		plt.savefig(wdfigs+'0pctLocal_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.pdf')
+		plt.savefig(wdfigs+'0pctLocal_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.png',dpi=700)
 
 for T in range(len(trfLevel)):
 	for V in range(len(loopvar)):
@@ -990,7 +989,7 @@ for T in range(len(trfLevel)):
 		plt.clf()
 		plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[0,T,V,:,1],Mask[0,T,V,:])),'g*-',label=LTitles[0])
 		plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[1,T,V,:,1],Mask[1,T,V,:])),'c*-',label=LTitles[1])
-		plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[2,T,V,:,1],Mask[2,T,V,:])),'b*-',label=LTitles[2])
+		#plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[2,T,V,:,1],Mask[2,T,V,:])),'b*-',label=LTitles[2])
 		try:
 			plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[3,T,V,:,1],Mask[3,T,V,:])),'r*-',label=LTitles[3])
 		except:
@@ -1001,7 +1000,7 @@ for T in range(len(trfLevel)):
 		plt.ylim([0,101])
 		plt.grid(True)
 		plt.legend()
-		plt.savefig(wdfigs+'1pctLocal_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.pdf')
+		plt.savefig(wdfigs+'1pctLocal_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.png',dpi=700)
 
 
 
@@ -1046,5 +1045,5 @@ plt.colorbar()
 plt.xticks(np.arange(43), subsaharancountry, rotation='vertical')
 plt.yticks(np.arange(len(Rcountry2)), Rcountry2)
 plt.title('Imports and Exports (Packets, Ordered by Lon)')
-plt.savefig(wdfigs+'impexp_array.pdf')
+plt.savefig(wdfigs+'impexp_array.png',dpi=700)
 
