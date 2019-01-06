@@ -277,7 +277,7 @@ for L in range(len(optiLevel)):
 				plt.xlabel(VTitles[V]+' Cost, % of Today')
 				plt.ylabel('Total Procurement Cost for One Year')
 				plt.grid(True)
-				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+Ttitles[T]+'__totalCost_vs_'+Vtitles[V]+'.png',dpi=700)
+				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+Ttitles[T]+'__totalCost_vs_'+Vtitles[V]+'.png',dpi=500)
 			
 				#### factoryNum ####
 				ydata=np.ma.compressed(np.ma.masked_array(factoryNum[L,T,V,:],Mask[L,T,V,:]))
@@ -287,7 +287,7 @@ for L in range(len(optiLevel)):
 				plt.xlabel(VTitles[V]+' Cost, % of Today')
 				plt.ylabel('Number of Factories')
 				plt.grid(True)
-				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+Ttitles[T]+'__factoryNum_vs_'+Vtitles[V]+'.png',dpi=700)
+				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+Ttitles[T]+'__factoryNum_vs_'+Vtitles[V]+'.png',dpi=500)
 				
 				#### factorySize ####
 				plt.clf()
@@ -301,7 +301,7 @@ for L in range(len(optiLevel)):
 				plt.xlabel(VTitles[V]+' Cost, % of Today')
 				plt.ylabel('Avg Factory Size')
 				plt.grid(True)
-				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factorySize_vs_'+Vtitles[V]+'.png',dpi=700)
+				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factorySize_vs_'+Vtitles[V]+'.png',dpi=500)
 				
 				#### factorySizeAll ####
 				for g in range(2):
@@ -311,7 +311,7 @@ for L in range(len(optiLevel)):
 					plt.xlabel(''+VTitles[V]+' Cost, % of Today')
 					plt.ylabel('Factory Size')
 					plt.grid(True)
-					plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factorySize'+str(g)+'_vs_'+Vtitles[V]+'Cost.png',dpi=700)
+					plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factorySize'+str(g)+'_vs_'+Vtitles[V]+'Cost.png',dpi=500)
 				
 				#### PctTrans ####
 				plt.clf()
@@ -320,7 +320,7 @@ for L in range(len(optiLevel)):
 				plt.xlabel(''+VTitles[V]+' Cost, % of Today')
 				plt.ylabel('% of Total Cost that is Transport')
 				plt.grid(True)
-				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'pctTrans_vs_'+Vtitles[V]+'Cost.png',dpi=700)
+				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'pctTrans_vs_'+Vtitles[V]+'Cost.png',dpi=500)
 				
 				#### PctIngredient ####
 				plt.clf()
@@ -329,7 +329,7 @@ for L in range(len(optiLevel)):
 				plt.xlabel(VTitles[V]+' Cost, % of Today')
 				plt.ylabel('% of Total Cost that is Ingredient')
 				plt.grid(True)
-				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'pctIngredient_vs_'+Vtitles[V]+'Cost.png',dpi=700)
+				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'pctIngredient_vs_'+Vtitles[V]+'Cost.png',dpi=500)
 			
 			#### FactoryPct ####
 			SMtitles=['SAM','MAM']
@@ -401,11 +401,11 @@ for L in range(len(optiLevel)):
 					fontP = FontProperties()
 					fontP.set_size('small')
 		
-					plt.title(LTitles[L]+':'+ SMtitles[g]+' Treatment: Factory Production by '+VTitles[V]+' Cost')
+					plt.title(LTitles[L]+': '+ SMtitles[g]+' Treatment: Factory Production by '+VTitles[V]+' Cost')
 					plt.xlabel(''+VTitles[V]+' Cost, % of Today')
 					plt.ylabel('% of Total Production')
-					ax.legend((pvars[::-1]),(Otitles[::-1]),bbox_to_anchor=(0.97, 0.6),prop=fontP)
-					plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factoryPct'+str(g)+'_vs_'+Vtitles[V]+'Cost.png',dpi=700)
+					ax.legend((pvars[::-1]),(Otitles[::-1]),bbox_to_anchor=(0.97, 0.98),prop=fontP)
+					plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factoryPct'+str(g)+'_vs_'+Vtitles[V]+'Cost.png',dpi=500)
 
 		##################################################################
 		# MAPS
@@ -441,7 +441,7 @@ for L in range(len(optiLevel)):
 			MinMaxArray[1,0]=cmax
 			plt.imshow(MinMaxArray,cmap=my_cmap)
 			plt.colorbar()
-			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'_export_map.png',dpi=700)
+			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'_export_map.png',dpi=500)
 			
 			ax = plt.axes([0.05,0.05,0.8,0.85],projection=ccrs.PlateCarree())
 			ax.set_extent([-19, 53, -37, 39], ccrs.PlateCarree())
@@ -514,7 +514,7 @@ for L in range(len(optiLevel)):
 			plt.legend(loc = 'lower left')
 			#plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally\nTotal Cost = $'+costOne+' Million', bbox=dict(fc="none", boxstyle="round"), size = 10)
 			plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally', bbox=dict(fc="none", boxstyle="round"), size = 10)
-			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/geographical/'+SMtitles[g]+'_export_map.png',dpi=700)
+			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/geographical/'+SMtitles[g]+'_export_map.png',dpi=500)
 
 		###########################
 		# Skeleton
@@ -598,10 +598,10 @@ for L in range(len(optiLevel)):
 		for icoast in range(24,len(countrycosted)):
 			plt.plot(capitalLatLon[1,icoast], capitalLatLon[0,icoast], marker='o', markersize=8, color='dodgerblue')
 
-		plt.title('Multi-Product Capacitated Facility Location Model\nPossible Factory Locations')
+		plt.title('Supply Chain Optimization\nPossible Factory and Port Locations')
 		plt.legend(loc = 'lower left')
 		plt.text(-15,-10,'24 Possible Factories\n9 Possible Ports', bbox=dict(fc="none", boxstyle="round"), size = 10)
-		plt.savefig(wdfigs+'skeleton_map.png',dpi=700)
+		plt.savefig(wdfigs+'skeleton_map.png',dpi=500)
 
 		###########################
 		# Supply Zones
@@ -666,9 +666,6 @@ for L in range(len(optiLevel)):
 			ax = plt.axes([0.05,0.05,0.8,0.85],projection=ccrs.PlateCarree())
 			ax.set_extent([-19, 53, -37, 39], ccrs.PlateCarree())
 			ax.coastlines()
-
-			plt.plot(-16.1, -34.7, marker='*', markersize=size, markerfacecolor='whitesmoke', markeredgewidth=1.5, markeredgecolor='k',label='Factories')
-			plt.plot(-16.1, -34.7, marker='o', markersize=size, markerfacecolor='whitesmoke', markeredgewidth=1.5, markeredgecolor='k', label='Intl Shipment Ports')
 
 			factoryNumOne=0
 			IntlNumOne=0
@@ -745,7 +742,7 @@ for L in range(len(optiLevel)):
 
 				if factoryPctOne[g,p]!=0:
 					size = 10*(1+factoryPctOne[g,p]/np.amax(factoryPctOne[g,:]))
-					plt.plot(capitalLatLon[1,p], capitalLatLon[0,p], marker='o', markersize=size, markerfacecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]], markeredgewidth=1.5, markeredgecolor='k')
+					plt.plot(capitalLatLon[1,p], capitalLatLon[0,p], marker='o', markersize=size, markerfacecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]], markeredgewidth=1.5, markeredgecolor='k', label=factory[2:]+' Port',linestyle = 'None')
 					IntlNumOne+=1
 
 			for f in range(len(Rcountrycosted)):
@@ -760,7 +757,7 @@ for L in range(len(optiLevel)):
 
 				if factoryPctOne[g,p]!=0:
 					size = 10*(1+factoryPctOne[g,p]/np.amax(factoryPctOne[g,:]))
-					plt.plot(capitalLatLon[1,p], capitalLatLon[0,p], marker='*', markersize=size, markerfacecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]], markeredgewidth=1.5, markeredgecolor='k')
+					plt.plot(capitalLatLon[1,p], capitalLatLon[0,p], marker='*', markersize=size, markerfacecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]], markeredgewidth=1.5, markeredgecolor='k',label=factory,linestyle = 'None')
 					factoryNumOne+=1
 				#if x==0:
 				#	plt.plot(capitalLatLon[1,p], capitalLatLon[0,p], marker='*', markersize=7, color='darkred')
@@ -771,9 +768,9 @@ for L in range(len(optiLevel)):
 			# costOne = str(int(round(costOne/1000000.,0)))
 
 			plt.title(SMtitles[g]+' Treatment: Primary Supplier by Country\n' + LTitles[L] + TTitles[T])
-			plt.legend(loc = 'lower left')
-			plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally', bbox=dict(fc="none", boxstyle="round"), size = 10)
-			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/geographical/'+SMtitles[g]+'supplyzone_map.png',dpi=700)
+			plt.legend(loc = 'lower left',ncol=1,numpoints=1)
+			plt.text(10,25,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally', bbox=dict(fc="none", boxstyle="round"), size = 10)
+			plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/geographical/'+SMtitles[g]+'supplyzone_map.png',dpi=500)
 
 		###########################
 		# By factory import/export
@@ -837,15 +834,15 @@ for L in range(len(optiLevel)):
 				MinMaxArray[1,0]=cmax
 				plt.imshow(MinMaxArray,cmap=my_cmap)
 				plt.colorbar()
-				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'_'+factory+'_exports.png',dpi=700)
+				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Ltitles[L]+'_'+factory+'_exports.png',dpi=500)
 				
 				ax = plt.axes([0.05,0.05,0.8,0.85],projection=ccrs.PlateCarree())
 				ax.set_extent([-19, 53, -37, 39], ccrs.PlateCarree())
 				ax.coastlines()
 		
-				plt.plot(-16.1, -34.7, marker='*', markersize=9, color='limegreen', label='Factory')
-				plt.plot(-16.1, -34.7, marker='o', markersize=8, color='limegreen', label = 'Intl Shipment Port')
-				plt.plot(-16.1, -34.7, marker='^', markersize=8, color='mediumpurple', label = 'Recieves Treatment')
+				plt.plot(-16.1, -34.7, marker='*', markersize=9, color='limegreen', label='Factory',linestyle = 'None')
+				plt.plot(-16.1, -34.7, marker='o', markersize=8, color='limegreen', label = 'Intl Shipment Port',linestyle = 'None')
+				plt.plot(-16.1, -34.7, marker='^', markersize=8, color='mediumpurple', label = 'Recieves Treatment',linestyle = 'None')
 				impCountries=[]
 				impPct=[]
 					
@@ -917,7 +914,7 @@ for L in range(len(optiLevel)):
 						plt.text(-13,-10.4-1.7*r,'- '+impCountries[r]+', '+str(int(round(impPct[r])))+'%',size=10)
 
 				plt.legend(loc = 'lower left')
-				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/exports_by_country/'+Ltitles[L]+'_'+factory+'_exports.png',dpi=700)
+				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/exports_by_country/'+Ltitles[L]+'_'+factory+'_exports.png',dpi=500)
 	
 
 fig = plt.figure(figsize=(9, 6))
@@ -942,7 +939,7 @@ for T in range(len(trfLevel)):
 		#plt.ylim([0,2e9])
 		plt.grid(True)
 		plt.legend()
-		plt.savefig(wdfigs+'totalCost_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.png',dpi=700)
+		plt.savefig(wdfigs+'totalCost_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.png',dpi=500)
 
 for T in range(len(trfLevel)):
 	for V in range(len(loopvar)):
@@ -960,7 +957,7 @@ for T in range(len(trfLevel)):
 		#plt.ylim([0,2e9])
 		plt.grid(True)
 		plt.legend()
-		plt.savefig(wdfigs+'factoryNum_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.png',dpi=700)
+		plt.savefig(wdfigs+'factoryNum_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.png',dpi=500)
 
 for T in range(len(trfLevel)):
 	for V in range(len(loopvar)):
@@ -980,7 +977,7 @@ for T in range(len(trfLevel)):
 		plt.ylim([0,101])
 		plt.grid(True)
 		plt.legend()
-		plt.savefig(wdfigs+'0pctLocal_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.png',dpi=700)
+		plt.savefig(wdfigs+'0pctLocal_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.png',dpi=500)
 
 for T in range(len(trfLevel)):
 	for V in range(len(loopvar)):
@@ -1000,7 +997,7 @@ for T in range(len(trfLevel)):
 		plt.ylim([0,101])
 		plt.grid(True)
 		plt.legend()
-		plt.savefig(wdfigs+'1pctLocal_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.png',dpi=700)
+		plt.savefig(wdfigs+'1pctLocal_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.png',dpi=500)
 
 
 
@@ -1045,5 +1042,5 @@ plt.colorbar()
 plt.xticks(np.arange(43), subsaharancountry, rotation='vertical')
 plt.yticks(np.arange(len(Rcountry2)), Rcountry2)
 plt.title('Imports and Exports (Packets, Ordered by Lon)')
-plt.savefig(wdfigs+'impexp_array.png',dpi=700)
+plt.savefig(wdfigs+'impexp_array.png',dpi=500)
 

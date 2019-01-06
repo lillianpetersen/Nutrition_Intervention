@@ -550,12 +550,12 @@ except:
 if MakePlots:
 	for y in range(nyearsT):
 		plt.clf()
-		plt.imshow(mal[y],cmap=cm.jet,vmax=0.3)
-		plt.title(str(year)+': % Population with Severe Malnutrition')
+		plt.imshow(mal[y]*100,cmap=cm.jet,vmax=30)
+		plt.title(str(year)+': % Population with Acute Malnutrition')
 		plt.xticks([])
 		plt.yticks([])
 		plt.colorbar()
-		plt.savefig(wdfigs+'malnutrition_'+str(year),dpi=700)
+		plt.savefig(wdfigs+'malnutrition_'+str(year),dpi=500)
 	
 	plt.clf()
 	plt.imshow(np.mean(mal,axis=0),cmap=cm.jet,vmax=0.3)
@@ -658,13 +658,13 @@ malnumber=np.ma.masked_array(malnumber,imageMask2[:nyearsT])
 
 if MakePlots:
 	plt.clf()
-	plt.imshow(pop5km[0],cmap=cm.gist_ncar_r,vmax=2000)
-	plt.title('Population (per square 5km)')
+	plt.imshow(pop5km[15],cmap=cm.gist_ncar_r,vmax=2000)
+	plt.title('2015 Population (per square 5km)')
 	plt.colorbar()
 	plt.xticks([])
 	plt.yticks([])
-	plt.savefig(wdfigs+'pop5km',dpi=700)
-
+	plt.savefig(wdfigs+'pop5km',dpi=500)
+	
 	for y in range(nyearsT):
 		plt.clf()
 		plt.imshow(malnumber,cmap=cm.nipy_spectral_r,vmax=500)
@@ -971,7 +971,6 @@ plt.title('UNICEF MAM vs Paper, Corr = '+str(round(CorrM,2))+', Avg Error = '+st
 plt.ylabel('MAM %')
 plt.xlabel('Interpolated %')
 plt.savefig(wdfigs+'MAMvsInterpolated.pdf')
-exit()
 
 #############
 
@@ -1481,7 +1480,7 @@ except:
 for i in range(len(indices)):
 	fromMatt=indices[i]
 
-	year=2019
+	year=2014
 	for y in range(1):
 		year+=1
 
@@ -1492,7 +1491,30 @@ for i in range(len(indices)):
 		plt.title(fromMatt)
 		plt.colorbar()
 		plt.savefig(wdfigs +fromMatt+str(year),dpi=700)
-exit()
+
+plt.clf()
+plt.imshow(female_education[16],cmap=cm.nipy_spectral)
+plt.colorbar()
+plt.xticks([])
+plt.yticks([])
+plt.title('2015 Female Education, Years of Attainment')
+plt.savefig(wdfigs+'female_education_2015.png',dpi=500)
+
+plt.clf()
+plt.imshow(mean_annual_precip[16]/1000.,cmap=cm.nipy_spectral)
+plt.colorbar()
+plt.xticks([])
+plt.yticks([])
+plt.title('2015 Mean Precipitation (m)')
+plt.savefig(wdfigs+'mean_annual_precip_2015.png',dpi=500)
+
+plt.clf()
+plt.imshow(forest[16],cmap=cm.rainbow)
+plt.colorbar()
+plt.xticks([])
+plt.yticks([])
+plt.title('Forest Cover (%)')
+plt.savefig(wdfigs+'forest_2015.png',dpi=500)
 
 
 ###########################################
@@ -1524,19 +1546,19 @@ except:
 
 	np.save(wdvars+'MPconficts',MPconflicts)
 	
-	year=1998
-	k=-1
-	for y in range(99,121):
-		k+=1
-		year+=1
-		
-		plt.clf()
-		plt.imshow(MPconflicts[k],vmax=10000,cmap=cm.gist_heat_r)
-		plt.colorbar()
-		plt.xticks([])
-		plt.yticks([])
-		plt.title(str(year)+': Conflicts index, '+str(k))
-		plt.savefig(wdfigs+'MPconflicts_'+str(year)+'.png',dpi=700)
+year=2014
+k=14
+for y in range(1):
+	k+=1
+	year+=1
+	
+	plt.clf()
+	plt.imshow(MPconflicts[k],vmax=12000,cmap=cm.gist_heat_r)
+	#plt.colorbar()
+	plt.xticks([])
+	plt.yticks([])
+	plt.title(str(year)+' Conflicts Index')
+	plt.savefig(wdfigs+'MPconflicts_'+str(year)+'.png',dpi=500)
 
 MPconflicts=np.ma.masked_array(MPconflicts,MPconflicts==0)
 
