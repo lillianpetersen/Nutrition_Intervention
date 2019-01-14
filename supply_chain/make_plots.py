@@ -535,6 +535,9 @@ for L in range(len(optiLevel)):
 				plt.legend(loc = 'lower left')
 				#plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally\nTotal Cost = $'+costOne+' Million', bbox=dict(fc="none", boxstyle="round"), size = 10)
 				plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally', bbox=dict(fc="none", boxstyle="round"), size = 10)
+				if not os.path.exists(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/geographical'):
+				    os.makedirs(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/geographical')
+				
 				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/geographical/'+SMtitles[g]+'_export_map.pdf')
 
 		###########################
@@ -791,6 +794,8 @@ for L in range(len(optiLevel)):
 				# costOne = str(int(round(costOne/1000000.,0)))
 
 				plt.legend(loc = 'lower left')
+				if not os.path.exists(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/exports_by_country/'):
+				    os.makedirs(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/exports_by_country/')
 				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/exports_by_country/'+Ltitles[L]+'_'+factory+'_exports.pdf')
 
 				plt.title(SMtitles[g]+' Treatment: Primary Supplier by Country\n' + LTitles[L] + TTitles[T])
