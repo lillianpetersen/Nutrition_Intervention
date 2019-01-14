@@ -656,21 +656,21 @@ pop5km=np.ma.masked_array(pop5km,imageMask2)
 malnumber=mal*pop5km[:nyearsT]
 malnumber=np.ma.masked_array(malnumber,imageMask2[:nyearsT])
 
-if MakePlots:
-	plt.clf()
-	plt.imshow(pop5km[15],cmap=cm.gist_ncar_r,vmax=2000)
-	plt.title('2015 Population (per square 5km)')
-	plt.colorbar()
-	plt.xticks([])
-	plt.yticks([])
-	plt.savefig(wdfigs+'pop5km',dpi=500)
+#if MakePlots:
+fig = plt.figure(figsize=(9, 6))
+plt.clf()
+plt.imshow(pop5km[15]/100,cmap=cm.gist_ncar_r,vmax=20)
+plt.title('2015 Population (100 per square 5km)')
+plt.colorbar(ticks=[0,5,10,15,20])
+plt.xticks([])
+plt.yticks([])
+plt.savefig(wdfigs+'pop5km',dpi=500)
 	
-	for y in range(nyearsT):
-		plt.clf()
-		plt.imshow(malnumber,cmap=cm.nipy_spectral_r,vmax=500)
-		plt.title('malnutrition number')
-		plt.colorbar()
-		plt.savefig(wdfigs+'malnumber',dpi=900)
+plt.clf()
+plt.imshow(malnumber[15],cmap=cm.nipy_spectral_r,vmax=500)
+plt.title('malnutrition number')
+plt.colorbar()
+plt.savefig(wdfigs+'malnumber',dpi=900)
 
 ######################################
 # Countries
@@ -1515,6 +1515,7 @@ plt.xticks([])
 plt.yticks([])
 plt.title('Forest Cover (%)')
 plt.savefig(wdfigs+'forest_2015.png',dpi=500)
+exit()
 
 
 ###########################################

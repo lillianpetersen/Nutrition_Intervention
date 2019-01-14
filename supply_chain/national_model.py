@@ -138,7 +138,7 @@ for line in f:
         transportcostArray[i,j]=float(tmp[j])*avg
 
 # import and export costs
-importExportCosts=np.zeros(shape=(transportcostArray.shape))
+importExportCosts=np.zeros(shape=(43,43))
 for x in range(len(subsaharancountry)):
 	exportCost=-9999
 	fx=open(wddata+'trading_across_borders2017.csv','r')
