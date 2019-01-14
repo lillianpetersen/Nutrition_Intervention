@@ -280,6 +280,8 @@ for L in range(len(optiLevel)):
 	
 			if not os.path.exists(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]):
 					os.makedirs(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V])
+			if not os.path.exists(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/geographical'):
+					os.makedirs(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/geographical')
 
 			x = np.arange(factor[V],maxs[V],factor[V])
 			x = x*100
