@@ -788,6 +788,9 @@ for L in range(len(optiLevel)):
 				intl = str(np.round(100*np.sum(factoryPctOne[g,24:])/np.sum(factoryPctOne[g,:]),0))
 				# costOne = str(int(round(costOne/1000000.,0)))
 
+				plt.legend(loc = 'lower left')
+				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/exports_by_country/'+Ltitles[L]+'_'+factory+'_exports.pdf')
+
 				plt.title(SMtitles[g]+' Treatment: Primary Supplier by Country\n' + LTitles[L] + TTitles[T])
 				plt.legend(loc = 'lower left',ncol=1,numpoints=1)
 				plt.text(10,25,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally', bbox=dict(fc="none", boxstyle="round"), size = 10)
