@@ -99,25 +99,17 @@ for k in range(len(optiLevel)):
     # 
     # 		    importExportCosts[x,y]=importCost+exportCost
     for z in range(len(loopvar)):
+        mShip=False
+        mImpExp=False
+        mStrt=False
+        mTruck=False
         if(loopvar[z]=='shipcost'):
             mShip=True
-            mImpExp=False
-            mStrt=False
-            mTruck=False
         elif(loopvar[z]=='impexp'):
-            mShip=False
             mImpExp=True
-            mStrt=False
-            mTruck=False
         elif(loopvar[z]=='strtup'):
-            mShip=False
-            mImpExp=False
             mStrt=True
-            mTruck=False
         elif(loopvar[z]=='truckfactor'):
-            mShip=False
-            mImpExp=False
-            mStrt=False
             mTruck=True
         for s in np.arange(factor[z],maxs[z],factor[z]):
             print 's=',s
@@ -760,6 +752,9 @@ for k in range(len(optiLevel)):
                 np.save(wddata+'/results/example/'+str(optiLevel[k])+"/Rsubsaharancountry", Rsubsaharancountry)
                 np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/Rrutfarray", Rrutfsupplyarray)
                 np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/Rrusfarray", Rrusfsupplyarray)
+
+                np.save(wddata+'/boundaries/countrycosted',countrycosted)
+                np.save(wddata+'/boundaries/subsaharancountry',subsaharancountry)
                 
                 rusfarray = np.load(wddata+'/results/example/'+str(optiLevel[k])+'/Rrusfarray.npy')
                 rutfarray = np.load(wddata+'/results/example/'+str(optiLevel[k])+'/Rrutfarray.npy')

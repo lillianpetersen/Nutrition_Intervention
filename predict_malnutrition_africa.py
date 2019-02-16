@@ -1555,11 +1555,12 @@ for y in range(1):
 	
 	plt.clf()
 	plt.imshow(MPconflicts[k],vmax=12000,cmap=cm.gist_heat_r)
-	#plt.colorbar()
+	plt.colorbar()
 	plt.xticks([])
 	plt.yticks([])
 	plt.title(str(year)+' Conflicts Index')
 	plt.savefig(wdfigs+'MPconflicts_'+str(year)+'.png',dpi=500)
+exit()
 
 MPconflicts=np.ma.masked_array(MPconflicts,MPconflicts==0)
 
