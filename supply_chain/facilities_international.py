@@ -675,7 +675,7 @@ for k in range(len(optiLevel)):
                         f.write(str(countrycosted[i])+','+str(rutftotaled[i])+','+str(rusftotaled[i])+'\n')
                 f.close()
                 Rcountrycosted=[]
-                lngth=max(len(np.where(rutftotaled>0)[0]), len(np.where(rusftotaled>0)[0]))
+                lngth=len(np.where(rutftotaled + rusftotaled>0)[0])
                 Rrutfsupplyarray=np.zeros(shape=(lngth,43))
                 Rrusfsupplyarray=np.zeros(shape=(lngth,43))
                 o=0
