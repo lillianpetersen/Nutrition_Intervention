@@ -79,7 +79,7 @@ def make_cmap(colors, position=None, bit=False):
 try:
 	wddata='/Users/lilllianpetersen/iiasa/data/supply_chain/'
 	wdfigs='/Users/lilllianpetersen/iiasa/figs/supply_chain/budget/'
-	wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
+	wdvars='/Users/lilllianpetersen/iiasa/saved_vars/supply_chain/'
 	f=open(wddata+'population/CAPITALVERSIONcasenumbers.csv','r')
 except:
 	wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/data/'
@@ -295,7 +295,7 @@ for iAM in range(len(AM)):
     				ydata=np.ma.compressed(np.ma.masked_array(cost[L,T,V,:],Mask[L,T,V,:]))
     				plt.clf()
     				plt.plot(x,ydata,'b*-')
-    				plt.title('On Budget'+LTitles[L]+TTitles[T]+': Effect of '+VTitles[V]+' Cost on Total Cost')
+    				plt.title('On Budget: '+LTitles[L]+TTitles[T]+': Effect of '+VTitles[V]+' Cost on Total Cost')
     				plt.xlabel(VTitles[V]+' Cost, % of Today')
     				plt.ylabel('Total Cases Treated in 1 year')
     				plt.grid(True)
@@ -353,84 +353,83 @@ for iAM in range(len(AM)):
  			# 	plt.grid(True)
  			# 	plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'pctIngredient_vs_'+Vtitles[V]+'Cost.pdf')
  			# 
- 			#### FactoryPct ####
- 			SMtitles=['SAM','MAM']
- 			for g in range(2):
-    				factoryCountries = []
-    				plt.clf()
-    				fig = plt.figure(figsize=(18, 7))
-    				ax = plt.subplot(1,2,1)
-    				
-    				for t in range(len(countrycosted)):
-   					country = countrycosted[t]
-   					c=np.where(country==countrycosted)[0][0]
-   					if country=='Congo (Republic of the)':
-  						country='RepOfCongo'
-   					elif country=='Congo':
-  						country='DRC'
-   					country=country.replace(' ','_')
-    				
-   					if np.amax(factoryPct[:,c])!=0:
-  						vars()[country+'Pct'] = factoryPct[g,c]
-  						factoryCountries.append(country)
-    				
-    				if g==0:
-   					countryComparison = np.zeros(shape=(len(factoryCountries)))
-   					for q in range(len(factoryCountries)):
-  						country = factoryCountries[q]
-  						countryComparison[q] = vars()[country+'Pct'][5]
-   					sIndex=np.argsort(countryComparison)
-    				factoryCountries=np.array(factoryCountries)
-    				factoryCountries=factoryCountries[sIndex][::-1]
-    				
-    				OfactoryCountries = []
-    				Otitles = []
-    				for country in factoryCountries:
-   					if country[:2]!='I_':
-  						OfactoryCountries.append(country)
-  						Otitles.append(country+' Factory')
-    				for country in factoryCountries:
-   					if country[:2]=='I_':
-  						OfactoryCountries.append(country)
-  						countryTitle = 'Intl: '+country[2:]+' Port'
-  						Otitles.append(countryTitle)
-    				
-    				if MakePlots:
-   					Dcolors = ['firebrick','m','darkorange','crimson','yellow','indianred','goldenrod','mediumpurple','navajowhite','peru','tomato','magenta','deeppink','lightcoral','lemonchiffon','sandybrown','r','gold','moccasin','peachpuff','orangered','orange','rosybrown','papayawhip']
-   					Icolors = ['navy','lawngreen','darkgreen','deepskyblue','darkslategray','mediumseagreen','lightseagreen','powderblue','midnightblue','forestgreen']
-   					width = 7 
-   					pvars=[]
-   					inter=-1
-   					domes=-1
-   					for l in range(len(OfactoryCountries)):
-  						country = OfactoryCountries[l]
-  						if country[:2]=='I_':
- 							inter+=1
- 							clr=Icolors[inter]
-  						else:
- 							domes+=1
- 							clr=Dcolors[domes]
-   					
-  						if l==0:
- 							vars()['p'+str(l)] = ax.bar(x, vars()[country+'Pct'], width, color=clr, )
- 							bottomStuff = vars()[country+'Pct']
-  						else:
- 							vars()['p'+str(l)] = ax.bar(x, vars()[country+'Pct'], width, color=clr, bottom = bottomStuff)
- 							bottomStuff+=vars()[country+'Pct']
-   					
-  						pvars.append(vars()['p'+str(l)])
-  						
-   					
-   					fontP = FontProperties()
-   					fontP.set_size('small')
-  		
-   					plt.title('On Budget'+SMtitles[g]+' Treatment: Factory Production by '+VTitles[V]+' Cost ('+LTitles[L]+')')
-   					plt.xlabel(''+VTitles[V]+' Cost, % of Today')
-   					plt.ylabel('% of Total Production')
-   					if g==1:
-  						ax.legend((pvars[::-1]),(Otitles[::-1]),bbox_to_anchor=(1, 0.98),prop=fontP)
-   					plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factoryPct'+str(g)+'_vs_'+Vtitles[V]+'Cost.pdf')
-    
+ 			# #### FactoryPct ####
+ 			# for g in range(1,2):
+    # 				factoryCountries = []
+    # 				plt.clf()
+    # 				fig = plt.figure(figsize=(18, 7))
+    # 				ax = plt.subplot(1,2,1)
+    # 				
+    # 				for t in range(len(countrycosted)):
+   	# 				country = countrycosted[t]
+   	# 				c=np.where(country==countrycosted)[0][0]
+   	# 				if country=='Congo (Republic of the)':
+  		# 				country='RepOfCongo'
+   	# 				elif country=='Congo':
+  		# 				country='DRC'
+   	# 				country=country.replace(' ','_')
+    # 				
+   	# 				if np.amax(factoryPct[:,c])!=0:
+  		# 				vars()[country+'Pct'] = factoryPct[g,c]
+  		# 				factoryCountries.append(country)
+    # 				
+    # 				if g==0:
+   	# 				countryComparison = np.zeros(shape=(len(factoryCountries)))
+   	# 				for q in range(len(factoryCountries)):
+  		# 				country = factoryCountries[q]
+  		# 				countryComparison[q] = vars()[country+'Pct'][5]
+   	# 				sIndex=np.argsort(countryComparison)
+    # 				factoryCountries=np.array(factoryCountries)
+    # 				factoryCountries=factoryCountries[sIndex][::-1]
+    # 				
+    # 				OfactoryCountries = []
+    # 				Otitles = []
+    # 				for country in factoryCountries:
+   	# 				if country[:2]!='I_':
+  		# 				OfactoryCountries.append(country)
+  		# 				Otitles.append(country+' Factory')
+    # 				for country in factoryCountries:
+   	# 				if country[:2]=='I_':
+  		# 				OfactoryCountries.append(country)
+  		# 				countryTitle = 'Intl: '+country[2:]+' Port'
+  		# 				Otitles.append(countryTitle)
+    # 				
+    # 				if MakePlots:
+   	# 				Dcolors = ['firebrick','m','darkorange','crimson','yellow','indianred','goldenrod','mediumpurple','navajowhite','peru','tomato','magenta','deeppink','lightcoral','lemonchiffon','sandybrown','r','gold','moccasin','peachpuff','orangered','orange','rosybrown','papayawhip']
+   	# 				Icolors = ['navy','lawngreen','darkgreen','deepskyblue','darkslategray','mediumseagreen','lightseagreen','powderblue','midnightblue','forestgreen']
+   	# 				width = 7 
+   	# 				pvars=[]
+   	# 				inter=-1
+   	# 				domes=-1
+   	# 				for l in range(len(OfactoryCountries)):
+  		# 				country = OfactoryCountries[l]
+  		# 				if country[:2]=='I_':
+ 			# 				inter+=1
+ 			# 				clr=Icolors[inter]
+  		# 				else:
+ 			# 				domes+=1
+ 			# 				clr=Dcolors[domes]
+   	# 				
+  		# 				if l==0:
+ 			# 				vars()['p'+str(l)] = ax.bar(x, vars()[country+'Pct'], width, color=clr, )
+ 			# 				bottomStuff = vars()[country+'Pct']
+  		# 				else:
+ 			# 				vars()['p'+str(l)] = ax.bar(x, vars()[country+'Pct'], width, color=clr, bottom = bottomStuff)
+ 			# 				bottomStuff+=vars()[country+'Pct']
+   	# 				
+  		# 				pvars.append(vars()['p'+str(l)])
+  		# 				
+   	# 				
+   	# 				fontP = FontProperties()
+   	# 				fontP.set_size('small')
+  		# 
+   	# 				plt.title('On Budget'+SMtitles[g]+' Treatment: Factory Production by '+VTitles[V]+' Cost ('+LTitles[L]+')')
+   	# 				plt.xlabel(''+VTitles[V]+' Cost, % of Today')
+   	# 				plt.ylabel('% of Total Production')
+   	# 				if g==1:
+  		# 				ax.legend((pvars[::-1]),(Otitles[::-1]),bbox_to_anchor=(1, 0.98),prop=fontP)
+   	# 				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factoryPct'+str(g)+'_vs_'+Vtitles[V]+'Cost.pdf')
+    # 
   		##################################################################
   		# MAPS
   		##################################################################
@@ -444,6 +443,7 @@ for iAM in range(len(AM)):
   		###########################
   		# Export
   		###########################
+  		SMtitles=['SAM','MAM']
   		if MakePlots:
  			colors = [(255,255,255),(152, 240, 152), (97, 218, 97), (65, 196, 65), (42, 175, 42), (28, 162, 28), (17, 149, 17), (7, 135, 7), (0, 118, 0)]
  			my_cmap = make_cmap(colors,bit=True)
@@ -451,7 +451,7 @@ for iAM in range(len(AM)):
  			countries_shp = shpreader.natural_earth(resolution='110m',
     				category='cultural', name=shapename)
  			
- 			for g in range(2): # SAM MAM treatment
+ 			for g in range(1,2): # SAM MAM treatment
     				plt.clf()
     				cmapArray=my_cmap(np.arange(256))
     				cmin=0
@@ -634,11 +634,8 @@ for iAM in range(len(AM)):
   		# Supply Zones
   		###########################
   		if MakePlots:
- 			if (AM[iAM]=='SAM'):
- 			    ruftitles=['rutf']
- 			else:
- 			    riftitles=['rusf']
- 			for g in range(1):
+ 			ruftitles=['rutf','rusf']
+ 			for g in range(1,2):
     				productarray = np.load(wddata+'results/budget/'+str(AM[iAM])+'/'+'example/'+optiLevel[L]+trfLevel[T]+'/RN'+ruftitles[g]+'array.npy')
     				Rcountrycosted1=np.load(wddata+'results/budget/'+str(AM[iAM])+'/'+'example/'+optiLevel[L]+trfLevel[T]+'/RNcountry.npy')
     				Rsubsaharancountry1=np.load(wddata+'results/budget/'+str(AM[iAM])+'/'+'example/'+optiLevel[L]+trfLevel[T]+'/RNsubsaharancountry.npy')
@@ -720,10 +717,14 @@ for iAM in range(len(AM)):
    					else:
   						poz=np.where(cName==Rsubsaharancountry)[0][0]
   						c=np.where(productarray[:,poz]==np.amax(productarray[:,poz]))[0][0]
-  						y=y1+(y2-y1)/(cmax-cmin)*(c-cmin)
-  						icmap=min(255,int(round(y,1)))
-  						icmap=max(0,int(round(icmap,1)))
-  						ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black', facecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]],label=cName)
+						if productarray[c,poz]==0:
+							facecolor=[1,1,1]
+						else:
+	  						y=y1+(y2-y1)/(cmax-cmin)*(c-cmin)
+	  						icmap=min(255,int(round(y,1)))
+	  						icmap=max(0,int(round(icmap,1)))
+							facecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]]
+	  					ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black', facecolor=facecolor,label=cName)
     
     				for country in shpreader.Reader(countries_shp).records():
    					cName=country.attributes['NAME_LONG']
@@ -742,8 +743,10 @@ for iAM in range(len(AM)):
    					if np.amax(cName==Rsubsaharancountry)==0:
   						continue
    					else:
-  						poz=np.where(cName==Rsubsaharancountry)[0][0]
-  						c=np.where(productarray[:,poz]==np.amax(productarray[:,poz]))[0][0]
+  						poz=np.where(cName==Rsubsaharancountry)[0][0] # index of country
+  						c=np.where(productarray[:,poz]==np.amax(productarray[:,poz]))[0][0] # index of country's main supplier
+						if productarray[c,poz]==0:
+							continue
   						width=0.2+(productarray[c,poz]/np.amax(productarray))
     
   						p = np.where(cName==subsaharancountry)[0][0]
@@ -802,7 +805,7 @@ for iAM in range(len(AM)):
     
     				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/exports_by_country/'+Ltitles[L]+'_'+factory+'_exports.pdf')
     
-    				plt.title('On Budget'+SMtitles[g]+' Treatment: Primary Supplier by Country\n' + LTitles[L] + TTitles[T])
+    				plt.title('On Budget: '+SMtitles[g]+' Treatment: Primary Supplier by Country\n' + LTitles[L] + TTitles[T])
     				plt.legend(loc = 'lower left',ncol=1,numpoints=1)
     				plt.text(10,25,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally', bbox=dict(fc="none", boxstyle="round"), size = 10)
     				plt.savefig(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/geographical/'+SMtitles[g]+'supplyzone_map.pdf')
@@ -811,7 +814,7 @@ for iAM in range(len(AM)):
   		# By factory import/export
   		###########################
   		if MakePlots:
- 			for g in range(2):
+ 			for g in range(1,2):
     				productarray = np.load(wddata+'results/budget/'+str(AM[iAM])+'/'+'example/'+optiLevel[L]+trfLevel[T]+'/RN'+ruftitles[g]+'array.npy')
     				Rcountrycosted1=np.load(wddata+'results/budget/'+str(AM[iAM])+'/'+'example/'+optiLevel[L]+trfLevel[T]+'/RNcountry.npy')
     				Rsubsaharancountry1=np.load(wddata+'results/budget/'+str(AM[iAM])+'/'+'example/'+optiLevel[L]+trfLevel[T]+'/Rsubsaharancountry.npy')
