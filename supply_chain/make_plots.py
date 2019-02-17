@@ -130,8 +130,7 @@ except:
 	np.save(wdvars+'subsaharancapitalLatLon.npy',SScapitalLatLon)
 
 optiLevel = ['AllarOpti','LocalOpti', 'AllIntl_opti', 'AllIntl']
-trfLevel = ['','_trf']
-loopvar = ['shipcost','impexp','strtup','truckfactor']
+loopvar = ['shipcost','impexp','strtup','truckfactor','tariff']
 
 LTitles = ['All Optimized','Local Optimized','Optimized Intl','Current Intl']
 TTitles = [' (No Tariff)',' (Tariff)']
@@ -157,10 +156,10 @@ pctLocal=np.zeros(shape=(4,2,4,20,2))
 pctLocalOneAll=np.zeros(shape=(4,2,2)) #optiLevel, trf, SAM-MAM
 
 for L in range(len(optiLevel)):
-	for T in range(1,len(trfLevel)):
+	for T in range(1):
 		for V in range(len(loopvar)):
-			File =optiLevel[L]+trfLevel[T]+'_'+loopvar[V]
-			print optiLevel[L],trfLevel[T],loopvar[V]
+			File =optiLevel[L]+'_'+loopvar[V]
+			print optiLevel[L],loopvar[V]
 	
 			shp=len(np.arange(factor[V],maxs[V],factor[V]))
 			pctTrans=np.zeros(shape=(shp))
@@ -634,9 +633,9 @@ for L in range(len(optiLevel)):
 		if MakePlots:
 			ruftitles=['rutf','rusf']
 			for g in range(2):
-				productarray = np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/RN'+ruftitles[g]+'array.npy')
-				Rcountrycosted1=np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/RNcountry.npy')
-				Rsubsaharancountry1=np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/RNsubsaharancountry.npy')
+				productarray = np.load(wddata+'results/example/'+optiLevel[L]+'/RN'+ruftitles[g]+'array.npy')
+				Rcountrycosted1=np.load(wddata+'results/example/'+optiLevel[L]+'/RNcountry.npy')
+				Rsubsaharancountry1=np.load(wddata+'results/example/'+optiLevel[L]+'/RNsubsaharancountry.npy')
 				Rcountrycosted=[]
 				for i in range(len(Rcountrycosted1)):
 					country=Rcountrycosted1[i]
@@ -807,8 +806,8 @@ for L in range(len(optiLevel)):
 		###########################
 		if MakePlots:
 			for g in range(2):
-				productarray = np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/RN'+ruftitles[g]+'array.npy')
-				Rcountrycosted1=np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/RNcountry.npy')
+				productarray = np.load(wddata+'results/example/'+optiLevel[L]+'/RN'+ruftitles[g]+'array.npy')
+				Rcountrycosted1=np.load(wddata+'results/example/'+optiLevel[L]+'/RNcountry.npy')
 				Rsubsaharancountry1=np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/Rsubsaharancountry.npy')
 				Rcountrycosted=[]
 				for i in range(len(Rcountrycosted1)):
