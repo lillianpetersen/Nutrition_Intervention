@@ -1129,4 +1129,3 @@ plt.xticks(np.arange(43), subsaharancountry, rotation='vertical')
 plt.yticks(np.arange(len(Rcountry2)), Rcountry2)
 plt.title('On Budget'+'Imports and Exports (Packets, Ordered by Lon)')
 plt.savefig(wdfigs+'impexp_array.pdf')
-
