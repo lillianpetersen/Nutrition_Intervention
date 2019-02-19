@@ -7,14 +7,14 @@ from sys import exit
 import matplotlib.cm as cm
 
 try:
-	wddata='/Users/lilllianpetersen/iiasa/data/supply_chain/'
-	wdfigs='/Users/lilllianpetersen/iiasa/figs/'
-	wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
-	f=open(wddata+'trading_across_borders2017.csv','r')
+    wddata='/Users/lilllianpetersen/iiasa/data/supply_chain/'
+    wdfigs='/Users/lilllianpetersen/iiasa/figs/'
+    wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
+    f=open(wddata+'trading_across_borders2017.csv','r')
 except:
-	wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/data/'
-	wdfigs='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/figs/'
-	wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
+    wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/data/'
+    wdfigs='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/figs/'
+    wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
 # 'AllIntl_opti',
 
 countryCostedTariff = np.load(wdvars+'tariff_by_country.npy')
@@ -23,11 +23,11 @@ bigloop=True
 
 if(bigloop): 
 
-	optiLevel = ['AllarOpti','LocalOpti','AllIntl']
-	loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff']
-	mins= np.array([0.2,0.2,0.5,0.2, 0])
-	factor = np.array([0.2,0.2,0.5,0.2, 0.2])
-	maxs = np.array([2.01,4.01,9.51,4.01, 2.6])
+    optiLevel = ['AllarOpti','LocalOpti','AllIntl']
+    loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff']
+    mins= np.array([0.2,0.2,0.5,0.2, 0])
+    factor = np.array([0.2,0.2,0.5,0.2, 0.2])
+    maxs = np.array([2.01,4.01,9.51,4.01, 2.6])
 else:
     import matplotlib.pyplot as plt
     optiLevel=['AllarOpti']
@@ -57,52 +57,52 @@ for k in range(len(optiLevel)):
     #     # import and export costs
     #     importExportCosts=np.zeros(shape=(transportcostArray.shape))
     #     for x in range(len(countrycosted)):
-    # 	   exportCost=-9999
-    # 	   fx=open(wddata+'trading_across_borders2017.csv','r')
-    # 	   if(countrycosted[x][0:2]=='I_'):
-    # 	       xCountry=countrycosted[x][2:]
-    # 	       for line in fx:
-    # 		  tmp=line.split(',')
-    # 		  if tmp[0]==xCountry:
-    # 		      exportCost=float(tmp[4])+float(tmp[6])+3330.
-    # 		      break
+    #        exportCost=-9999
+    #        fx=open(wddata+'trading_across_borders2017.csv','r')
+    #        if(countrycosted[x][0:2]=='I_'):
+    #            xCountry=countrycosted[x][2:]
+    #            for line in fx:
+    #       tmp=line.split(',')
+    #       if tmp[0]==xCountry:
+    #           exportCost=float(tmp[4])+float(tmp[6])+3330.
+    #           break
     #                for y in range(len(subsaharancountry)):
-    # 		  importCost=-9999
-    # 		  yCountry=subsaharancountry[y]
-    # 		  if xCountry==yCountry:
-    # 			continue
+    #       importCost=-9999
+    #       yCountry=subsaharancountry[y]
+    #       if xCountry==yCountry:
+    #         continue
     # 
-    # 		  fy=open(wddata+'trading_across_borders2017.csv','r')
-    # 		  for line in fy:
-    # 			 tmp=line.split(',')
-    # 			 if tmp[0]==yCountry:
-    # 				    importCost=float(tmp[8])+float(tmp[10])
-    # 				    break
+    #       fy=open(wddata+'trading_across_borders2017.csv','r')
+    #       for line in fy:
+    #          tmp=line.split(',')
+    #          if tmp[0]==yCountry:
+    #             importCost=float(tmp[8])+float(tmp[10])
+    #             break
     # 
-    # 		  importExportCosts[x,y]=importCost+exportCost
-    # 	   else:
-    # 	       xCountry=countrycosted[x]
-    # 	       for line in fx:
-    # 	           tmp=line.split(',')
-    # 	           if tmp[0]==xCountry:
-    # 	               exportCost=float(tmp[4])+float(tmp[6])
-    # 	               break
-    # 	   # print exportCost,xCountry
+    #       importExportCosts[x,y]=importCost+exportCost
+    #        else:
+    #            xCountry=countrycosted[x]
+    #            for line in fx:
+    #                tmp=line.split(',')
+    #                if tmp[0]==xCountry:
+    #                    exportCost=float(tmp[4])+float(tmp[6])
+    #                    break
+    #        # print exportCost,xCountry
     # 
-    # 	       for y in range(len(subsaharancountry)):
-    #   		    importCost=-9999
-    #   		    yCountry=subsaharancountry[y]
-    #   		    if xCountry==yCountry:
-    #  			continue
+    #            for y in range(len(subsaharancountry)):
+    #           importCost=-9999
+    #           yCountry=subsaharancountry[y]
+    #           if xCountry==yCountry:
+    #          continue
     # 
-    # 		    fy=open(wddata+'trading_across_borders2017.csv','r')
-    # 		    for line in fy:
-    # 			tmp=line.split(',')
-    # 			if tmp[0]==yCountry:
-    # 				importCost=float(tmp[8])+float(tmp[10])
-    # 				break
+    #         fy=open(wddata+'trading_across_borders2017.csv','r')
+    #         for line in fy:
+    #         tmp=line.split(',')
+    #         if tmp[0]==yCountry:
+    #         importCost=float(tmp[8])+float(tmp[10])
+    #         break
     # 
-    # 		    importExportCosts[x,y]=importCost+exportCost
+    #         importExportCosts[x,y]=importCost+exportCost
     for z in range(len(loopvar)):
         mShip=False
         mImpExp=False
@@ -152,13 +152,13 @@ for k in range(len(optiLevel)):
                 code=np.zeros(shape=(247),dtype=int)
                 i=-1
                 for line in f:
-               	    i+=1
-               	    tmp=line.split(',')
-               	    countrycosted.append(tmp[0])
-               	    rutfprice.append(tmp[1])
-               	    rusfprice.append(tmp[2])
-               	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-2])
+                    i+=1
+                    tmp=line.split(',')
+                    countrycosted.append(tmp[0])
+                    rutfprice.append(tmp[1])
+                    rusfprice.append(tmp[2])
+                    scplusprice.append(tmp[3])
+                    capitalcosted.append(tmp[4][:-2])
             elif (optiLevel[k]=='AllarOpti_trf'):
                 ### cost per country
                 countrycosted=[]
@@ -170,13 +170,13 @@ for k in range(len(optiLevel)):
                 code=np.zeros(shape=(247),dtype=int)
                 i=-1
                 for line in f:
-               	    i+=1
-               	    tmp=line.split(',')
-               	    countrycosted.append(tmp[0])
-               	    rutfprice.append(tmp[1])
-               	    rusfprice.append(tmp[2])
-               	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-2])
+                    i+=1
+                    tmp=line.split(',')
+                    countrycosted.append(tmp[0])
+                    rutfprice.append(tmp[1])
+                    rusfprice.append(tmp[2])
+                    scplusprice.append(tmp[3])
+                    capitalcosted.append(tmp[4][:-2])
             elif (optiLevel[k]=='LocalOpti'):
                 ### cost per country
                 countrycosted=[]
@@ -188,13 +188,13 @@ for k in range(len(optiLevel)):
                 code=np.zeros(shape=(247),dtype=int)
                 i=-1
                 for line in f:
-               	    i+=1
-               	    tmp=line.split(',')
-               	    countrycosted.append(tmp[0])
-               	    rutfprice.append(tmp[1])
-               	    rusfprice.append(tmp[2])
-               	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-2])
+                    i+=1
+                    tmp=line.split(',')
+                    countrycosted.append(tmp[0])
+                    rutfprice.append(tmp[1])
+                    rusfprice.append(tmp[2])
+                    scplusprice.append(tmp[3])
+                    capitalcosted.append(tmp[4][:-2])
             elif (optiLevel[k]=='LocalOpti_trf'):
                 ### cost per country
                 countrycosted=[]
@@ -206,13 +206,13 @@ for k in range(len(optiLevel)):
                 code=np.zeros(shape=(247),dtype=int)
                 i=-1
                 for line in f:
-               	    i+=1
-               	    tmp=line.split(',')
-               	    countrycosted.append(tmp[0])
-               	    rutfprice.append(tmp[1])
-               	    rusfprice.append(tmp[2])
-               	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-2])
+                    i+=1
+                    tmp=line.split(',')
+                    countrycosted.append(tmp[0])
+                    rutfprice.append(tmp[1])
+                    rusfprice.append(tmp[2])
+                    scplusprice.append(tmp[3])
+                    capitalcosted.append(tmp[4][:-2])
             elif (optiLevel[k]=='AllIntl'):
                 ### cost per country
                 countrycosted=[]
@@ -224,13 +224,13 @@ for k in range(len(optiLevel)):
                 code=np.zeros(shape=(247),dtype=int)
                 i=-1
                 for line in f:
-               	    i+=1
-               	    tmp=line.split(',')
-               	    countrycosted.append(tmp[0])
-               	    rutfprice.append(tmp[1])
-               	    rusfprice.append(tmp[2])
-               	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-2])
+                    i+=1
+                    tmp=line.split(',')
+                    countrycosted.append(tmp[0])
+                    rutfprice.append(tmp[1])
+                    rusfprice.append(tmp[2])
+                    scplusprice.append(tmp[3])
+                    capitalcosted.append(tmp[4][:-2])
             elif (optiLevel[k]=='AllIntl_trf'):
                 ### cost per country
                 countrycosted=[]
@@ -242,13 +242,13 @@ for k in range(len(optiLevel)):
                 code=np.zeros(shape=(247),dtype=int)
                 i=-1
                 for line in f:
-               	    i+=1
-               	    tmp=line.split(',')
-               	    countrycosted.append(tmp[0])
-               	    rutfprice.append(tmp[1])
-               	    rusfprice.append(tmp[2])
-               	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-2])
+                    i+=1
+                    tmp=line.split(',')
+                    countrycosted.append(tmp[0])
+                    rutfprice.append(tmp[1])
+                    rusfprice.append(tmp[2])
+                    scplusprice.append(tmp[3])
+                    capitalcosted.append(tmp[4][:-2])
             elif (optiLevel[k]=='AllIntl_opti'):
                 ### cost per country
                 countrycosted=[]
@@ -260,13 +260,13 @@ for k in range(len(optiLevel)):
                 code=np.zeros(shape=(247),dtype=int)
                 i=-1
                 for line in f:
-               	    i+=1
-               	    tmp=line.split(',')
-               	    countrycosted.append(tmp[0])
-               	    rutfprice.append(tmp[1])
-               	    rusfprice.append(tmp[2])
-               	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-2])
+                       i+=1
+                       tmp=line.split(',')
+                       countrycosted.append(tmp[0])
+                       rutfprice.append(tmp[1])
+                       rusfprice.append(tmp[2])
+                       scplusprice.append(tmp[3])
+                       capitalcosted.append(tmp[4][:-2])
             elif (optiLevel[k]=='AllIntl_opti_trf'):
                 ### cost per country
                 countrycosted=[]
@@ -278,13 +278,13 @@ for k in range(len(optiLevel)):
                 code=np.zeros(shape=(247),dtype=int)
                 i=-1
                 for line in f:
-               	    i+=1
-               	    tmp=line.split(',')
-               	    countrycosted.append(tmp[0])
-               	    rutfprice.append(tmp[1])
-               	    rusfprice.append(tmp[2])
-               	    scplusprice.append(tmp[3])
-               	    capitalcosted.append(tmp[4][:-2])
+                       i+=1
+                       tmp=line.split(',')
+                       countrycosted.append(tmp[0])
+                       rutfprice.append(tmp[1])
+                       rusfprice.append(tmp[2])
+                       scplusprice.append(tmp[3])
+                       capitalcosted.append(tmp[4][:-2])
             countrycosted[6]="Congo (Republic of the)"
             countrycosted[7]="Cote d'Ivoire"
             
@@ -376,48 +376,48 @@ for k in range(len(optiLevel)):
             # import and export costs
             importExportCosts=np.zeros(shape=(transportcostArray.shape))
             for x in range(len(countrycosted)):
-        	   exportCost=-9999
-        	   fx=open(wddata+'trading_across_borders2017.csv','r')
-        	   if(countrycosted[x][0:2]=='I_'):
-        	       xCountry=countrycosted[x][2:]
-        	       for line in fx:
-        		  tmp=line.split(',')
-        		  if tmp[0]==xCountry:
-        		      exportCost=mImpExpV*(float(tmp[4])+float(tmp[6]))+mShipV*2550.
-        		      break
-        	       for y in range(len(subsaharancountry)):
-        		  importCost=-9999
-        		  yCountry=subsaharancountry[y]
-        		  if xCountry==yCountry:
-     			    continue
+                exportCost=-9999
+                fx=open(wddata+'trading_across_borders2017.csv','r')
+                if(countrycosted[x][0:2]=='I_'):
+                    xCountry=countrycosted[x][2:]
+                    for line in fx:
+                        tmp=line.split(',')
+                        if tmp[0]==xCountry:
+                            exportCost=mImpExpV*(float(tmp[4])+float(tmp[6]))+mShipV*2550.
+                            break
+                    for y in range(len(subsaharancountry)):
+                        importCost=-9999
+                        yCountry=subsaharancountry[y]
+                        if xCountry==yCountry:
+                            continue
         
-        		  fy=open(wddata+'trading_across_borders2017.csv','r')
-        		  for line in fy:
-        		         tmp=line.split(',')
-        			 if tmp[0]==yCountry:
-        				    importCost=mImpExpV*(float(tmp[8])+float(tmp[10]))
-        				    break
-        		  importExportCosts[x,y]=importCost+exportCost
-        	   else:
-        	       xCountry=countrycosted[x]
-        	       for line in fx:
-        	           tmp=line.split(',')
-        	           if tmp[0]==xCountry:
-        	               exportCost=mImpExpV*(float(tmp[4])+float(tmp[6]))
-        	               break
+                        fy=open(wddata+'trading_across_borders2017.csv','r')
+                        for line in fy:
+                            tmp=line.split(',')
+                            if tmp[0]==yCountry:
+                                importCost=mImpExpV*(float(tmp[8])+float(tmp[10]))
+                                break
+                        importExportCosts[x,y]=importCost+exportCost
+                else:
+                    xCountry=countrycosted[x]
+                    for line in fx:
+                        tmp=line.split(',')
+                        if tmp[0]==xCountry:
+                            exportCost=mImpExpV*(float(tmp[4])+float(tmp[6]))
+                            break
         
-        	       for y in range(len(subsaharancountry)):
-        	           importCost=-9999
-        	           yCountry=subsaharancountry[y]
-        	           if xCountry==yCountry:
-         			continue
-         		   fy=open(wddata+'trading_across_borders2017.csv','r')
-         		   for line in fy:
-      		                tmp=line.split(',')
-      		                if tmp[0]==yCountry:
-        			     importCost=mImpExpV*(float(tmp[8])+float(tmp[10]))
-        			     break
-      		           importExportCosts[x,y]=importCost+exportCost
+                    for y in range(len(subsaharancountry)):
+                        importCost=-9999
+                        yCountry=subsaharancountry[y]
+                        if xCountry==yCountry:
+                            continue
+                        fy=open(wddata+'trading_across_borders2017.csv','r')
+                        for line in fy:
+                            tmp=line.split(',')
+                            if tmp[0]==yCountry:
+                                importCost=mImpExpV*(float(tmp[8])+float(tmp[10]))
+                                break
+                        importExportCosts[x,y]=importCost+exportCost
 
             #cost dabber RUTF ########################################################################
             rutfcostarray=np.zeros(shape=(33,43))
@@ -857,21 +857,21 @@ for k in range(len(optiLevel)):
             #     plt.title('RUSF treatment Imports and Exports ordered by Lon')
             #     plt.savefig(wdfigs+'rusfimpexp.png')
             # 
-					# if v.name[0,5]="
-				
-			# resultsarray=np.zeros(shape=(86,2))
-			# i=-1
-			# for v in varsdict():
-			#	 if(v.varValue>0 and v.name[:4] == 'Supp'):
-			#		 i+=1
-			#		 # resultsarray[i,0]=v.name
-			#		 resultsarray[i,1]=v.value
-			#		 # if(v.name[10:14]=="RUTF"):
-			#		 #	 resultsarray[i,0]= 'RUTF'
-			#		 # else:
-			#		 #	 resultsarray[i,0]= 'RUSF'
-			#		 # tmp = re.findall('[A-Z][^A-Z]*', v.name[15:])
-			#		 # resultsarray[i,1]=float(tmp[0])
-			#		 # resultsarray[i,2]=v.varValue
-			# 
-			# np.savetxt(wddata + "optiarrays/results/results.csv", resultsarray, delimiter=",")
+            # if v.name[0,5]="
+        
+        # resultsarray=np.zeros(shape=(86,2))
+        # i=-1
+        # for v in varsdict():
+        #     if(v.varValue>0 and v.name[:4] == 'Supp'):
+        #     i+=1
+        #     # resultsarray[i,0]=v.name
+        #     resultsarray[i,1]=v.value
+        #     # if(v.name[10:14]=="RUTF"):
+        #     #     resultsarray[i,0]= 'RUTF'
+        #     # else:
+        #     #     resultsarray[i,0]= 'RUSF'
+        #     # tmp = re.findall('[A-Z][^A-Z]*', v.name[15:])
+        #     # resultsarray[i,1]=float(tmp[0])
+        #     # resultsarray[i,2]=v.varValue
+        # 
+        # np.savetxt(wddata + "optiarrays/results/results.csv", resultsarray, delimiter=",")
