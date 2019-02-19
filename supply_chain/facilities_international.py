@@ -15,14 +15,14 @@ except:
 	wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/data/'
 	wdfigs='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/figs/'
 	wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
-
+# 'AllIntl_opti','AllarOpti','LocalOpti',
 
 bigloop=True
 
 if(bigloop): 
-
-	optiLevel = ['AllarOpti','LocalOpti','AllIntl_opti','AllIntl']
-	loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff']
+# 'shipcost', 'impexp','strtup','truckfactor', 
+	optiLevel = ['AllIntl']
+	loopvar = ['tariff']
 	mins= np.array([0.2,0.2,0.5,0.2, 0])
 	factor = np.array([0.2,0.2,0.5,0.2, 0.2])
 	maxs = np.array([2.01,4.01,9.51,4.01, 2.6])
@@ -432,7 +432,10 @@ for k in range(len(optiLevel)):
                     if(countrycosted[i][:2]=='I_'):
                         rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]
                     else:
-                        rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*0.07*mTariffV
+                        if(optiLevel[k]=='AllIntl'):
+                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*0.15*mTariffV
+                        else:
+                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*0.07*mTariffV
             
             with open(wddata+'optiarrays/rutfdictionary.json', 'w') as fp:
                 json.dump(rutfdictionary, fp, sort_keys=True)
@@ -462,7 +465,10 @@ for k in range(len(optiLevel)):
                     if(countrycosted[i][:2]=='I_'):
                         mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]
                     else:
-                        mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*0.07*mTariffV
+                        if(optiLevel[k]=='AllIntl'):
+                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*0.15*mTariffV
+                        else:
+                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*0.07*mTariffV
             
             with open(wddata+'optiarrays/mamdictionary.json', 'w') as fp:
                 json.dump(mamdictionary, fp, sort_keys=True)

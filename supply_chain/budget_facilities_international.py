@@ -24,9 +24,9 @@ if(bigloop):
         AM=['MAM']
 	optiLevel = ['AllIntl']
 	loopvar = ['budget']
-	mins= np.array([1])
-	factor = np.array([0.2])
-	maxs = np.array([3.2])
+	mins= np.array([0.25])
+	factor = np.array([0.25])
+	maxs = np.array([3.1])
 	# mins= np.array([0.2,0.2,0.5,0.2, 0, 0.5])
 	# factor = np.array([0.2,0.2,0.5,0.2, 0.2, 0.2])
 	# maxs = np.array([2.01,4.01,9.51,4.01, 2.6, 2.5])
