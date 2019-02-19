@@ -129,31 +129,33 @@ except:
 		SScapitalLatLon[1,c] = location.longitude
 	np.save(wdvars+'subsaharancapitalLatLon.npy',SScapitalLatLon)
 
-optiLevel = ['AllarOpti','LocalOpti', 'AllIntl_opti', 'AllIntl']
+#  'AllIntl_opti',
+optiLevel = ['AllarOpti','LocalOpti', 'AllIntl']
 loopvar = ['shipcost','impexp','strtup','truckfactor','tariff']
 
 LTitles = ['All Optimized','Local Optimized','Optimized Intl','Current Intl']
 TTitles = [' (No Tariff)',' (Tariff)']
-VTitles = ['Shipping','Import/Export','Startup','Trucking']
+VTitles = ['Shipping','Import/Export','Startup','Trucking', 'Tariff']
 
 Ltitles = ['AllOpti','LocalOpti', 'AllIntlOpti', 'AllIntl']
 Ttitles = ['_noTrf','_trf']
-Vtitles = ['shipping','importexport','startup','trucking']
+Vtitles = ['shipping','importexport','startup','trucking', 'tariff']
 
-factor = np.array([0.2,0.2,0.5,0.2])
-maxs = np.array([2.01,4.01,9.51,4.01])
+mins= np.array([0.2,0.2,0.5,0.2,0])
+factor = np.array([0.2,0.2,0.5,0.2,0.2])
+maxs = np.array([2.01,4.01,9.51,4.01,2.6])
 #LTitles = ['All Optimized','Local Optimized','Local Producing Optimized International with Tariff','Local Producing International with Tariff','Local Optimized with Tariff','All Optimized with Tariff','Local Producing Optimized International']
 #optiLevel = ['AllarOpti','LocalOpti', 'AllIntl_opti_trf', 'AllIntl_trf', 'LocalOpti_trf', 'AllarOpti_trf', 'AllIntl_opti']
 
 #[AllOpti,LocalOpti,AllIntl,AllIntlOpti] , [Trf,NoTrf] , [Shipcost,imexp,strtup,truckfactor] , [scenarios]
-cost=np.zeros(shape=(4,2,4,20)) 
-costOneAll=np.zeros(shape=(4,2)) 
-Mask=np.ones(shape=(4,2,4,20),dtype=bool) 
-factoryNum=np.zeros(shape=(4,2,4,20))
-factoryNumOneAll=np.zeros(shape=(4,2))
-portNumOneAll=np.zeros(shape=(4,2))
-pctLocal=np.zeros(shape=(4,2,4,20,2))
-pctLocalOneAll=np.zeros(shape=(4,2,2)) #optiLevel, trf, SAM-MAM
+cost=np.zeros(shape=(4,1,5,20)) 
+costOneAll=np.zeros(shape=(4,1)) 
+Mask=np.ones(shape=(4,1,5,20),dtype=bool) 
+factoryNum=np.zeros(shape=(4,1,5,20))
+factoryNumOneAll=np.zeros(shape=(4,1))
+portNumOneAll=np.zeros(shape=(4,1))
+pctLocal=np.zeros(shape=(4,1,5,20,2))
+pctLocalOneAll=np.zeros(shape=(4,1,2)) #optiLevel, trf, SAM-MAM
 
 for L in range(len(optiLevel)):
 	for T in range(1):
@@ -161,7 +163,7 @@ for L in range(len(optiLevel)):
 			File =optiLevel[L]+'_'+loopvar[V]
 			print optiLevel[L],loopvar[V]
 	
-			shp=len(np.arange(factor[V],maxs[V],factor[V]))
+			shp=len(np.arange(mins[V],maxs[V],factor[V]))
 			pctTrans=np.zeros(shape=(shp))
 			pctIngredient=np.zeros(shape=(shp))
 			avgShipments=np.zeros(shape=(shp))
@@ -179,7 +181,7 @@ for L in range(len(optiLevel)):
 				countrycosted[f]=countrycosted[f].replace(' ','_')
 	
 			i=-1
-			for s in np.arange(factor[V],maxs[V],factor[V]):
+			for s in np.arange(mins[V],maxs[V],factor[V]):
 				s=np.round(s,2)
 				#print '\n',s
 				i+=1
@@ -284,7 +286,7 @@ for L in range(len(optiLevel)):
 			if not os.path.exists(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/exports_by_country/'):
 			    os.makedirs(wdfigs+Ltitles[L]+'/'+Ttitles[T]+'/exports_by_country/')
 
-			x = np.arange(factor[V],maxs[V],factor[V])
+			x = np.arange(mins[V],maxs[V],factor[V])
 			x = x*100
 			if MakePlots:
 				fig = plt.figure(figsize=(9, 6))
@@ -808,7 +810,7 @@ for L in range(len(optiLevel)):
 			for g in range(2):
 				productarray = np.load(wddata+'results/example/'+optiLevel[L]+'/RN'+ruftitles[g]+'array.npy')
 				Rcountrycosted1=np.load(wddata+'results/example/'+optiLevel[L]+'/RNcountry.npy')
-				Rsubsaharancountry1=np.load(wddata+'results/example/'+optiLevel[L]+trfLevel[T]+'/Rsubsaharancountry.npy')
+				Rsubsaharancountry1=np.load(wddata+'results/example/'+optiLevel[L]+'/Rsubsaharancountry.npy')
 				Rcountrycosted=[]
 				for i in range(len(Rcountrycosted1)):
 					country=Rcountrycosted1[i]
@@ -1001,7 +1003,7 @@ LTitles = ['All Optimized','Local Optimized','Optimized Intl','Current']
 T=1
 cost1=cost/1e9
 for V in range(len(loopvar)):
-	x = np.arange(factor[V],maxs[V],factor[V])
+	x = np.arange(mins[V],maxs[V],factor[V])
 	x = x*100
 	plt.clf()
 	#plt.plot(x,np.ma.compressed(np.ma.masked_array(cost[2,T,V,:],Mask[2,T,V,:])),'b*-',label=LTitles[2])
@@ -1017,9 +1019,9 @@ for V in range(len(loopvar)):
 	plt.legend(loc='lower right')
 	plt.savefig(wdfigs+'totalCost_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.pdf')
 
-for T in range(len(trfLevel)):
+for T in range(len(1)):
 	for V in range(len(loopvar)):
-		x = np.arange(factor[V],maxs[V],factor[V])
+		x = np.arange(mins[V],maxs[V],factor[V])
 		x = x*100
 		plt.clf()
 		plt.plot(x,np.ma.compressed(np.ma.masked_array(factoryNum[0,T,V,:],Mask[0,T,V,:])),'g*-',label=LTitles[0])
@@ -1035,9 +1037,9 @@ for T in range(len(trfLevel)):
 		plt.legend()
 		plt.savefig(wdfigs+'factoryNum_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.pdf')
 
-for T in range(len(trfLevel)):
+for T in range(len(1)):
 	for V in range(len(loopvar)):
-		x = np.arange(factor[V],maxs[V],factor[V])
+		x = np.arange(mins[V],maxs[V],factor[V])
 		x = x*100
 		plt.clf()
 		plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[0,T,V,:,0],Mask[0,T,V,:])),'g*-',label=LTitles[0])
@@ -1055,9 +1057,9 @@ for T in range(len(trfLevel)):
 		plt.legend()
 		plt.savefig(wdfigs+'0pctLocal_vs_'+Vtitles[V]+'_'+Ttitles[T]+'.pdf')
 
-for T in range(len(trfLevel)):
+for T in range(len(1)):
 	for V in range(len(loopvar)):
-		x = np.arange(factor[V],maxs[V],factor[V])
+		x = np.arange(mins[V],maxs[V],factor[V])
 		x = x*100
 		plt.clf()
 		plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[0,T,V,:,1],Mask[0,T,V,:])),'g*-',label=LTitles[0])

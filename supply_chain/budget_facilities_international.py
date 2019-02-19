@@ -19,18 +19,24 @@ except:
 
 bigloop=True
 # , 'AllIntl_opti_trf', 'AllIntl_opti', "Allintl"
+# 'shipcost', 'impexp','strtup','truckfactor', 'tariff', 'budget'
 if(bigloop):
         AM=['MAM']
-	optiLevel = ['AllarOpti','LocalOpti','AllIntl_opti','AllIntl']
-	loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff']
-	factor = np.array([0.2,0.2,0.5,0.2, 0.5])
-	maxs = np.array([2.01,4.01,9.51,4.01, 9.51])
+	optiLevel = ['AllIntl']
+	loopvar = ['budget']
+	mins= np.array([1])
+	factor = np.array([0.2])
+	maxs = np.array([3.2])
+	# mins= np.array([0.2,0.2,0.5,0.2, 0, 0.5])
+	# factor = np.array([0.2,0.2,0.5,0.2, 0.2, 0.2])
+	# maxs = np.array([2.01,4.01,9.51,4.01, 2.6, 2.5])
 else:
     import matplotlib.pyplot as plt
     AM=['MAM']
     optiLevel=['AllarOpti_trf']
     # optiLevel=['AllIntl_trf','AllarOpti','LocalOpti','AllIntl_opti_trf', 'LocalOpti_trf','AllarOpti_trf','AllIntl_opti','AllIntl']
-    loopvar=['shipcost']
+    loopvar=['budget']
+    mins=np.array([1])
     factor=np.array([1])
     maxs=np.array([1.1])
 
@@ -108,37 +114,25 @@ for iAM in range(len(AM)):
         # 
         # 		    importExportCosts[x,y]=importCost+exportCost
         for z in range(len(loopvar)):
+            mShip=False
+            mImpExp=False
+            mStrt=False
+            mTruck=False
+            mTariff=False
+            mBudget=False
             if(loopvar[z]=='shipcost'):
                 mShip=True
-                mImpExp=False
-                mStrt=False
-                mTruck=False
-                mBudget=False
             elif(loopvar[z]=='impexp'):
-                mShip=False
                 mImpExp=True
-                mStrt=False
-                mTruck=False
-                mBudget=False
             elif(loopvar[z]=='strtup'):
-                mShip=False
-                mImpExp=False
                 mStrt=True
-                mTruck=False
-                mBudget=False
             elif(loopvar[z]=='truckfactor'):
-                mShip=False
-                mImpExp=False
-                mStrt=False
                 mTruck=True
-                mBudget=False
+            elif(loopvar[z]=='tariff'):
+                mTariff=True
             elif(loopvar[z]=='budget'):
-                mShip=False
-                mImpExp=False
-                mStrt=False
-                mTruck=False
                 mBudget=True
-            for s in np.arange(factor[z],maxs[z],factor[z]):
+            for s in np.arange(mins[z],maxs[z],factor[z]):
                 print 's=',s
                 print 'optiLevel=',optiLevel[k],k
                 print 'loopvar=',loopvar[z] ,z
@@ -323,72 +317,86 @@ for iAM in range(len(AM)):
                             indexedrutf[j]=rutfprice[i]
                             indexedrusf[j]=rusfprice[i]
                             indexedscp[j]=scplusprice[i][:-1]
-                #for all        
-                Fscaleaverage=np.zeros(shape=43)
-                f=open(wddata+'travel_time/averagetkmcost.csv','r')
-                i=-1
-                for line in f:
-                    tmp=line.split(',')
-                    i+=1
-                    Fscaleaverage[i]=tmp[1][:-1]
-                
-                #for facilities  
-                scaleaverage=np.zeros(shape=33)
-                f=open(wddata+'travel_time/averagetkmcost.csv','r')
-                i=-1
-                for line in f:
-                    tmp=line.split(',')
-                    i+=1
-                    countrycosted=np.array(countrycosted)
-                    c=np.where(tmp[0]==countrycosted)[0]
-                    c2=np.where(['I_'+tmp[0]]==countrycosted)[0]
-                    
-                    if len(c)!=0:
-                        c=c[0]
-                        scaleaverage[c]=tmp[1][:-1]
-                    if len(c2)!=0:
-                        c2=c2[0]
-                        scaleaverage[c2]=tmp[1][:-1]
+                # #for all        
+                # Fscaleaverage=np.zeros(shape=43)
+                # f=open(wddata+'travel_time/averagetkmcost.csv','r')
+                # i=-1
+                # for line in f:
+                #     tmp=line.split(',')
+                #     i+=1
+                #     Fscaleaverage[i]=tmp[1][:-1]
+                # 
+                # #for facilities  
+                # scaleaverage=np.zeros(shape=33)
+                # f=open(wddata+'travel_time/averagetkmcost.csv','r')
+                # i=-1
+                # for line in f:
+                #     tmp=line.split(',')
+                #     i+=1
+                #     countrycosted=np.array(countrycosted)
+                #     c=np.where(tmp[0]==countrycosted)[0]
+                #     c2=np.where(['I_'+tmp[0]]==countrycosted)[0]
+                #     
+                #     if len(c)!=0:
+                #         c=c[0]
+                #         scaleaverage[c]=tmp[1][:-1]
+                #     if len(c2)!=0:
+                #         c2=c2[0]
+                #         scaleaverage[c2]=tmp[1][:-1]
                 if(mShip==True):
                     mShipV=s
                     mImpExpV=1
                     mStrtV=1
                     mTruckV=1
-                    mBudget=1
+                    mTariffV=1
+                    mBudgetV=1
                 elif(mImpExp==True):
                     mShipV=1
                     mImpExpV=s
                     mStrtV=1
                     mTruckV=1
-                    mBudget=1
+                    mTariffV=1
+                    mBudgetV=1
                 elif(mStrt==True):
                     mShipV=1
                     mImpExpV=1
                     mStrtV=s
                     mTruckV=1
-                    mBudget=1
+                    mTariffV=1
+                    mBudgetV=1
                 elif(mTruck==True):
                     mShipV=1
                     mImpExpV=1
                     mStrtV=1
                     mTruckV=s
-                    mBudget=1
+                    mTariffV=1
+                    mBudgetV=1
+                elif(mTariff==True):
+                    mShipV=1
+                    mImpExpV=1
+                    mStrtV=1
+                    mTruckV=1
+                    mTariffV=s
+                    mBudgetV=1
                 elif(mBudget==True):
                     mShipV=1
                     mImpExpV=1
                     mStrtV=1
                     mTruckV=1
-                    mBudget=s
-                transportcostArray=np.zeros(shape=(33,43))
-                f=open(wddata+'travel_time/INTLcapitaldistanceArray.csv','r')
-                i=-1
-                for line in f:
-                    i+=1
-                    tmp=line.split(',')
-                    for j in range(len(tmp)):
-                        avg=(scaleaverage[i]+Fscaleaverage[j])/2.
-                        transportcostArray[i,j]=float(tmp[j])*avg*(1/1000.)*mTruckV
-                    
+                    mTariffV=1
+                    mBudgetV=s
+                transportcostArray = np.load(wddata+'travel_time/totalTruckingCost.npy')
+                transportcostArray = transportcostArray/1000
+                # transportcostArray=np.zeros(shape=(33,43))
+                # f=open(wddata+'travel_time/INTLcapitaldistanceArray.csv','r')
+                # i=-1
+                # for line in f:
+                #     i+=1
+                #     tmp=line.split(',')
+                #     for j in range(len(tmp)):
+                #         avg=(scaleaverage[i]+Fscaleaverage[j])/2.
+                #         transportcostArray[i,j]=float(tmp[j])*avg*(1/1000.)*mTruckV
+                #     
                 # import and export costs
                 importExportCosts=np.zeros(shape=(transportcostArray.shape))
                 for x in range(len(countrycosted)):
@@ -447,8 +455,11 @@ for iAM in range(len(AM)):
                 for i in range(len(countrycosted)):
                     rutfdictionary[countrycosted[i]]={}
                     for j in range(len(subsaharancountry)):
-                        rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]
-                
+                        if(countrycosted[i][:2]=='I_'):
+                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]
+                        else:
+                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*0.07*mTariffV
+                    
                 with open(wddata+'optiarrays/rutfdictionary.json', 'w') as fp:
                     json.dump(rutfdictionary, fp, sort_keys=True)
                 
@@ -474,8 +485,10 @@ for iAM in range(len(AM)):
                 for i in range(len(countrycosted)):
                     mamdictionary[countrycosted[i]]={}
                     for j in range(len(subsaharancountry)):
-                        mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]
-                
+                        if(countrycosted[i][:2]=='I_'):
+                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]
+                        else:
+                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*0.07*mTariffV
                 with open(wddata+'optiarrays/mamdictionary.json', 'w') as fp:
                     json.dump(mamdictionary, fp, sort_keys=True)
                     
@@ -510,7 +523,7 @@ for iAM in range(len(AM)):
                 #OPTIMIZER
                 
                 #fixed costs for facility
-                # startupcost= 1000000.0
+                # startupcost= 10000050.0
                 strt=1000000.*0.2*mStrtV
                 startupcost = dict(zip(facility, [strt, strt, strt, strt, strt, strt, strt, strt, strt, strt, strt, strt, strt, strt, strt, strt, strt, strt, strt, strt, strt, strt, strt, strt, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
                 
@@ -603,9 +616,9 @@ for iAM in range(len(AM)):
                 if(mSAM):
                     budgettotal = 10404000
                 elif(mMAM):
-                    budgettotal = 127000000
+                    budgettotal = 54000000
                 
-                budgettotal = budgettotal * mBudget
+                budgettotal = budgettotal * mBudgetV
                 prob += sum(costM1[i] * Machine1[i] + costM2[i] * Machine2[i] + upgradecost[i] * Factorysize[i] + sum((CostMAM[i][j] * QuantityMAM[i][j]) + (MAMCostTransport[i][j] * QuantityMAM[i][j]) + (CostRUTF[i][j] * QuantityRUTF[i][j]) + (SAMCostTransport[i][j] * QuantityRUTF[i][j]) for j in location) for i in facility) <= budgettotal
                     
                 prob.solve()
@@ -635,7 +648,7 @@ for iAM in range(len(AM)):
                 
                 for i in range(len(capitalcosted)):
                     capitalcosted[i]=capitalcosted[i].replace(' ','_')
-                    
+                
                 children=0
                 factorynum=0
                 sourcenum=0

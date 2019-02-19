@@ -20,6 +20,7 @@ except:
 bigloop=True
 
 if(bigloop): 
+
 	optiLevel = ['AllarOpti','LocalOpti','AllIntl_opti','AllIntl']
 	loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff']
 	mins= np.array([0.2,0.2,0.5,0.2, 0])
@@ -352,7 +353,7 @@ for k in range(len(optiLevel)):
                 mStrtV=1
                 mTruckV=s
                 mTariffV=1
-            elif(mTruck==True):
+            elif(mTariff==True):
                 mShipV=1
                 mImpExpV=1
                 mStrtV=1
@@ -431,7 +432,7 @@ for k in range(len(optiLevel)):
                     if(countrycosted[i][:2]=='I_'):
                         rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]
                     else:
-                        rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*0.15*mTariffV
+                        rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*0.07*mTariffV
             
             with open(wddata+'optiarrays/rutfdictionary.json', 'w') as fp:
                 json.dump(rutfdictionary, fp, sort_keys=True)
@@ -458,7 +459,10 @@ for k in range(len(optiLevel)):
             for i in range(len(countrycosted)):
                 mamdictionary[countrycosted[i]]={}
                 for j in range(len(subsaharancountry)):
-                    mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]
+                    if(countrycosted[i][:2]=='I_'):
+                        mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]
+                    else:
+                        mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*0.07*mTariffV
             
             with open(wddata+'optiarrays/mamdictionary.json', 'w') as fp:
                 json.dump(mamdictionary, fp, sort_keys=True)
