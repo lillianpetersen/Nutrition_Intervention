@@ -9,24 +9,25 @@ import matplotlib.cm as cm
 try:
 	wddata='/Users/lilllianpetersen/iiasa/data/supply_chain/'
 	wdfigs='/Users/lilllianpetersen/iiasa/figs/'
-	wdvars='/Users/lilllianpetersen/iiasa/saved_vars/'
+	wdvars='/Users/lilllianpetersen/iiasa/saved_vars/supply_chain/'
 	f=open(wddata+'trading_across_borders2017.csv','r')
 except:
 	wddata='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/data/'
 	wdfigs='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/figs/'
 	wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
 
+countryCostedTariff = np.load(wdvars+'tariff_by_country.npy')
 
 bigloop=True
 # , 'AllIntl_opti_trf', 'AllIntl_opti', "Allintl"
 # 'shipcost', 'impexp','strtup','truckfactor', 'tariff', 'budget'
 if(bigloop):
-        AM=['MAM']
+    AM=['MAM']
 	optiLevel = ['AllIntl']
 	loopvar = ['budget']
-	mins= np.array([0.25])
-	factor = np.array([0.25])
-	maxs = np.array([3.1])
+	mins= np.array([0.2])
+	factor = np.array([0.2])
+	maxs = np.array([3.2])
 	# mins= np.array([0.2,0.2,0.5,0.2, 0, 0.5])
 	# factor = np.array([0.2,0.2,0.5,0.2, 0.2, 0.2])
 	# maxs = np.array([2.01,4.01,9.51,4.01, 2.6, 2.5])
@@ -133,7 +134,7 @@ for iAM in range(len(AM)):
             elif(loopvar[z]=='budget'):
                 mBudget=True
             for s in np.arange(mins[z],maxs[z],factor[z]):
-                print 's=',s
+                print '\ns=',s
                 print 'optiLevel=',optiLevel[k],k
                 print 'loopvar=',loopvar[z] ,z
                 ##capitalonly
@@ -458,7 +459,10 @@ for iAM in range(len(AM)):
                         if(countrycosted[i][:2]=='I_'):
                             rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]
                         else:
-                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*0.07*mTariffV
+                            # 7% Tariff = 1
+                            # rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*0.07*mTariffV
+                            # Tariff by country = 1
+                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j] * countryCostedTariff[i] * mTariffV
                     
                 with open(wddata+'optiarrays/rutfdictionary.json', 'w') as fp:
                     json.dump(rutfdictionary, fp, sort_keys=True)
@@ -488,7 +492,7 @@ for iAM in range(len(AM)):
                         if(countrycosted[i][:2]=='I_'):
                             mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]
                         else:
-                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*0.07*mTariffV
+                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j] * countryCostedTariff[i] * mTariffV
                 with open(wddata+'optiarrays/mamdictionary.json', 'w') as fp:
                     json.dump(mamdictionary, fp, sort_keys=True)
                     
@@ -621,7 +625,9 @@ for iAM in range(len(AM)):
                 budgettotal = budgettotal * mBudgetV
                 prob += sum(costM1[i] * Machine1[i] + costM2[i] * Machine2[i] + upgradecost[i] * Factorysize[i] + sum((CostMAM[i][j] * QuantityMAM[i][j]) + (MAMCostTransport[i][j] * QuantityMAM[i][j]) + (CostRUTF[i][j] * QuantityRUTF[i][j]) + (SAMCostTransport[i][j] * QuantityRUTF[i][j]) for j in location) for i in facility) <= budgettotal
                     
-                prob.solve()
+                status = prob.solve()
+                LpStatus[status]
+                #prob.ActualSolve()
                 # print(LpStatus[prob.status])
                 # print("Objective:")
                 # print s
