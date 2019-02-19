@@ -17,6 +17,8 @@ except:
 	wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
 # 'AllIntl_opti','AllarOpti','LocalOpti',
 
+countryCostedTariff = np.load(wdvars+'tariff_by_country.npy')
+
 bigloop=True
 
 if(bigloop): 
@@ -435,7 +437,7 @@ for k in range(len(optiLevel)):
                         if(optiLevel[k]=='AllIntl'):
                             rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*0.15*mTariffV
                         else:
-                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*0.07*mTariffV
+                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j] * countryCostedTariff[i] * mTariffV
             
             with open(wddata+'optiarrays/rutfdictionary.json', 'w') as fp:
                 json.dump(rutfdictionary, fp, sort_keys=True)
@@ -468,7 +470,7 @@ for k in range(len(optiLevel)):
                         if(optiLevel[k]=='AllIntl'):
                             mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*0.15*mTariffV
                         else:
-                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*0.07*mTariffV
+                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j] * countryCostedTariff[i] * mTariffV
             
             with open(wddata+'optiarrays/mamdictionary.json', 'w') as fp:
                 json.dump(mamdictionary, fp, sort_keys=True)
