@@ -17,20 +17,21 @@ except:
     wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
 
 countryCostedTariff = np.load(wdvars+'tariff_by_country.npy')
+countryCostedTariff = countryCostedTariff/100
 
 bigloop=True
 # , 'AllIntl_opti_trf', 'AllIntl_opti', "Allintl"
 # 'shipcost', 'impexp','strtup','truckfactor', 'tariff', 'budget'
 if(bigloop):
-    AM=['MAM']
-    optiLevel = ['AllIntl']
-    loopvar = ['budget']
-    mins= np.array([0.2])
-    factor = np.array([0.2])
-    maxs = np.array([3.2])
-    # mins= np.array([0.2,0.2,0.5,0.2, 0, 0.5])
-    # factor = np.array([0.2,0.2,0.5,0.2, 0.2, 0.2])
-    # maxs = np.array([2.01,4.01,9.51,4.01, 2.6, 2.5])
+    AM=['MAM','SAM']
+    optiLevel = ['AllarOpti','LocalOpti','AllIntl']
+    loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff', 'budget']
+    # mins= np.array([0.2])
+    # factor = np.array([0.2])
+    # maxs = np.array([3.2])
+    mins= np.array([0.2,0.2,0.5,0.2, 0.2, 0.2])
+    factor = np.array([0.2,0.2,0.5,0.2, 0.2, 0.2])
+    maxs = np.array([2.01,4.01,9.51,4.01, 2.61, 2.51])
 else:
     import matplotlib.pyplot as plt
     AM=['MAM']
@@ -344,47 +345,27 @@ for iAM in range(len(AM)):
                 #     if len(c2)!=0:
                 #         c2=c2[0]
                 #         scaleaverage[c2]=tmp[1][:-1]
+                mShipV=1
+                mImpExpV=1
+                mStrtV=1
+                mTruckV=1
+                mBudgetV=1
+                if optiLevel[k]=='AllIntl':
+                    mTariffV=2
+                else:
+                    mTariffV=1
+
                 if(mShip==True):
                     mShipV=s
-                    mImpExpV=1
-                    mStrtV=1
-                    mTruckV=1
-                    mTariffV=1
-                    mBudgetV=1
                 elif(mImpExp==True):
-                    mShipV=1
                     mImpExpV=s
-                    mStrtV=1
-                    mTruckV=1
-                    mTariffV=1
-                    mBudgetV=1
                 elif(mStrt==True):
-                    mShipV=1
-                    mImpExpV=1
                     mStrtV=s
-                    mTruckV=1
-                    mTariffV=1
-                    mBudgetV=1
                 elif(mTruck==True):
-                    mShipV=1
-                    mImpExpV=1
-                    mStrtV=1
                     mTruckV=s
-                    mTariffV=1
-                    mBudgetV=1
                 elif(mTariff==True):
-                    mShipV=1
-                    mImpExpV=1
-                    mStrtV=1
-                    mTruckV=1
                     mTariffV=s
-                    mBudgetV=1
                 elif(mBudget==True):
-                    mShipV=1
-                    mImpExpV=1
-                    mStrtV=1
-                    mTruckV=1
-                    mTariffV=1
                     mBudgetV=s
                 transportcostArray = np.load(wddata+'travel_time/totalTruckingCost.npy')
                 transportcostArray = transportcostArray/1000
@@ -399,75 +380,75 @@ for iAM in range(len(AM)):
                 #         transportcostArray[i,j]=float(tmp[j])*avg*(1/1000.)*mTruckV
                 #     
                 # import and export costs
-            importExportCosts=np.zeros(shape=(transportcostArray.shape))
-            for x in range(len(countrycosted)):
-                exportCost=-9999
-                fx=open(wddata+'trading_across_borders2017.csv','r')
-                if(countrycosted[x][0:2]=='I_'):
-                    xCountry=countrycosted[x][2:]
-                    for line in fx:
-                        tmp=line.split(',')
-                        if tmp[0]==xCountry:
-                            exportCost=mImpExpV*(float(tmp[4])+float(tmp[6]))+mShipV*2550.
-                            break
-                    for y in range(len(subsaharancountry)):
-                        importCost=-9999
-                        yCountry=subsaharancountry[y]
-                        if xCountry==yCountry:
-                            continue
-        
-                        fy=open(wddata+'trading_across_borders2017.csv','r')
-                        for line in fy:
+                importExportCosts=np.zeros(shape=(transportcostArray.shape))
+                for x in range(len(countrycosted)):
+                    exportCost=-9999
+                    fx=open(wddata+'trading_across_borders2017.csv','r')
+                    if(countrycosted[x][0:2]=='I_'):
+                        xCountry=countrycosted[x][2:]
+                        for line in fx:
                             tmp=line.split(',')
-                            if tmp[0]==yCountry:
-                                importCost=mImpExpV*(float(tmp[8])+float(tmp[10]))
+                            if tmp[0]==xCountry:
+                                exportCost=mImpExpV*(float(tmp[4])+float(tmp[6]))+mShipV*2550.
                                 break
-                        importExportCosts[x,y]=importCost+exportCost
-                else:
-                    xCountry=countrycosted[x]
-                    for line in fx:
-                        tmp=line.split(',')
-                        if tmp[0]==xCountry:
-                            exportCost=mImpExpV*(float(tmp[4])+float(tmp[6]))
-                            break
+                        for y in range(len(subsaharancountry)):
+                            importCost=-9999
+                            yCountry=subsaharancountry[y]
+                            if xCountry==yCountry:
+                                continue
         
-                    for y in range(len(subsaharancountry)):
-                        importCost=-9999
-                        yCountry=subsaharancountry[y]
-                        if xCountry==yCountry:
-                            continue
-                        fy=open(wddata+'trading_across_borders2017.csv','r')
-                        for line in fy:
+                            fy=open(wddata+'trading_across_borders2017.csv','r')
+                            for line in fy:
+                                tmp=line.split(',')
+                                if tmp[0]==yCountry:
+                                    importCost=mImpExpV*(float(tmp[8])+float(tmp[10]))
+                                    break
+                            importExportCosts[x,y]=importCost+exportCost
+                    else:
+                        xCountry=countrycosted[x]
+                        for line in fx:
                             tmp=line.split(',')
-                            if tmp[0]==yCountry:
-                                importCost=mImpExpV*(float(tmp[8])+float(tmp[10]))
+                            if tmp[0]==xCountry:
+                                exportCost=mImpExpV*(float(tmp[4])+float(tmp[6]))
                                 break
-                        importExportCosts[x,y]=importCost+exportCost
+        
+                        for y in range(len(subsaharancountry)):
+                            importCost=-9999
+                            yCountry=subsaharancountry[y]
+                            if xCountry==yCountry:
+                                continue
+                            fy=open(wddata+'trading_across_borders2017.csv','r')
+                            for line in fy:
+                                tmp=line.split(',')
+                                if tmp[0]==yCountry:
+                                    importCost=mImpExpV*(float(tmp[8])+float(tmp[10]))
+                                    break
+                            importExportCosts[x,y]=importCost+exportCost
     
-                #cost dabber RUTF ########################################################################
-                rutfcostarray=np.zeros(shape=(33,43))
-                for i in range(len(countrycosted)):
-                    for j in range(len(indexedSAM)):
-                # sums ingredient and transport cost, converts to $/100g delivered
-                        rutfcostarray[i,j]=rutfprice[i]
-                
-                rutfdictionary={}
-                ### array to dict
-                for i in range(len(countrycosted)):
-                    rutfdictionary[countrycosted[i]]={}
-                    for j in range(len(subsaharancountry)):
-                        if(countrycosted[i][:2]=='I_'):
-                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]
-                        else:
-                            # 7% Tariff = 1
-                            # rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*0.07*mTariffV
-                            # Tariff by country = 1
-                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j] * countryCostedTariff[i] * mTariffV
+                    #cost dabber RUTF ########################################################################
+                    rutfcostarray=np.zeros(shape=(33,43))
+                    for i in range(len(countrycosted)):
+                        for j in range(len(indexedSAM)):
+                    # sums ingredient and transport cost, converts to $/100g delivered
+                            rutfcostarray[i,j]=rutfprice[i]
                     
-                with open(wddata+'optiarrays/rutfdictionary.json', 'w') as fp:
-                    json.dump(rutfdictionary, fp, sort_keys=True)
-                
-                np.savetxt(wddata + "foodstuffs/rutfcostarray.csv", rutfcostarray, delimiter=",")
+                    rutfdictionary={}
+                    ### array to dict
+                    for i in range(len(countrycosted)):
+                        rutfdictionary[countrycosted[i]]={}
+                        for j in range(len(subsaharancountry)):
+                            if(countrycosted[i][:2]=='I_'):
+                                rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]
+                            else:
+                                # 7% Tariff = 1
+                                # rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*0.07*mTariffV
+                                # Tariff by country = 1
+                                rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j] * countryCostedTariff[i] * mTariffV
+                        
+                    with open(wddata+'optiarrays/rutfdictionary.json', 'w') as fp:
+                        json.dump(rutfdictionary, fp, sort_keys=True)
+                    
+                    np.savetxt(wddata + "foodstuffs/rutfcostarray.csv", rutfcostarray, delimiter=",")
                 
                 #cost dabber MAM ########################################################################
                 SCPuse=np.zeros(shape=(33,43))
@@ -625,8 +606,7 @@ for iAM in range(len(AM)):
                 budgettotal = budgettotal * mBudgetV
                 prob += sum(costM1[i] * Machine1[i] + costM2[i] * Machine2[i] + upgradecost[i] * Factorysize[i] + sum((CostMAM[i][j] * QuantityMAM[i][j]) + (MAMCostTransport[i][j] * QuantityMAM[i][j]) + (CostRUTF[i][j] * QuantityRUTF[i][j]) + (SAMCostTransport[i][j] * QuantityRUTF[i][j]) for j in location) for i in facility) <= budgettotal
                     
-                status = prob.solve()
-                LpStatus[status]
+                prob.solve()
                 #prob.ActualSolve()
                 # print(LpStatus[prob.status])
                 # print("Objective:")

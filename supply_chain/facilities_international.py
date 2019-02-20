@@ -331,35 +331,20 @@ for k in range(len(optiLevel)):
             #     if len(c2)!=0:
             #         c2=c2[0]
             #         scaleaverage[c2]=tmp[1][:-1]
+            mShipV=1
+            mImpExpV=1
+            mStrtV=1
+            mTruckV=1
+            mTariffV=1
             if(mShip==True):
                 mShipV=s
-                mImpExpV=1
-                mStrtV=1
-                mTruckV=1
-                mTariffV=1
             elif(mImpExp==True):
-                mShipV=1
                 mImpExpV=s
-                mStrtV=1
-                mTruckV=1
-                mTariffV=1
             elif(mStrt==True):
-                mShipV=1
-                mImpExpV=1
                 mStrtV=s
-                mTruckV=1
-                mTariffV=1
             elif(mTruck==True):
-                mShipV=1
-                mImpExpV=1
-                mStrtV=1
                 mTruckV=s
-                mTariffV=1
             elif(mTariff==True):
-                mShipV=1
-                mImpExpV=1
-                mStrtV=1
-                mTruckV=1
                 mTariffV=s
             transportcostArray = np.load(wddata+'travel_time/totalTruckingCost.npy')
             transportcostArray = transportcostArray/1000
