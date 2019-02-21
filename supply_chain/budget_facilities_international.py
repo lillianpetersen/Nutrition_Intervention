@@ -364,7 +364,7 @@ for iAM in range(len(AM)):
                 elif(mBudget==True):
                     mBudgetV=s
                 transportcostArray = np.load(wddata+'travel_time/totalTruckingCost.npy')
-                transportcostArray = transportcostArray/1000
+                transportcostArray = mTruckV*transportcostArray/1000
                 # transportcostArray=np.zeros(shape=(33,43))
                 # f=open(wddata+'travel_time/INTLcapitaldistanceArray.csv','r')
                 # i=-1
