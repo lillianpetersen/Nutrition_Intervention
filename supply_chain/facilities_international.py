@@ -23,11 +23,15 @@ bigloop=True
 
 if(bigloop): 
 
+# 'shipcost', 'impexp','strtup','truckfactor', 
+# 0.2,0.2,0.5,0.2, 
+# 0.2,0.2,0.5,0.2, 
+# 2.01,4.01,9.51,4.01, 
     optiLevel = ['AllarOpti','LocalOpti','AllIntl']
-    loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff']
-    mins= np.array([0.2,0.2,0.5,0.2, 0])
-    factor = np.array([0.2,0.2,0.5,0.2, 0.2])
-    maxs = np.array([2.01,4.01,9.51,4.01, 2.6])
+    loopvar = ['tariff']
+    mins= np.array([0.2])
+    factor = np.array([0.2])
+    maxs = np.array([2.6])
 else:
     import matplotlib.pyplot as plt
     optiLevel=['AllarOpti']
@@ -435,9 +439,9 @@ for k in range(len(optiLevel)):
                         rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]
                     else:
                         if(optiLevel[k]=='AllIntl'):
-                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]*(1/100)*mTariffV*2.
+                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]/100*mTariffV*2.
                         else:
-                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]*(1/100)*mTariffV
+                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]/100*mTariffV
             
             with open(wddata+'optiarrays/rutfdictionary.json', 'w') as fp:
                 json.dump(rutfdictionary, fp, sort_keys=True)
@@ -468,9 +472,10 @@ for k in range(len(optiLevel)):
                         mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]
                     else:
                         if(optiLevel[k]=='AllIntl'):
-                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]*(1/100)*mTariffV*2.
+                            print
+                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]/100*mTariffV*2.
                         else:
-                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]*(1/100)*mTariffV
+                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]/100*mTariffV
             
             with open(wddata+'optiarrays/mamdictionary.json', 'w') as fp:
                 json.dump(mamdictionary, fp, sort_keys=True)
@@ -563,7 +568,7 @@ for k in range(len(optiLevel)):
             Factorysize = LpVariable.dicts('Factory Size %s', facility,
                                 lowBound = 0,
                                 cat='Integer')
-        
+
             prob = LpProblem('Fixed Charge', LpMinimize)
             tmp1 = sum(costM1[i] * Machine1[i] for i in facility)
             tmp2 = sum(costM2[i] * Machine2[i] for i in facility)

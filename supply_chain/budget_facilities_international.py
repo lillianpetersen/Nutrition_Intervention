@@ -399,50 +399,50 @@ for iAM in range(len(AM)):
                 #         transportcostArray[i,j]=float(tmp[j])*avg*(1/1000.)*mTruckV
                 #     
                 # import and export costs
-            importExportCosts=np.zeros(shape=(transportcostArray.shape))
-            for x in range(len(countrycosted)):
-                exportCost=-9999
-                fx=open(wddata+'trading_across_borders2017.csv','r')
-                if(countrycosted[x][0:2]=='I_'):
-                    xCountry=countrycosted[x][2:]
-                    for line in fx:
-                        tmp=line.split(',')
-                        if tmp[0]==xCountry:
-                            exportCost=mImpExpV*(float(tmp[4])+float(tmp[6]))+mShipV*2550.
-                            break
-                    for y in range(len(subsaharancountry)):
-                        importCost=-9999
-                        yCountry=subsaharancountry[y]
-                        if xCountry==yCountry:
-                            continue
-        
-                        fy=open(wddata+'trading_across_borders2017.csv','r')
-                        for line in fy:
+                importExportCosts=np.zeros(shape=(transportcostArray.shape))
+                for x in range(len(countrycosted)):
+                    exportCost=-9999
+                    fx=open(wddata+'trading_across_borders2017.csv','r')
+                    if(countrycosted[x][0:2]=='I_'):
+                        xCountry=countrycosted[x][2:]
+                        for line in fx:
                             tmp=line.split(',')
-                            if tmp[0]==yCountry:
-                                importCost=mImpExpV*(float(tmp[8])+float(tmp[10]))
+                            if tmp[0]==xCountry:
+                                exportCost=mImpExpV*(float(tmp[4])+float(tmp[6]))+mShipV*2550.
                                 break
-                        importExportCosts[x,y]=importCost+exportCost
-                else:
-                    xCountry=countrycosted[x]
-                    for line in fx:
-                        tmp=line.split(',')
-                        if tmp[0]==xCountry:
-                            exportCost=mImpExpV*(float(tmp[4])+float(tmp[6]))
-                            break
-        
-                    for y in range(len(subsaharancountry)):
-                        importCost=-9999
-                        yCountry=subsaharancountry[y]
-                        if xCountry==yCountry:
-                            continue
-                        fy=open(wddata+'trading_across_borders2017.csv','r')
-                        for line in fy:
+                        for y in range(len(subsaharancountry)):
+                            importCost=-9999
+                            yCountry=subsaharancountry[y]
+                            if xCountry==yCountry:
+                                continue
+            
+                            fy=open(wddata+'trading_across_borders2017.csv','r')
+                            for line in fy:
+                                tmp=line.split(',')
+                                if tmp[0]==yCountry:
+                                    importCost=mImpExpV*(float(tmp[8])+float(tmp[10]))
+                                    break
+                            importExportCosts[x,y]=importCost+exportCost
+                    else:
+                        xCountry=countrycosted[x]
+                        for line in fx:
                             tmp=line.split(',')
-                            if tmp[0]==yCountry:
-                                importCost=mImpExpV*(float(tmp[8])+float(tmp[10]))
+                            if tmp[0]==xCountry:
+                                exportCost=mImpExpV*(float(tmp[4])+float(tmp[6]))
                                 break
-                        importExportCosts[x,y]=importCost+exportCost
+            
+                        for y in range(len(subsaharancountry)):
+                            importCost=-9999
+                            yCountry=subsaharancountry[y]
+                            if xCountry==yCountry:
+                                continue
+                            fy=open(wddata+'trading_across_borders2017.csv','r')
+                            for line in fy:
+                                tmp=line.split(',')
+                                if tmp[0]==yCountry:
+                                    importCost=mImpExpV*(float(tmp[8])+float(tmp[10]))
+                                    break
+                            importExportCosts[x,y]=importCost+exportCost
     
                 #cost dabber RUTF ########################################################################
                 rutfcostarray=np.zeros(shape=(33,43))
