@@ -440,7 +440,8 @@ for iAM in range(len(AM)):
                                     rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]/100*mTariffV*2.
                                 else:
                                     rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]/100*mTariffV
-            
+
+
                     with open(wddata+'optiarrays/rutfdictionary.json', 'w') as fp:
                         json.dump(rutfdictionary, fp, sort_keys=True)
                     
