@@ -21,13 +21,13 @@ countryCostedTariff = np.load(wdvars+'tariff_by_country.npy')
 
 bigloop=True
 
-if(bigloop):
+if(bigloop): 
 
     optiLevel = ['AllarOpti','LocalOpti','AllIntl']
-    loopvar = ['shipcost','impexp','strtup','truckfactor','tariff']
-    mins= np.array([0.2,0.2,0.5,0.2,0.2])
-    factor = np.array([0.2,0.2,0.5,0.2,0.2])
-    maxs = np.array([2.01,4.01,9.51,4.01,2.6])
+    loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff']
+    mins= np.array([0.2,0.2,0.5,0.2, 0])
+    factor = np.array([0.2,0.2,0.5,0.2, 0.2])
+    maxs = np.array([2.01,4.01,9.51,4.01, 2.6])
 else:
     import matplotlib.pyplot as plt
     optiLevel=['AllarOpti']
@@ -331,35 +331,20 @@ for k in range(len(optiLevel)):
             #     if len(c2)!=0:
             #         c2=c2[0]
             #         scaleaverage[c2]=tmp[1][:-1]
+            mShipV=1
+            mImpExpV=1
+            mStrtV=1
+            mTruckV=1
+            mTariffV=1
             if(mShip==True):
                 mShipV=s
-                mImpExpV=1
-                mStrtV=1
-                mTruckV=1
-                mTariffV=1
             elif(mImpExp==True):
-                mShipV=1
                 mImpExpV=s
-                mStrtV=1
-                mTruckV=1
-                mTariffV=1
             elif(mStrt==True):
-                mShipV=1
-                mImpExpV=1
                 mStrtV=s
-                mTruckV=1
-                mTariffV=1
             elif(mTruck==True):
-                mShipV=1
-                mImpExpV=1
-                mStrtV=1
                 mTruckV=s
-                mTariffV=1
             elif(mTariff==True):
-                mShipV=1
-                mImpExpV=1
-                mStrtV=1
-                mTruckV=1
                 mTariffV=s
             transportcostArray = np.load(wddata+'travel_time/totalTruckingCost.npy')
             transportcostArray = transportcostArray/1000
@@ -563,7 +548,7 @@ for k in range(len(optiLevel)):
             Factorysize = LpVariable.dicts('Factory Size %s', facility,
                                 lowBound = 0,
                                 cat='Integer')
-
+        
             prob = LpProblem('Fixed Charge', LpMinimize)
             tmp1 = sum(costM1[i] * Machine1[i] for i in facility)
             tmp2 = sum(costM2[i] * Machine2[i] for i in facility)
