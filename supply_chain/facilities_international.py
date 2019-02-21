@@ -21,17 +21,13 @@ countryCostedTariff = np.load(wdvars+'tariff_by_country.npy')
 
 bigloop=True
 
-if(bigloop): 
+if(bigloop):
 
-# 'shipcost', 'impexp','strtup','truckfactor', 
-# 0.2,0.2,0.5,0.2, 
-# 0.2,0.2,0.5,0.2, 
-# 2.01,4.01,9.51,4.01, 
     optiLevel = ['AllarOpti','LocalOpti','AllIntl']
-    loopvar = ['tariff']
-    mins= np.array([0.2])
-    factor = np.array([0.2])
-    maxs = np.array([2.6])
+    loopvar = ['shipcost','impexp','strtup','truckfactor','tariff']
+    mins= np.array([0.2,0.2,0.5,0.2,0.2])
+    factor = np.array([0.2,0.2,0.5,0.2,0.2])
+    maxs = np.array([2.01,4.01,9.51,4.01,2.6])
 else:
     import matplotlib.pyplot as plt
     optiLevel=['AllarOpti']
@@ -472,7 +468,6 @@ for k in range(len(optiLevel)):
                         mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]
                     else:
                         if(optiLevel[k]=='AllIntl'):
-                            print
                             mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]/100*mTariffV*2.
                         else:
                             mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]/100*mTariffV

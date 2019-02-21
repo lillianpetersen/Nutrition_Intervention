@@ -459,10 +459,11 @@ for iAM in range(len(AM)):
                         if(countrycosted[i][:2]=='I_'):
                             rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]
                         else:
-                            # 7% Tariff = 1
-                            # rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*0.07*mTariffV
-                            # Tariff by country = 1
-                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j] * countryCostedTariff[i] * mTariffV
+                            if(optiLevel[k]=='AllIntl'):
+                                rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]/100*mTariffV*2.
+                            else:
+                                rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]/100*mTariffV
+            
                     
                 with open(wddata+'optiarrays/rutfdictionary.json', 'w') as fp:
                     json.dump(rutfdictionary, fp, sort_keys=True)
@@ -492,7 +493,11 @@ for iAM in range(len(AM)):
                         if(countrycosted[i][:2]=='I_'):
                             mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]
                         else:
-                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j] * countryCostedTariff[i] * mTariffV
+                            if(optiLevel[k]=='AllIntl'):
+                                mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]/100*mTariffV*2.
+                            else:
+                                mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]/100*mTariffV
+            
                 with open(wddata+'optiarrays/mamdictionary.json', 'w') as fp:
                     json.dump(mamdictionary, fp, sort_keys=True)
                     
