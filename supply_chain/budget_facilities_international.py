@@ -23,7 +23,7 @@ bigloop=True
 # , 'AllIntl_opti_trf', 'AllIntl_opti', "Allintl"
 # 'shipcost', 'impexp','strtup','truckfactor', 'tariff', 'budget'
 if(bigloop):
-    AM=['MAM','SAM']
+    AM=['SAM','MAM']
     optiLevel = ['AllarOpti','LocalOpti','AllIntl']
     loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff', 'budget']
     # mins= np.array([0.2])
@@ -31,7 +31,7 @@ if(bigloop):
     # maxs = np.array([3.2])
     mins= np.array([0.2,0.2,0.5,0.2, 0.2, 0.2])
     factor = np.array([0.2,0.2,0.5,0.2, 0.2, 0.2])
-    maxs = np.array([2.01,4.01,9.51,4.01, 2.61, 2.51])
+    maxs = np.array([2.01,4.01,9.51,4.01, 2.61, 20.01])
 else:
     import matplotlib.pyplot as plt
     AM=['MAM']
@@ -42,13 +42,14 @@ else:
     factor=np.array([1])
     maxs=np.array([1.1])
 
-for iAM in range(0,1):
+for iAM in range(2):
     if(AM[iAM]=='SAM'):
         mSAM=1
         mMAM=0
     if(AM[iAM]=='MAM'):
         mMAM=1
         mSAM=0 
+    print AM[iAM]
     for k in range(len(optiLevel)):
             # for x in range(len(countrycosted)):
             #     if(tmp[0]==countrycosted[x] or tmp[0][2:]==countrycosted[x]):

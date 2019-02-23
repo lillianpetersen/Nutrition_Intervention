@@ -810,8 +810,6 @@ for L in range(len(optiLevel)):
 
         plt.legend(bbox_to_anchor=(0.98, 0.8),ncol=1,numpoints=1)
 
-        plt.savefig(wdfigs+'cost_optimization/'+Ltitles[L]+'/exports_by_country/'+Ltitles[L]+'_'+factory+'_exports.pdf')
-
         plt.title('Primary Supplier of Treatment by Country',fontsize=18)
         plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally', bbox=dict(fc="none", boxstyle="round"), size = 10)
         plt.savefig(wdfigs+'cost_optimization/'+Ltitles[L]+'/geographical/Supplyzone_map.pdf')

@@ -158,8 +158,8 @@ factoryNumOneAll=np.zeros(shape=(3))
 portNumOneAll=np.zeros(shape=(3))
 pctLocal=np.zeros(shape=(3,6,20,2))
 pctLocalOneAll=np.zeros(shape=(3,2)) #optiLevel, trf, SAM-MAM
-packetsOne=np.zeros(shape=3)
-packets=np.zeros(shape=(3,6,20))
+packetsOne=np.zeros(shape=(2,3))
+packets=np.zeros(shape=(2,3,6,20))
 
 for L in range(len(optiLevel)):
    for V in range(len(loopvar)):
@@ -242,10 +242,10 @@ for L in range(len(optiLevel)):
                     
                     if AM[iAM]=='SAM':
                         factoryPct1[iAM,i,c]=float(tmp[1])
-                        packets[L,V,i]+=float(tmp[1])
+                        packets[iAM,L,V,i]+=float(tmp[1])
                         if s==1:
                            if V==0:
-                               packetsOne[L]+=float(tmp[1])
+                               packetsOne[iAM,L]+=float(tmp[1])
                            factoryPctOne[iAM,c]=float(tmp[1])
                            capacityOne[iAM]+=float(tmp[1])
                            if country[:2]!='I_':
@@ -257,10 +257,10 @@ for L in range(len(optiLevel)):
 
                     if AM[iAM]=='MAM':
                         factoryPct1[iAM,i,c]=float(tmp[2])
-                        packets[L,V,i]+=float(tmp[2])
+                        packets[iAM,L,V,i]+=float(tmp[2])
                         if s==1:
                            if V==0:
-                               packetsOne[L]+=float(tmp[2])
+                               packetsOne[iAM,L]+=float(tmp[2])
                            factoryPctOne[iAM,c]=float(tmp[2])
                            capacityOne[iAM]+=float(tmp[2])
                            if country[:2]!='I_':
@@ -724,7 +724,7 @@ for L in range(len(optiLevel)):
    if MakeExportPlots:
       ruftitles=['rutf','rusf']
       for g in range(2):
-          vars()['productarray'+ruftitles[g]] = np.load(wddata+'results/budget/'+str(AM[iAM])+'/'+'example/'+optiLevel[L]+'/RN'+ruftitles[g]+'array.npy')
+          vars()['productarray'+ruftitles[g]] = np.load(wddata+'results/budget/'+str(AM[iAM])+'/example/'+optiLevel[L]+'/RN'+ruftitles[g]+'array.npy')
           Rcountrycosted1=np.load(wddata+'results/budget/'+str(AM[iAM])+'/'+'example/'+optiLevel[L]+'/RNcountry.npy')
           Rsubsaharancountry1=np.load(wddata+'results/budget/'+str(AM[iAM])+'/'+'example/'+optiLevel[L]+'/RNsubsaharancountry.npy')
           Rcountrycosted=[]
@@ -896,7 +896,6 @@ for L in range(len(optiLevel)):
       plt.title('Primary Supplier of Treatment by Country',fontsize=18)
       plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally', bbox=dict(fc="none", boxstyle="round"), size = 10)
       plt.savefig(wdfigs+Ltitles[L]+'/geographical/Supplyzone_map.pdf')
-      exit()
 
    ###########################
    # By factory import/export
@@ -1042,17 +1041,21 @@ for L in range(len(optiLevel)):
                 plt.legend(loc = 'lower left')
                 plt.savefig(wdfigs+Ltitles[L]+'/exports_by_country/'+Ltitles[L]+'_'+factory+'_exports.pdf')
     
+totalPackets = [6180785853.,2081458493.]
+#totalPackets = [1,1]
 ## cost barchart ##
-fig = plt.figure(figsize=(6, 5))
-plt.clf()
-x=np.array([1,2,3])
-ydata = (np.array([packetsOne[0],packetsOne[1],packetsOne[2]])/82622443.46)[::-1]
-colors=['g','b','r'][::-1]
-plt.bar(x,ydata,color=colors,tick_label=['Current','Local Optimized','All Optimized'])
-plt.ylabel('% Children Treated on the Current Budget')
-plt.title('Percent of Children Treated',fontsize=18)
-plt.grid(True,linestyle=':')
-plt.savefig(wdfigs+'summary/barchart_treatment.pdf')
+for g in range(2):
+    fig = plt.figure(figsize=(6, 5))
+    plt.clf()
+    x=np.array([1,2,3])
+    ydata = (100*np.array([packetsOne[g,0],packetsOne[g,1],packetsOne[g,2]])/totalPackets[g])[::-1]
+    colors=['g','b','r'][::-1]
+    plt.bar(x,ydata,color=colors,tick_label=['Current','Local Optimized','All Optimized'])
+    plt.ylabel('% Children Treated on the Current Budget')
+    plt.title('Percent of '+AM[g]+' Cases Treated',fontsize=16)
+    plt.grid(True,linestyle=':')
+    plt.savefig(wdfigs+'summary/barchart_treatment_'+AM[g]+'.pdf')
+exit()
 
 ### % local barchart ##
 #fig = plt.figure(figsize=(6, 5))
