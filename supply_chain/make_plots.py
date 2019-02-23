@@ -95,7 +95,6 @@ MakeByFactoryPlots=False
 
 subsaharancountry = np.load(wdvars+'subsaharancountry.npy')
 
-
 #for f in range(len(subsaharancountry)):
 #    subsaharancountry[f]=subsaharancountry[f].replace(' ','_')
 subsaharancountry[subsaharancountry=='Congo']='DRC'
@@ -143,7 +142,6 @@ VTitles = ['Shipping','Import/Export','Startup','Trucking', 'Tariff']
 
 Ltitles = ['AllOpti','LocalOpti', 'AllIntlOpti', 'AllIntl']
 Vtitles = ['shipping','importexport','startup','trucking', 'tariff']
-T
 
 mins= np.array([0.2,0.2,0.5,0.2, 0.2])
 factor = np.array([0.2,0.2,0.5,0.2, 0.2])
@@ -444,7 +442,6 @@ for L in range(len(optiLevel)):
             ax.legend((pvars[::-1]),(Otitles[::-1]),bbox_to_anchor=(1, 0.98),prop=fontP)
             plt.savefig(wdfigs+'cost_optimization/'+Ltitles[L]+'/'+Vtitles[V]+'/FactoryPct_vs_'+Vtitles[V]+'.pdf')
 
-    exit()
     ##################################################################
     # MAPS
     ##################################################################
@@ -967,24 +964,26 @@ for L in range(len(optiLevel)):
 fig = plt.figure(figsize=(6, 5))
 plt.clf()
 x=np.array([1,2,3])
-ydata = (np.array([costOneAll[0,1],costOneAll[1,1],costOneAll[3,1]])/1e9)[::-1]
+ydata = (np.array([costOneAll[0],costOneAll[1],costOneAll[2]])/1e9)[::-1]
 colors=['g','b','r'][::-1]
 plt.bar(x,ydata,color=colors,tick_label=['Current','Local Optimized','All Optimized'])
 plt.ylabel('Total Cost of Procurement for 1 Year (Billion USD)')
-plt.title('Total Modeled Cost')
-plt.savefig(wdfigs+'cost_optimization/'+'cost_optimized_vs_current_barchart.pdf')
+plt.title('Total Modeled Cost',fontsize=18)
+plt.grid(True,linestyle=':')
+plt.savefig(wdfigs+'cost_optimization/summary/barchart_cost.pdf')
 
 ## % local barchart ##
 fig = plt.figure(figsize=(6, 5))
 plt.clf()
 x=np.array([1,2,3])
-pctLocalOneAll1 = np.mean(pctLocalOneAll[:,1,:],axis=1)
-ydata = (np.array([pctLocalOneAll1[0],pctLocalOneAll1[1],pctLocalOneAll1[3]])*100)[::-1]
+pctLocalOneAll1 = np.mean(pctLocalOneAll[:,:],axis=1)
+ydata = (np.array([pctLocalOneAll1[0],pctLocalOneAll1[1],pctLocalOneAll1[2]])*100)[::-1]
 colors=['g','b','r'][::-1]
 plt.bar(x,ydata,color=colors,tick_label=['Current','Local Optimized','All Optimized'])
 plt.ylabel('% Treatment Produced Locally')
-plt.title('Percent Produced Locally')
-plt.savefig(wdfigs+'cost_optimization/'+'pctLocal_optimized_vs_current_barchart.pdf')
+plt.title('Percent Produced Locally',fontsize=18)
+plt.grid(True,linestyle=':')
+plt.savefig(wdfigs+'cost_optimization/summary/barchart_pctLocal.pdf')
 
 ## factoryNum barchart ##
 fig = plt.figure(figsize=(6, 5))
@@ -993,12 +992,12 @@ x1=np.array([0.79,1.79,2.79])
 x2=np.array([1.21,2.21,3.21])
 
 bar_width=0.4
-ydata = (np.array([factoryNumOneAll[0,1],factoryNumOneAll[1,1],factoryNumOneAll[3,1]]))[::-1]
+ydata = (np.array([factoryNumOneAll[0],factoryNumOneAll[1],factoryNumOneAll[2]]))[::-1]
 colors=['g','b','r'][::-1]
-plt.bar(x1,ydata,color=colors,width=bar_width) #,tick_label=['Factories','Factories','Factories'])
+plt.bar(x1,ydata,color=colors,width=bar_width) 
 
-ydata = (np.array([portNumOneAll[0,1],portNumOneAll[1,1],portNumOneAll[3,1]]))[::-1]
-plt.bar(x2,ydata,color=colors,width=bar_width) #,tick_label=['Current','Local Optimized','All Optimized'])
+ydata = (np.array([portNumOneAll[0],portNumOneAll[1],portNumOneAll[2]]))[::-1]
+plt.bar(x2,ydata,color=colors,width=bar_width)
 
 plt.yticks([0,2,4,6,8,10,12,14,16,18,20])
 plt.xticks([1,2,3],['Current','Local Optimized','All Optimized'])
@@ -1009,8 +1008,11 @@ plt.text(1.12,0.4,'Ports',size=8)
 plt.text(2.12,0.4,'Ports',size=8)
 plt.text(3.12,0.4,'Ports',size=8)
 plt.ylabel('Number of Factories or Ports')
-plt.title('Number of Factories and Ports')
-plt.savefig(wdfigs+'cost_optimization/'+'factoryNum_optimized_vs_current_barchart.pdf')
+plt.title('Number of Factories and Ports',fontsize=18)
+plt.grid(True,linestyle=':')
+plt.savefig(wdfigs+'cost_optimization/summary/barchart_factoryNum.pdf')
+
+
 
 fig = plt.figure(figsize=(7, 4))
 LTitles = ['All Optimized','Local Optimized','Optimized Intl','Current']
@@ -1020,8 +1022,7 @@ for V in range(len(loopvar)):
     x = np.arange(mins[V],maxs[V],factor[V])
     x = x*100
     plt.clf()
-    #plt.plot(x,np.ma.compressed(np.ma.masked_array(cost[2,V,:],Mask[2,V,:])),'b*-',label=LTitles[2])
-    plt.plot(x,np.ma.compressed(np.ma.masked_array(cost1[3,V,:],Mask[3,V,:])),'r*-',label=LTitles[3])
+    plt.plot(x,np.ma.compressed(np.ma.masked_array(cost1[2,V,:],Mask[2,V,:])),'r*-',label=LTitles[3])
     plt.plot(x,np.ma.compressed(np.ma.masked_array(cost1[1,V,:],Mask[1,V,:])),'b*-',label=LTitles[1])
     plt.plot(x,np.ma.compressed(np.ma.masked_array(cost1[0,V,:],Mask[0,V,:])),'g*-',label=LTitles[0])
 
@@ -1031,7 +1032,7 @@ for V in range(len(loopvar)):
     plt.ylim([0.5,1.35])
     plt.grid(True)
     plt.legend(loc='lower right')
-    plt.savefig(wdfigs+'cost_optimization/'+'totalCost_vs_'+Vtitles[V]+'.pdf')
+    plt.savefig(wdfigs+'cost_optimization/summary/line_totalCost_vs_'+Vtitles[V]+'.pdf')
 
 for V in range(len(loopvar)):
     x = np.arange(mins[V],maxs[V],factor[V])
@@ -1040,7 +1041,7 @@ for V in range(len(loopvar)):
     plt.plot(x,np.ma.compressed(np.ma.masked_array(factoryNum[0,V,:],Mask[0,V,:])),'g*-',label=LTitles[0])
     plt.plot(x,np.ma.compressed(np.ma.masked_array(factoryNum[1,V,:],Mask[1,V,:])),'c*-',label=LTitles[1])
     #plt.plot(x,np.ma.compressed(np.ma.masked_array(factoryNum[2,V,:],Mask[2,V,:])),'b*-',label=LTitles[2])
-    plt.plot(x,np.ma.compressed(np.ma.masked_array(factoryNum[3,V,:],Mask[3,V,:])),'r*-',label=LTitles[3])
+    plt.plot(x,np.ma.compressed(np.ma.masked_array(factoryNum[2,V,:],Mask[2,V,:])),'r*-',label=LTitles[3])
 
     plt.title('Effect of '+VTitles[V]+' on Number of Factories')
     plt.xlabel(VTitles[V]+' Cost, % of Today')
@@ -1048,7 +1049,7 @@ for V in range(len(loopvar)):
     #plt.ylim([0,2e9])
     plt.grid(True)
     plt.legend()
-    plt.savefig(wdfigs+'cost_optimization/'+'factoryNum_vs_'+Vtitles[V]+'.pdf')
+    plt.savefig(wdfigs+'cost_optimization/summary/line_factoryNum_vs_'+Vtitles[V]+'.pdf')
 
 for V in range(len(loopvar)):
     x = np.arange(mins[V],maxs[V],factor[V])
@@ -1058,7 +1059,7 @@ for V in range(len(loopvar)):
     plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[1,V,:,0],Mask[1,V,:])),'c*-',label=LTitles[1])
     #plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[2,V,:,0],Mask[2,V,:])),'b*-',label=LTitles[2])
     try:
-        plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[3,V,:,0],Mask[3,V,:])),'r*-',label=LTitles[3])
+        plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[2,V,:,0],Mask[2,V,:])),'r*-',label=LTitles[3])
     except:
         print V
     plt.title('Effect of '+VTitles[V]+' on % RUTF Produced Locally')
@@ -1067,7 +1068,7 @@ for V in range(len(loopvar)):
     plt.ylim([0,101])
     plt.grid(True)
     plt.legend()
-    plt.savefig(wdfigs+'cost_optimization/'+'0pctLocal_vs_'+Vtitles[V]+'.pdf')
+    plt.savefig(wdfigs+'cost_optimization/summary/line_0pctLocal_vs_'+Vtitles[V]+'.pdf')
 
 for V in range(len(loopvar)):
     x = np.arange(mins[V],maxs[V],factor[V])
@@ -1077,7 +1078,7 @@ for V in range(len(loopvar)):
     plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[1,V,:,1],Mask[1,V,:])),'c*-',label=LTitles[1])
     #plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[2,V,:,1],Mask[2,V,:])),'b*-',label=LTitles[2])
     try:
-        plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[3,V,:,1],Mask[3,V,:])),'r*-',label=LTitles[3])
+        plt.plot(x,100*np.ma.compressed(np.ma.masked_array(pctLocal[2,V,:,1],Mask[2,V,:])),'r*-',label=LTitles[3])
     except:
         print V
     plt.title('Effect of '+VTitles[V]+' on % RUSF Produced Locally')
@@ -1086,51 +1087,4 @@ for V in range(len(loopvar)):
     plt.ylim([0,101])
     plt.grid(True)
     plt.legend()
-    plt.savefig(wdfigs+'cost_optimization/'+'1pctLocal_vs_'+Vtitles[V]+'.pdf')
-
-
-
-#######################
-# One One One array
-####################### 
-exit()
-rusfarray = np.load(wddata+'results2/example/Rrusfarray.npy')
-rutfarray = np.load(wddata+'results2/example/Rrutfarray.npy')
-Rcountry = np.load(wddata+'results2/example/Rcountry.npy')
-Rcountry[Rcountry=='Congo']='DRC'
-Rcountry[Rcountry=='Congo_(Republic_of_the)']='Congo'
-Rcountry[Rcountry=='Cote_d\'Ivoire']='Ivory Coast'
-
-Rcountry2=[]
-for i in range(len(Rcountry)):
-    country=Rcountry[i]
-    if country[:2]=='I_':
-        if country=="I_Cote_d'Ivoire":
-            country='I_Ivory_Coast'
-        Rcountry2.append('Intl ('+country[2:]+')')
-    else:
-        Rcountry2.append(country)
-Rcountry2=np.array(Rcountry2)
-for i in range(len(Rcountry2)):
-    Rcountry2[i]=Rcountry2[i].replace('_',' ')
-
-#Rcountry2=[]
-#for i in range(len(Rcountry)):
-#    country=Rcountry[i]
-#    if country[:2]=='I_':
-#        countrytmp=country[:2].replace('_',' ')
-#        Rcountry2.append('I_'+countrytmp)
-#    else:
-#        countrytmp=country.replace('_',' ')
-#        Rcountry2.append(country)
-#Rcountry2=np.array(Rcountry2)
-
-plt.clf()
-fig = plt.figure(figsize=(13, 8))
-plt.imshow(rusfarray,cmap=cm.terrain_r,vmax=2.5e8)
-plt.colorbar()
-plt.xticks(np.arange(43), subsaharancountry, rotation='vertical')
-plt.yticks(np.arange(len(Rcountry2)), Rcountry2)
-plt.title('Imports and Exports (Packets, Ordered by Lon)')
-plt.savefig(wdfigs+'cost_optimization/'+'impexp_array.pdf')
-
+    plt.savefig(wdfigs+'cost_optimization/summary/line_1pctLocal_vs_'+Vtitles[V]+'.pdf')

@@ -17,7 +17,7 @@ except:
     wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
 
 countryCostedTariff = np.load(wdvars+'tariff_by_country.npy')
-countryCostedTariff = countryCostedTariff/100
+countryCostedTariff = countryCostedTariff/100.
 
 bigloop=True
 # , 'AllIntl_opti_trf', 'AllIntl_opti', "Allintl"
@@ -42,7 +42,7 @@ else:
     factor=np.array([1])
     maxs=np.array([1.1])
 
-for iAM in range(len(AM)):
+for iAM in range(0,1):
     if(AM[iAM]=='SAM'):
         mSAM=1
         mMAM=0
@@ -437,9 +437,9 @@ for iAM in range(len(AM)):
                                 rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]
                             else:
                                 if(optiLevel[k]=='AllIntl'):
-                                    rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]/100*mTariffV*2.
+                                    rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]*mTariffV*2.
                                 else:
-                                    rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]/100*mTariffV
+                                    rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]*mTariffV
 
 
                     with open(wddata+'optiarrays/rutfdictionary.json', 'w') as fp:
@@ -471,9 +471,9 @@ for iAM in range(len(AM)):
                             mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]
                         else:
                             if(optiLevel[k]=='AllIntl'):
-                                mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]/100*mTariffV*2.
+                                mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]*mTariffV*2.
                             else:
-                                mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]/100*mTariffV
+                                mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]*mTariffV
             
                 with open(wddata+'optiarrays/mamdictionary.json', 'w') as fp:
                     json.dump(mamdictionary, fp, sort_keys=True)
@@ -600,7 +600,7 @@ for iAM in range(len(AM)):
                     prob += sum(QuantityMAM[i][j] for i in facility) <= DemandMAM[j]
                 #cost must be within budget:
                 if(mSAM):
-                    budgettotal = 10404000
+                    budgettotal = 54000000
                 elif(mMAM):
                     budgettotal = 54000000
                 
