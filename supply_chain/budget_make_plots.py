@@ -1,4 +1,9 @@
-from __future__ import division
+################################################################
+# Step 3: Optimize SNF Supply Logistics
+# Makes Plots
+# Plots for maximum cases treated on a budget
+################################################################
+
 import csv
 from math import sqrt
 from sys import exit
@@ -6,34 +11,15 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.mlab as mlab
-#from mpl_toolkits.basemap import Basemap
 import os
 from scipy.stats import norm
 import matplotlib as mpl
-from matplotlib.patches import Polygon
-import random
 import matplotlib.cm as cm
 import matplotlib.colors as colors
-from PIL import Image
-from osgeo import gdal
-#import ogr
-from IPython import embed
 import shapefile
-#from shapely.geometry import shape, Point
-import matplotlib.patches as patches
 from math import sin, cos, sqrt, atan2, radians, pi, degrees
-# from geopy.geocoders import Nominatim
-# geolocator = Nominatim()
-# import geopy.distance
 from scipy import ndimage
-# from scipy.signal import convolve2d
-from sklearn import linear_model
-from scipy.interpolate import RectSphereBivariateSpline
-# from libtiff import TIFF
-# import googlemaps
-import json
 from matplotlib.font_manager import FontProperties
-# from mpl_toolkits.basemap import Basemap
 import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
 import itertools
@@ -89,7 +75,7 @@ except:
 MakePlots=True
 MakeLinePlots=False
 MakeStackedBarPlots=False
-MakeExportPlots=True
+MakeExportPlots=False
 MakeSkeleton=False
 MakeByFactoryPlots=False
 
@@ -1128,7 +1114,8 @@ for g in range(len(AM)):
     x = np.arange(mins[V],maxs[V],factor[V])
     x = x*100
     plt.clf()
-    plt.plot(np.ma.compressed(np.ma.masked_array(x,budgetMask[g,2,V,:])),[100 for i in range(len(np.ma.compressed(np.ma.masked_array(x,budgetMask[g,2,V,:]))))],'k-',linewidth=3)
+    plt.plot([-100,2000],[100,100],'k-',linewidth=2)
+    plt.plot([100,100],[-10,110],'k-',linewidth=1)
     plt.plot(np.ma.compressed(np.ma.masked_array(x,budgetMask[g,2,V,:])),np.ma.compressed(np.ma.masked_array(cost1[2,V,:],budgetMask[g,2,V,:])),'r*-',label=LTitles[2])
     plt.plot(np.ma.compressed(np.ma.masked_array(x,budgetMask[g,1,V,:])),np.ma.compressed(np.ma.masked_array(cost1[1,V,:],budgetMask[g,1,V,:])),'b*-',label=LTitles[1])
     plt.plot(np.ma.compressed(np.ma.masked_array(x,budgetMask[g,0,V,:])),np.ma.compressed(np.ma.masked_array(cost1[0,V,:],budgetMask[g,0,V,:])),'g*-',label=LTitles[0])
@@ -1136,7 +1123,11 @@ for g in range(len(AM)):
     plt.title('Effect of '+VTitles[V]+' on '+AM[g]+' Coverage',fontsize=15)
     plt.xlabel(AM[g]+' '+VTitles[V]+', % of Today')
     plt.ylabel('% of '+AM[g]+' Cases Treated')
-    #plt.ylim([0.5,1.35])
+    plt.ylim([-3,103])
+    if g==0:
+        plt.xlim([-0.1,1800])
+    if g==1:
+        plt.xlim([-0.1,500.1])
     plt.grid(True)
     plt.legend(loc='lower right')
     plt.savefig(wdfigs+'summary/line_totalCost_vs_'+Vtitles[V]+'_'+AM[g]+'.pdf')
