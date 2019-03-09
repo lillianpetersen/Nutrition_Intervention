@@ -19,10 +19,11 @@ except:
 countryCostedTariff = np.load(wdvars+'tariff_by_country.npy')
 countryCostedTariff = countryCostedTariff/100.
 
-bigloop=True
+bigloop=False
 # , 'AllIntl_opti_trf', 'AllIntl_opti', "Allintl"
 # 'shipcost', 'impexp','strtup','truckfactor', 'tariff', 'budget'
 if(bigloop):
+<<<<<<< HEAD
     AM=['SAM','MAM']
     optiLevel = ['AllarOpti','LocalOpti','AllIntl']
     loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff', 'budget']
@@ -32,15 +33,30 @@ if(bigloop):
     mins= np.array([0.2,0.2,0.5,0.2, 0.2, 0.2])
     factor = np.array([0.2,0.2,0.5,0.2, 0.2, 0.2])
     maxs = np.array([2.01,4.01,9.51,4.01, 2.61, 20.01])
+=======
+    # AM=['MAM','SAM']
+    AM = ['SAM']
+    # optiLevel = ['AllarOpti','LocalOpti','AllIntl']
+    optiLevel = ['AllIntl']
+    # loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff', 'budget']
+    loopvar = ['budget']
+    mins= np.array([1])
+    factor = np.array([0.5])
+    maxs = np.array([10])
+    # mins= np.array([0.2,0.2,0.5,0.2, 0.2, 0.2])
+    # factor = np.array([0.2,0.2,0.5,0.2, 0.2, 0.2])
+    # maxs = np.array([2.01,4.01,9.51,4.01, 2.61, 2.51])
+    
+>>>>>>> s==1
 else:
     import matplotlib.pyplot as plt
     AM=['MAM']
-    optiLevel=['AllarOpti_trf']
+    optiLevel=['AllarOpti']
     # optiLevel=['AllIntl_trf','AllarOpti','LocalOpti','AllIntl_opti_trf', 'LocalOpti_trf','AllarOpti_trf','AllIntl_opti','AllIntl']
     loopvar=['budget']
     mins=np.array([1])
     factor=np.array([1])
-    maxs=np.array([1.1])
+    maxs=np.array([3])
 
 for iAM in range(2):
     if(AM[iAM]=='SAM'):
@@ -572,7 +588,7 @@ for iAM in range(2):
                 Factorysize = LpVariable.dicts('Factory Size %s', facility,
                                     lowBound = 0,
                                     cat='Integer')
-                                    
+
                 prob = LpProblem('problem', LpMaximize)
                 tmp1 = sum(sum(QuantityRUTF[i][j] for j in location) for i in facility)
                 tmp2 = sum(sum(QuantityMAM[i][j] for j in location) for i in facility)

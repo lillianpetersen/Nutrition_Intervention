@@ -19,7 +19,7 @@ except:
 
 countryCostedTariff = np.load(wdvars+'tariff_by_country.npy')
 
-bigloop=True
+bigloop=False
 
 if(bigloop): 
 
@@ -30,9 +30,9 @@ if(bigloop):
     maxs = np.array([2.01,4.01,9.51,4.01, 2.6])
 else:
     import matplotlib.pyplot as plt
-    optiLevel=['AllarOpti']
+    optiLevel= ['AllarOpti','LocalOpti','AllIntl']
     # optiLevel=['AllIntl_trf','AllarOpti','LocalOpti','AllIntl_opti_trf', 'LocalOpti_trf','AllarOpti_trf','AllIntl_opti','AllIntl']
-    loopvar=['shipcost']
+    loopvar=['shipcost', 'impexp','strtup','truckfactor', 'tariff']
     mins=np.array([1])
     factor=np.array([1])
     maxs=np.array([1.1])
@@ -761,39 +761,40 @@ for k in range(len(optiLevel)):
             if not os.path.exists(wddata+'/results/example/'+str(optiLevel[k])+'/'):
                 os.makedirs(wddata+'/results/example/'+str(optiLevel[k])+'/')
             
-            np.save(wddata+'/results/example/'+str(optiLevel[k])+"/RNcountry", RNcountrycosted)
-            np.save(wddata+'/results/example/'+str(optiLevel[k])+"/RNsubsaharancountry", RNsubsaharancountry)
-            np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/RNrutfarray", RNrutfsupplyarray)
-            np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/RNrusfarray", RNrusfsupplyarray)
-            
-            np.save(wddata+'/results/example/'+str(optiLevel[k])+"/Rcountry", Rcountrycosted)
-            np.save(wddata+'/results/example/'+str(optiLevel[k])+"/Rsubsaharancountry", Rsubsaharancountry)
-            np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/Rrutfarray", Rrutfsupplyarray)
-            np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/Rrusfarray", Rrusfsupplyarray)
-
-            np.save(wddata+'/boundaries/countrycosted',countrycosted)
-            np.save(wddata+'/boundaries/subsaharancountry',subsaharancountry)
-            
-            rusfarray = np.load(wddata+'/results/example/'+str(optiLevel[k])+'/Rrusfarray.npy')
-            rutfarray = np.load(wddata+'/results/example/'+str(optiLevel[k])+'/Rrutfarray.npy')
-            Rcountry = np.load(wddata+'/results/example/'+str(optiLevel[k])+'/Rcountry.npy')
-            Rcountry[Rcountry=='Congo']='DRC'
-            Rcountry[Rcountry=='Congo_(Republic_of_the)']='Congo'
-            Rcountry[Rcountry=='Cote_d\'Ivoire']='Ivory Coast'
-            
-            Rcountry2=[]
-            for i in range(len(Rcountry)):
-                country=Rcountry[i]
-                if country[:2]=='I_':
-                    if country=="I_Cote_d'Ivoire":
-                        country='I_Ivory_Coast'
-                    Rcountry2.append('Intl ('+country[2:]+')')
-                else:
-                    Rcountry2.append(country)
-            Rcountry2=np.array(Rcountry2)
-            for i in range(len(Rcountry2)):
-                Rcountry2[i]=Rcountry2[i].replace('_',' ')
-            
+            if(s==1):
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+"/RNcountry", RNcountrycosted)
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+"/RNsubsaharancountry", RNsubsaharancountry)
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/RNrutfarray", RNrutfsupplyarray)
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/RNrusfarray", RNrusfsupplyarray)
+                
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+"/Rcountry", Rcountrycosted)
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+"/Rsubsaharancountry", Rsubsaharancountry)
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/Rrutfarray", Rrutfsupplyarray)
+                np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/Rrusfarray", Rrusfsupplyarray)
+    
+                np.save(wddata+'/boundaries/countrycosted',countrycosted)
+                np.save(wddata+'/boundaries/subsaharancountry',subsaharancountry)
+                
+                rusfarray = np.load(wddata+'/results/example/'+str(optiLevel[k])+'/Rrusfarray.npy')
+                rutfarray = np.load(wddata+'/results/example/'+str(optiLevel[k])+'/Rrutfarray.npy')
+                Rcountry = np.load(wddata+'/results/example/'+str(optiLevel[k])+'/Rcountry.npy')
+                Rcountry[Rcountry=='Congo']='DRC'
+                Rcountry[Rcountry=='Congo_(Republic_of_the)']='Congo'
+                Rcountry[Rcountry=='Cote_d\'Ivoire']='Ivory Coast'
+                
+                Rcountry2=[]
+                for i in range(len(Rcountry)):
+                    country=Rcountry[i]
+                    if country[:2]=='I_':
+                        if country=="I_Cote_d'Ivoire":
+                            country='I_Ivory_Coast'
+                        Rcountry2.append('Intl ('+country[2:]+')')
+                    else:
+                        Rcountry2.append(country)
+                Rcountry2=np.array(Rcountry2)
+                for i in range(len(Rcountry2)):
+                    Rcountry2[i]=Rcountry2[i].replace('_',' ')
+                
             # plt.clf()
             # fig = plt.figure(figsize=(13, 8))
             # plt.imshow(rutfarray,cmap=cm.terrain_r,vmax=2.5e8)

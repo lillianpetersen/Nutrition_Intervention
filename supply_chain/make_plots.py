@@ -142,6 +142,10 @@ VTitles = ['Shipping','Import/Export','Startup','Trucking', 'Tariff']
 
 Ltitles = ['AllOpti','LocalOpti', 'AllIntlOpti', 'AllIntl']
 Vtitles = ['shipping','importexport','startup','trucking', 'tariff']
+<<<<<<< HEAD
+=======
+
+>>>>>>> s==1
 
 mins= np.array([0.2,0.2,0.5,0.2, 0.2])
 factor = np.array([0.2,0.2,0.5,0.2, 0.2])
