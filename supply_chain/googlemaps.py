@@ -1,3 +1,8 @@
+################################################################
+# Calculates shortes on-road distance between each sub-Saharan African capital
+# by using a Google Maps Python API
+################################################################
+
 import csv
 import numpy as np
 import googlemaps

@@ -1,4 +1,9 @@
-from __future__ import division
+################################################################
+# Step 3: Optimize SNF Supply Logistics
+# Makes Plots
+# Plots for minimum cost while treating all cases
+################################################################
+
 import csv
 from math import sqrt
 from sys import exit
@@ -6,37 +11,19 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.mlab as mlab
-#from mpl_toolkits.basemap import Basemap
 import os
 from scipy.stats import norm
 import matplotlib as mpl
-from matplotlib.patches import Polygon
-import random
 import matplotlib.cm as cm
 import matplotlib.colors as colors
-from PIL import Image
-from osgeo import gdal
-#import ogr
-from IPython import embed
 import shapefile
-#from shapely.geometry import shape, Point
-import matplotlib.patches as patches
 from math import sin, cos, sqrt, atan2, radians, pi, degrees
-# from geopy.geocoders import Nominatim
-# geolocator = Nominatim()
-# import geopy.distance
 from scipy import ndimage
-from scipy.signal import convolve2d
-from sklearn import linear_model
-from scipy.interpolate import RectSphereBivariateSpline
-# from libtiff import TIFF
-# import googlemaps
-import json
 from matplotlib.font_manager import FontProperties
-# from mpl_toolkits.basemap import Basemap
 import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
 import itertools
+
 
 ################################################3
 # Functions
@@ -86,10 +73,10 @@ except:
     wdfigs='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/figs/'
     wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
 
-MakePlots=True
+MakePlots=False
 MakeLinePlots=False
-MakeStackedBarPlots=True
-MakeExportPlots=True
+MakeStackedBarPlots=False
+MakeExportPlots=False
 MakeSkeleton=False
 MakeByFactoryPlots=False
 
@@ -137,10 +124,10 @@ except:
 optiLevel = ['AllarOpti','LocalOpti', 'AllIntl']
 loopvar = ['shipcost','impexp','strtup','truckfactor','tariff']
 
-LTitles = ['All Optimized','Local Optimized','Optimized Intl','Current Intl']
+LTitles = ['All Optimized','Local Optimized','Current Intl']
 VTitles = ['Shipping','Import/Export','Startup','Trucking', 'Tariff']
 
-Ltitles = ['AllOpti','LocalOpti', 'AllIntlOpti', 'AllIntl']
+Ltitles = ['AllOpti','LocalOpti', 'AllIntl']
 Vtitles = ['shipping','importexport','startup','trucking', 'tariff']
 <<<<<<< HEAD
 =======
@@ -1016,7 +1003,7 @@ plt.savefig(wdfigs+'cost_optimization/summary/barchart_factoryNum.pdf')
 
 
 
-fig = plt.figure(figsize=(7, 4))
+fig = plt.figure(figsize=(7, 3.75))
 LTitles = ['All Optimized','Local Optimized','Optimized Intl','Current']
 
 cost1=cost/1e9
@@ -1024,17 +1011,19 @@ for V in range(len(loopvar)):
     x = np.arange(mins[V],maxs[V],factor[V])
     x = x*100
     plt.clf()
+    plt.plot([100,100],[0.5,1.35],'k-')
     plt.plot(x,np.ma.compressed(np.ma.masked_array(cost1[2,V,:],Mask[2,V,:])),'r*-',label=LTitles[3])
     plt.plot(x,np.ma.compressed(np.ma.masked_array(cost1[1,V,:],Mask[1,V,:])),'b*-',label=LTitles[1])
     plt.plot(x,np.ma.compressed(np.ma.masked_array(cost1[0,V,:],Mask[0,V,:])),'g*-',label=LTitles[0])
 
-    plt.title('Effect of '+VTitles[V]+' on Total Cost')
+    plt.title('Effect of '+VTitles[V]+' on Total Cost',fontsize=15)
     plt.xlabel(VTitles[V]+' Cost, % of Today')
-    plt.ylabel('Total Procurement Cost for One Year (Billion USD)')
+    plt.ylabel('Procurement Cost for One Year (Billion USD)')
     plt.ylim([0.5,1.35])
     plt.grid(True)
     plt.legend(loc='lower right')
     plt.savefig(wdfigs+'cost_optimization/summary/line_totalCost_vs_'+Vtitles[V]+'.pdf')
+exit()
 
 for V in range(len(loopvar)):
     x = np.arange(mins[V],maxs[V],factor[V])
