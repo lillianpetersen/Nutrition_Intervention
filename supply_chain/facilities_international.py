@@ -1,10 +1,3 @@
-################################################################
-# Step 3: Optimize SNF Supply Logistics
-# Optimizes factory locations, capacities, and supply chains
-# Optimizer minimizes costs while treating all SAM and MAM cases
-# Runs the parameter study by changing variable costs
-################################################################
-
 from pulp import *
 import math
 import json

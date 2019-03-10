@@ -581,9 +581,9 @@ for L in range(len(optiLevel)):
         ax.set_extent([-19, 53, -37, 39], ccrs.PlateCarree())
         ax.coastlines()
 
-        plt.plot(capitalLatLon[1,8], capitalLatLon[0,8], marker='*', markersize=9, color='orangered', label='Possible Factories')
-        plt.plot(capitalLatLon[1,30], capitalLatLon[0,30], marker='o', markersize=8, color='dodgerblue', label = 'Possible Intl Shipment Ports')
-        plt.plot(SScapitalLatLon[1,9],SScapitalLatLon[0,9], marker='^', markersize=8, color='mediumpurple', label = 'Recieves Treatment')
+        plt.plot(capitalLatLon[0,8], capitalLatLon[0,8], marker='*', markersize=9, color='orangered', label='Possible Factories')
+        plt.plot(capitalLatLon[0,30], capitalLatLon[0,30], marker='o', markersize=8, color='dodgerblue', label = 'Possible Intl Shipment Ports')
+        plt.plot(SScapitalLatLon[0,43],SScapitalLatLon[0,43], marker='^', markersize=8, color='mediumpurple', label = 'Recieves Treatment')
 
         for country in shpreader.Reader(countries_shp).records():
             cName=country.attributes['NAME_LONG']

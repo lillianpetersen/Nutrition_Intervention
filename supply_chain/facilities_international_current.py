@@ -17,21 +17,21 @@ except:
     wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
 # 'AllIntl_opti',
 
-countryCostedTariff = np.load(wdvars+'tariff_by_country.npy')
+countryCostedTariff = np.load(wdvars+'current_tariff_by_country.npy')
 
 bigloop=True
 
 if(bigloop): 
     optiLevel = ['current']
-    loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff']
-    mins= np.array([0.2,0.2,0.5,0.2, 0])
-    factor = np.array([0.2,0.2,0.5,0.2, 0.2])
-    maxs = np.array([2.01,4.01,9.51,4.01, 2.6])
+    loopvar = ['shipcost', 'impexp', 'truckfactor', 'tariff']
+    mins= np.array([0.2, 0.2, 0.2, 0])
+    factor = np.array([0.2, 0.2, 0.2, 0.05])
+    maxs = np.array([2.01, 4.01, 4.01, 0.4])
 else:
     import matplotlib.pyplot as plt
     optiLevel= ['current']
     # optiLevel=['AllIntl_trf','AllarOpti','LocalOpti','AllIntl_opti_trf', 'LocalOpti_trf','AllarOpti_trf','AllIntl_opti','AllIntl']
-    loopvar=['shipcost', 'impexp','strtup','truckfactor', 'tariff']
+    loopvar=['shipcost', 'impexp','truckfactor', 'tariff']
     mins=np.array([1])
     factor=np.array([1])
     maxs=np.array([1.1])
@@ -206,7 +206,7 @@ for k in range(len(optiLevel)):
             mImpExpV=1
             mStrtV=1
             mTruckV=1
-            mTariffV=1
+            mTariffV=0.
             if(mShip==True):
                 mShipV=s
             elif(mImpExp==True):
@@ -217,7 +217,7 @@ for k in range(len(optiLevel)):
                 mTruckV=s
             elif(mTariff==True):
                 mTariffV=s
-            transportcostArray = np.load(wddata+'travel_time/totalTruckingCost.npy')
+            transportcostArray = np.load(wddata+'travel_time/current_totalTruckingCost.npy')
             transportcostArray = mTruckV*transportcostArray/1000
             # transportcostArray=np.zeros(shape=(33,43))
             # f=open(wddata+'travel_time/INTLcapitaldistanceArray.csv','r')
@@ -291,9 +291,9 @@ for k in range(len(optiLevel)):
                         rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]
                     else:
                         if(optiLevel[k]=='AllIntl'):
-                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]/100*mTariffV*2.
+                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]-rutfcostarray[i,j]*mTariffV*2.
                         else:
-                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]/100*mTariffV
+                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]-rutfcostarray[i,j]*mTariffV
             
             with open(wddata+'optiarrays/rutfdictionary.json', 'w') as fp:
                 json.dump(rutfdictionary, fp, sort_keys=True)
@@ -324,9 +324,9 @@ for k in range(len(optiLevel)):
                         mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]
                     else:
                         if(optiLevel[k]=='AllIntl'):
-                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]/100*mTariffV*2.
+                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]-mamcostarray[i,j]*mTariffV*2.
                         else:
-                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]/100*mTariffV
+                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]-mamcostarray[i,j]*mTariffV
             
             with open(wddata+'optiarrays/mamdictionary.json', 'w') as fp:
                 json.dump(mamdictionary, fp, sort_keys=True)
@@ -363,18 +363,22 @@ for k in range(len(optiLevel)):
             
             #fixed costs for facility
             # startupcost= 1000000.0
-            strt=1000000.*0.2*mStrtV
+            # strt=1000000.*0.2*mStrtV
+            strt=0
             startupcost = dict(zip(facility, [strt, strt, strt, strt, strt, strt, strt, strt, strt, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
             
-            upgrd=20000.*0.2*mStrtV
+            # upgrd=20000.*0.2*mStrtV
+            upgrd=0
             upgradecost= dict(zip(facility, [upgrd, upgrd, upgrd, upgrd, upgrd, upgrd, upgrd, upgrd, upgrd, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
             
             #machinery costs for production, small machinery
-            m1c=6000.*0.2*mStrtV
+            # m1c=6000.*0.2*mStrtV
+            m1c=0
             costM1 = dict(zip(facility, [m1c, m1c, m1c, m1c, m1c, m1c, m1c, m1c, m1c, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
             #machinery costs for production, large machinery
             
-            m2c=10000.*0.2*mStrtV
+            # m2c=10000.*0.2*mStrtV
+            m2c=0
             costM2 = dict(zip(facility, [m2c, m2c, m2c, m2c, m2c, m2c, m2c, m2c, m2c, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
             #fixed capacity per piece of machinery, small machinery
             Capacity1 = 780000
