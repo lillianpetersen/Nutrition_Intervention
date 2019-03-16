@@ -38,9 +38,9 @@ import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
 import itertools
 
-################################################3
+################################################
 # Functions
-################################################3
+################################################
 def make_cmap(colors, position=None, bit=False):
     '''
     make_cmap takes a list of tuples which contain RGB values. The RGB
@@ -74,7 +74,7 @@ def make_cmap(colors, position=None, bit=False):
 
     cmap = mpl.colors.LinearSegmentedColormap('my_colormap',cdict,256)
     return cmap
-################################################3
+################################################
 
 try:
     wddata='/Users/lilllianpetersen/iiasa/data/supply_chain/'

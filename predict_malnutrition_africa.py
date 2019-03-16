@@ -35,11 +35,12 @@ geolocator = Nominatim()
 import geopy.distance
 from scipy import ndimage
 from scipy.signal import convolve2d
-from sklearn import linear_model
 from scipy.interpolate import RectSphereBivariateSpline
 from scipy.interpolate import griddata
-from sklearn.ensemble import RandomForestRegressor
 from scipy.interpolate import RegularGridInterpolator
+from sklearn import linear_model
+from sklearn.ensemble import RandomForestRegressor
+from sknn.mlp import Regressor
 import sklearn
 #import googlemaps
 
@@ -2397,7 +2398,7 @@ for icountry in range(1,len(africanCountries)):
 	
 	print 'fitting'
 	##############################
-	clf=RandomForestRegressor(n_estimators=numTrees,n_jobs=-1,verbose=2)
+	clf=Regressor(n_estimators=numTrees,n_jobs=-1,verbose=2)
 	clf.fit(xMultiTrainC,ydataTrain)
 	#pickle.dump(clf, open(wdvars+'stuffForFinalPrediction/randomForest_trained_notEthiopia_'+str(numTrees)+'trees', 'wb'))
 	malPred=clf.predict(xMultiTestC)
