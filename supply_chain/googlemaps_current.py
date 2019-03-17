@@ -83,6 +83,7 @@ for i in range(len(capitalcosted)):
     distanceDictionary[capitalcosted[i]]=[]
     for j in range(len(listofcities)):
         if capitalcosted[i]==listofcities[j]:
+            print capitalcosted[i]
             distanceDictionary[capitalcosted[i]].append(0)
             distanceArray[i,j]=0
         else:
@@ -95,5 +96,5 @@ for i in range(len(capitalcosted)):
                 distanceDictionary[capitalcosted[i]].append(gmapreturn['distance']['value'])
                 distanceArray[i,j]=gmapreturn['distance']['value']
 
-np.savetxt(wddata + "travel_time/Current_capitaldistanceArray.csv", distanceArray, delimiter=",")
+np.savetxt(wddata + "travel_time/current_capitaldistanceArray.csv", distanceArray, delimiter=",")
     

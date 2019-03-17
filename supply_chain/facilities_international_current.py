@@ -505,37 +505,48 @@ for k in range(len(optiLevel)):
         
             rutfsupplyarray=np.zeros(shape=(27,43))
             
+            countrycosted[16]="I_Guinea_Bissau"
+            
             for i in countrycosted:
                 j=0
                 for v in prob.variables():
                     if (v.name == "Supply_of_RUTF_NigeriaAngola" and i == "Niger"):
                         break
-                    elif ((v.name == "Supply_of_RUTF_Guinea-BissauAngola") and (i=="Guinea" or i=="I_Guinea")):
+                    elif (v.name == "Supply_of_RUTF_Guinea_BissauAngola" and i=="Guinea"):
                         break
-                    elif ((v.name == "Supply_of_RUTF_I_Guinea_BissauAngola") and (i=="Guinea" or i=="I_Guinea")):
+                    elif (v.name == "Supply_of_RUTF_Guinea_BissauAngola" and i=="I_Guinea"):
+                        break
+                    elif (v.name == "Supply_of_RUTF_I_Guinea_BissauAngola" and i=="Guinea"):
+                        break
+                    elif (v.name == "Supply_of_RUTF_I_Guinea_BissauAngola" and i=="I_Guinea"):
                         break
                     elif ("Supply_of_RUTF" in v.name and v.name[15:int(15+len(i))]==i):
                         a=np.where(np.array(countrycosted)==i)[0][0]
                         rutfsupplyarray[a,j]=v.varValue
                         j+=1
-            
+                    # elif ( i!="Guinea_Bissau" and v.name[15:25]=="Guinea_Bis"):
+                    #     print v.name
+                    #     break
+                    # elif (v.name
+                    #     break
             rutftotaled=np.sum(rutfsupplyarray,axis=1)
+            
 
             rusfsupplyarray=np.zeros(shape=(27,43))
-            for i in countrycosted:
-                j=0
-                for v in prob.variables():
-                    if (v.name == "Supply_of_MAM_Treatment_NigeriaAngola" and i == "Niger"):
-                        break
-                    elif ((v.name == "Supply_of_MAM_Treatment_Guinea-BissauAngola") and (i=="Guinea" or i=="I_Guinea")):
-                        break
-                    elif ((v.name == "Supply_of_MAM_Treatment_I_Guinea_BissauAngola") and (i=="Guinea" or i=="I_Guinea")):
-                        break
-                    elif ("Supply_of_MAM" in v.name and v.name[24:int(24+len(i))]==i):
-                        a=np.where(np.array(countrycosted)==i)[0][0]
-                        rusfsupplyarray[a,j]=v.varValue
-                        j+=1
-            
+            # for i in countrycosted:
+            #     j=0
+            #     for v in prob.variables():
+            #         if (v.name == "Supply_of_MAM_Treatment_NigeriaAngola" and i == "Niger"):
+            #             break
+            #         elif ((v.name == "Supply_of_MAM_Treatment_Guinea_BissauAngola") and (i=="Guinea" or i=="I_Guinea")):
+            #             break
+            #         elif ((v.name == "Supply_of_MAM_Treatment_I_Guinea-BissauAngola") and (i=="Guinea" or i=="I_Guinea")):
+            #             break
+            #         elif ("Supply_of_MAM" in v.name and v.name[24:int(24+len(i))]==i):
+            #             a=np.where(np.array(countrycosted)==i)[0][0]
+            #             rusfsupplyarray[a,j]=v.varValue
+            #             j+=1
+            # 
             rusftotaled=np.sum(rusfsupplyarray,axis=1)
         
             ingredientcosttotalpercent=np.sum(rutfsupplyarray*rutfcostarray+rusfsupplyarray*mamcostarray)/value(prob.objective)
