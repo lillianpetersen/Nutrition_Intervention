@@ -142,17 +142,18 @@ except:
 
 #  'AllIntl_opti',
 optiLevel = ['current']
-loopvar = ['shipcost','impexp','strtup','truckfactor','tariff']
+loopvar = ['shipcost','impexp','truckfactor','tariff']
 
 LTitles = ['Current']
-VTitles = ['Shipping','Import/Export','Startup','Trucking', 'Tariff']
+VTitles = ['Shipping','Import/Export','Trucking', 'Tariff']
 
 Ltitles = ['Current']
-Vtitles = ['shipping','importexport','startup','trucking', 'tariff']
+Vtitles = ['shipping','importexport','trucking', 'tariff']
+loopvar = ['shipcost', 'impexp', 'truckfactor', 'tariff']
 
-mins= np.array([0.2,0.2,0.5,0.2, 0.0])
-factor = np.array([0.2,0.2,0.5,0.2, 0.05])
-maxs = np.array([2.01,4.01,9.51,4.01, 0.4])
+mins= np.array([0.2, 0.2, 0.2, 0])
+factor = np.array([0.2, 0.2, 0.2, 0.05])
+maxs = np.array([5.01, 5.01, 5.01, 0.4])
 #LTitles = ['All Optimized','Local Optimized','Local Producing Optimized International with Tariff','Local Producing International with Tariff','Local Optimized with Tariff','All Optimized with Tariff','Local Producing Optimized International']
 #optiLevel = ['AllarOpti','LocalOpti', 'AllIntl_opti_trf', 'AllIntl_trf', 'LocalOpti_trf', 'AllarOpti_trf', 'AllIntl_opti']
 

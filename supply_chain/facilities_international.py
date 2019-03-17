@@ -25,9 +25,10 @@ if(bigloop):
 
     optiLevel = ['AllarOpti','LocalOpti','AllIntl']
     loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff']
-    mins= np.array([0.2,0.2,0.5,0.2, 0])
-    factor = np.array([0.2,0.2,0.5,0.2, 0.2])
-    maxs = np.array([2.01,4.01,9.51,4.01, 2.6])
+    mins= np.array([0.2,0.2,0.2,0.2,0.2])
+    factor = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
+    maxs = np.array([5.01, 5.01, 5.01, 5.01, 5.01])
+
 else:
     import matplotlib.pyplot as plt
     optiLevel= ['AllarOpti','LocalOpti','AllIntl']

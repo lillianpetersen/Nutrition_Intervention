@@ -129,9 +129,9 @@ VTitles = ['Shipping','Import/Export','Startup','Trucking', 'Tariff', 'Budget']
 Ltitles = ['AllOpti','LocalOpti', 'AllIntl']
 Vtitles = ['shipping','importexport','startup','trucking', 'tariff', 'budget']
 
-mins= np.array([0.2,0.2,0.5,0.2, 0.2, 0.2])
-factor = np.array([0.2,0.2,0.5,0.2, 0.2, 0.2])
-maxs = np.array([2.01,4.01,9.51,4.01, 2.61, 20.01])
+mins= np.array([0.2,0.2,0.2,0.2, 0.2, 0.2])
+factor = np.array([0.2,0.2,0.2,0.2, 0.2, 0.2])
+maxs = np.array([5.01,5.01,5.01,5.01, 5.01, 20.01])
 #LTitles = ['All Optimized','Local Optimized','Local Producing Optimized International with Tariff','Local Producing International with Tariff','Local Optimized with Tariff','All Optimized with Tariff','Local Producing Optimized International']
 #optiLevel = ['AllarOpti','LocalOpti', 'AllIntl_opti_trf', 'AllIntl_trf', 'LocalOpti_trf', 'AllarOpti_trf', 'AllIntl_opti']
 
