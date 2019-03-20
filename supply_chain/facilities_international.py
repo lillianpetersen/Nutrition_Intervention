@@ -31,7 +31,7 @@ if(bigloop):
 
 else:
     import matplotlib.pyplot as plt
-    optiLevel= ['AllarOpti','LocalOpti','AllIntl']
+    optiLevel= ['current_factory_local_ingredientcost']
     # optiLevel=['AllIntl_trf','AllarOpti','LocalOpti','AllIntl_opti_trf', 'LocalOpti_trf','AllarOpti_trf','AllIntl_opti','AllIntl']
     loopvar=['shipcost', 'impexp','strtup','truckfactor', 'tariff']
     mins=np.array([1])
@@ -150,6 +150,60 @@ for k in range(len(optiLevel)):
                 scplusprice=[]
                 capitalcosted=[]
                 f=open(wddata+'foodstuffs/pricesCorrected_intl_opti.csv')
+                code=np.zeros(shape=(247),dtype=int)
+                i=-1
+                for line in f:
+                    i+=1
+                    tmp=line.split(',')
+                    countrycosted.append(tmp[0])
+                    rutfprice.append(tmp[1])
+                    rusfprice.append(tmp[2])
+                    scplusprice.append(tmp[3])
+                    capitalcosted.append(tmp[4][:-2])
+            elif (optiLevel[k]=='current_ingredientcost'):
+                ### cost per country
+                countrycosted=[]
+                rutfprice=[]
+                rusfprice=[]
+                scplusprice=[]
+                capitalcosted=[]
+                f=open(wddata+'foodstuffs/current_ingredient_price.csv')
+                code=np.zeros(shape=(247),dtype=int)
+                i=-1
+                for line in f:
+                    i+=1
+                    tmp=line.split(',')
+                    countrycosted.append(tmp[0])
+                    rutfprice.append(tmp[1])
+                    rusfprice.append(tmp[2])
+                    scplusprice.append(tmp[3])
+                    capitalcosted.append(tmp[4][:-2])
+            elif (optiLevel[k]=='current_local_ingredientcost'):
+                ### cost per country
+                countrycosted=[]
+                rutfprice=[]
+                rusfprice=[]
+                scplusprice=[]
+                capitalcosted=[]
+                f=open(wddata+'foodstuffs/current_local_ingredient_price.csv')
+                code=np.zeros(shape=(247),dtype=int)
+                i=-1
+                for line in f:
+                    i+=1
+                    tmp=line.split(',')
+                    countrycosted.append(tmp[0])
+                    rutfprice.append(tmp[1])
+                    rusfprice.append(tmp[2])
+                    scplusprice.append(tmp[3])
+                    capitalcosted.append(tmp[4][:-2])
+            elif (optiLevel[k]=='current_factory_local_ingredientcost'):
+                ### cost per country
+                countrycosted=[]
+                rutfprice=[]
+                rusfprice=[]
+                scplusprice=[]
+                capitalcosted=[]
+                f=open(wddata+'foodstuffs/current_factory_local_ingredient_price.csv')
                 code=np.zeros(shape=(247),dtype=int)
                 i=-1
                 for line in f:
@@ -514,7 +568,8 @@ for k in range(len(optiLevel)):
             rutfdemandarray = np.genfromtxt(wddata+'optiarrays/SAMdemand.csv', delimiter=',')
             DemandRUTF = dict(zip(location, rutfdemandarray))
             
-            mamdemandarray = np.genfromtxt(wddata+'optiarrays/MAMdemand.csv', delimiter=',')
+            # mamdemandarray = np.genfromtxt(wddata+'optiarrays/MAMdemand.csv', delimiter=',')
+            mamdemandarray=np.zeros(shape=43)
             DemandMAM = dict(zip(location, mamdemandarray))
         
             # cost to location

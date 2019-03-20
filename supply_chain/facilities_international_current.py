@@ -158,7 +158,25 @@ for k in range(len(optiLevel)):
                     rusfprice.append(tmp[2])
                     scplusprice.append(tmp[3])
                     capitalcosted.append(tmp[4][:-2])
-            
+            elif (optiLevel[k]=='current_ingredientcost'):
+                ### cost per country
+                countrycosted=[]
+                rutfprice=[]
+                rusfprice=[]
+                scplusprice=[]
+                capitalcosted=[]
+                f=open(wddata+'foodstuffs/current_prices.csv')
+                code=np.zeros(shape=(247),dtype=int)
+                i=-1
+                for line in f:
+                    i+=1
+                    tmp=line.split(',')
+                    countrycosted.append(tmp[0])
+                    rutfprice.append(tmp[1])
+                    rusfprice.append(tmp[2])
+                    scplusprice.append(tmp[3])
+                    capitalcosted.append(tmp[4][:-2])
+                    
             facility=countrycosted
             location=subsaharancountry
                 
@@ -656,6 +674,10 @@ for k in range(len(optiLevel)):
             
             Rrusfsupplyarray=Rrusfsupplyarray[iSortedF]
             Rrusfsupplyarray=Rrusfsupplyarray[:,iSortedC]
+            
+            np.save(wddata+'/results/current/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/' +'RNcountrycosted'+str(optiLevel[k])+'_'+str(loopvar[z])+str(np.round(s,2)), RNcountrycosted)
+            np.save(wddata+'/results/current/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/' +'RNsubsaharancountry'+str(optiLevel[k])+'_'+str(loopvar[z])+str(np.round(s,2)), RNsubsaharancountry)
+            np.save(wddata+'/results/current/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/' +'RNrutfsupplyarray'+str(optiLevel[k])+'_'+str(loopvar[z])+str(np.round(s,2)), RNrutfsupplyarray)
             
             if not os.path.exists(wddata+'/results/current/example/'+str(optiLevel[k])+'/'):
                 os.makedirs(wddata+'/results/current/example/'+str(optiLevel[k])+'/')
