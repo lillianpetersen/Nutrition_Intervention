@@ -82,7 +82,7 @@ except:
 
 MakeLinePlots=False
 MakeStackedBarPlots=True
-MakeExportPlots=False
+MakeExportPlots=True
 MakeSkeleton=False
 MakeByFactoryPlots=False
 

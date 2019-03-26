@@ -478,8 +478,7 @@ for k in range(len(optiLevel)):
             
             varsdict = {}
             for v in prob.variables():
-                if(v.varValue>0):
-                    varsdict[v.name] = v.varValue
+                varsdict[v.name] = v.varValue
                     
             with open(wddata+'optiarrays/temp_results.json', 'w') as fp:
                 json.dump(varsdict, fp, sort_keys=True)
@@ -524,32 +523,17 @@ for k in range(len(optiLevel)):
             rutfsupplyarray=np.zeros(shape=(27,43))
             
             countrycosted[16]="I_Guinea_Bissau"
+            subsaharancountry[19]="Guinea_Bissau"
             
-            for i in countrycosted:
-                j=0
-                for v in prob.variables():
-                    if (v.name == "Supply_of_RUTF_NigeriaAngola" and i == "Niger"):
-                        break
-                    elif (v.name == "Supply_of_RUTF_Guinea_BissauAngola" and i=="Guinea"):
-                        break
-                    elif (v.name == "Supply_of_RUTF_Guinea_BissauAngola" and i=="I_Guinea"):
-                        break
-                    elif (v.name == "Supply_of_RUTF_I_Guinea_BissauAngola" and i=="Guinea"):
-                        break
-                    elif (v.name == "Supply_of_RUTF_I_Guinea_BissauAngola" and i=="I_Guinea"):
-                        break
-                    elif ("Supply_of_RUTF" in v.name and v.name[15:int(15+len(i))]==i):
-                        a=np.where(np.array(countrycosted)==i)[0][0]
-                        rutfsupplyarray[a,j]=v.varValue
-                        j+=1
-                    # elif ( i!="Guinea_Bissau" and v.name[15:25]=="Guinea_Bis"):
-                    #     print v.name
-                    #     break
-                    # elif (v.name
-                    #     break
+            for i in range(len(countrycosted)):
+                for j in range(len(subsaharancountry)):
+                    rutfsupplyarray[i,j]=varsdict["Supply_of_RUTF_"+countrycosted[i]+subsaharancountry[j]]
+            
             rutftotaled=np.sum(rutfsupplyarray,axis=1)
-            
-
+            for v in prob.variables():
+                if (v.name ==  "Supply_of_RUTF_SudanSouth_Sudan" or v.name == "Supply_of_RUTF_SudanSudan"):
+                    print v.name
+                    print v.varValue
             rusfsupplyarray=np.zeros(shape=(27,43))
             # for i in countrycosted:
             #     j=0
