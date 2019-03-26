@@ -19,7 +19,7 @@ except:
 
 countryCostedTariff = np.load(wdvars+'tariff_by_country.npy')
 
-bigloop=False
+bigloop=True
 
 if(bigloop): 
 
@@ -149,7 +149,7 @@ for k in range(len(optiLevel)):
                 rusfprice=[]
                 scplusprice=[]
                 capitalcosted=[]
-                f=open(wddata+'foodstuffs/pricesCorrected_intl_opti.csv')
+                f=open(wddata+'foodstuffs/pricesCorrected_intl_opti_fix.csv')
                 code=np.zeros(shape=(247),dtype=int)
                 i=-1
                 for line in f:
@@ -239,7 +239,7 @@ for k in range(len(optiLevel)):
                 rusfprice=[]
                 scplusprice=[]
                 capitalcosted=[]
-                f=open(wddata+'foodstuffs/pricesCorrected_intl.csv')
+                f=open(wddata+'foodstuffs/pricesCorrected_intl_fix.csv')
                 code=np.zeros(shape=(247),dtype=int)
                 i=-1
                 for line in f:
@@ -275,7 +275,7 @@ for k in range(len(optiLevel)):
                 rusfprice=[]
                 scplusprice=[]
                 capitalcosted=[]
-                f=open(wddata+'foodstuffs/pricesCorrected_AllIntl.csv')
+                f=open(wddata+'foodstuffs/pricesCorrected_AllIntl_fix.csv')
                 code=np.zeros(shape=(247),dtype=int)
                 i=-1
                 for line in f:

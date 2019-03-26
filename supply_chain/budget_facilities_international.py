@@ -26,7 +26,7 @@ except:
 countryCostedTariff = np.load(wdvars+'tariff_by_country.npy')
 countryCostedTariff = countryCostedTariff/100.
 
-bigloop=False
+bigloop=True
 if(bigloop):
     AM=['SAM','MAM']
     optiLevel = ['AllarOpti','LocalOpti','AllIntl']
@@ -119,7 +119,7 @@ for iAM in range(2):
         #                 break
         # 
         #             importExportCosts[x,y]=importCost+exportCost
-        for z in range(1): #range(len(loopvar)):
+        for z in range(len(loopvar)):
             mShip=False
             mImpExp=False
             mStrt=False
@@ -167,7 +167,7 @@ for iAM in range(2):
                     rusfprice=[]
                     scplusprice=[]
                     capitalcosted=[]
-                    f=open(wddata+'foodstuffs/pricesCorrected_intl_opti.csv')
+                    f=open(wddata+'foodstuffs/pricesCorrected_intl_opti_fix.csv')
                     code=np.zeros(shape=(247),dtype=int)
                     i=-1
                     for line in f:
@@ -203,7 +203,7 @@ for iAM in range(2):
                     rusfprice=[]
                     scplusprice=[]
                     capitalcosted=[]
-                    f=open(wddata+'foodstuffs/pricesCorrected_intl.csv')
+                    f=open(wddata+'foodstuffs/pricesCorrected_intl_fix.csv')
                     code=np.zeros(shape=(247),dtype=int)
                     i=-1
                     for line in f:
@@ -239,7 +239,7 @@ for iAM in range(2):
                     rusfprice=[]
                     scplusprice=[]
                     capitalcosted=[]
-                    f=open(wddata+'foodstuffs/pricesCorrected_AllIntl.csv')
+                    f=open(wddata+'foodstuffs/pricesCorrected_AllIntl_fix.csv')
                     code=np.zeros(shape=(247),dtype=int)
                     i=-1
                     for line in f:
