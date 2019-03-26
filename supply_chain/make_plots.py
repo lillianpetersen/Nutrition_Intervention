@@ -25,9 +25,9 @@ import cartopy.io.shapereader as shpreader
 import itertools
 
 
-################################################3
+################################################
 # Functions
-################################################3
+################################################
 def make_cmap(colors, position=None, bit=False):
     '''
     make_cmap takes a list of tuples which contain RGB values. The RGB
@@ -61,7 +61,7 @@ def make_cmap(colors, position=None, bit=False):
 
     cmap = mpl.colors.LinearSegmentedColormap('my_colormap',cdict,256)
     return cmap
-################################################3
+################################################
 
 try:
     wddata='/Users/lilllianpetersen/iiasa/data/supply_chain/'
@@ -75,7 +75,7 @@ except:
 
 MakePlots=False
 MakeLinePlots=False
-MakeStackedBarPlots=False
+MakeStackedBarPlots=True
 MakeExportPlots=False
 MakeSkeleton=False
 MakeByFactoryPlots=False
@@ -130,20 +130,20 @@ VTitles = ['Shipping','Import/Export','Startup','Trucking', 'Tariff']
 Ltitles = ['AllOpti','LocalOpti', 'AllIntl']
 Vtitles = ['shipping','importexport','startup','trucking', 'tariff']
 
-mins= np.array([0.2,0.2,0.2,0.2,0.2])
+mTrueins= np.array([0.2,0.2,0.2,0.2,0.2])
 factor = np.array([0.2,0.2,0.2,0.2,0.2])
 maxs = np.array([5.01,5.01,5.01,5.01,5.01])
 #LTitles = ['All Optimized','Local Optimized','Local Producing Optimized International with Tariff','Local Producing International with Tariff','Local Optimized with Tariff','All Optimized with Tariff','Local Producing Optimized International']
 #optiLevel = ['AllarOpti','LocalOpti', 'AllIntl_opti_trf', 'AllIntl_trf', 'LocalOpti_trf', 'AllarOpti_trf', 'AllIntl_opti']
 
 #[AllOpti,LocalOpti,AllIntl,AllIntlOpti] , [Trf,NoTrf] , [Shipcost,imexp,strtup,truckfactor] , [scenarios]
-cost=np.zeros(shape=(4,5,20)) 
+cost=np.zeros(shape=(4,5,25)) 
 costOneAll=np.zeros(shape=(4)) 
-Mask=np.ones(shape=(4,5,20),dtype=bool) 
-factoryNum=np.zeros(shape=(4,5,20))
+Mask=np.ones(shape=(4,5,25),dtype=bool) 
+factoryNum=np.zeros(shape=(4,5,25))
 factoryNumOneAll=np.zeros(shape=(4))
 portNumOneAll=np.zeros(shape=(4))
-pctLocal=np.zeros(shape=(4,5,20,2))
+pctLocal=np.zeros(shape=(4,5,25,2))
 pctLocalOneAll=np.zeros(shape=(4,2)) #optiLevel, trf, SAM-MAM
 
 for L in range(len(optiLevel)):
@@ -179,12 +179,13 @@ for L in range(len(optiLevel)):
             capacity=np.zeros(shape=2)
         
             try:
-                f = open(wddata+'results2/'+str(File)+'/'+str(File)+str(s)+'.csv')
+                f = open(wddata+'results/'+str(File)+'/'+str(File)+str(s)+'.csv')
             except:
                 continue
             k=-1
             j=-1
             for line in f:
+                line = line[:-2]
                 k+=1
                 tmp=line.split(',')
                 if k==0:
@@ -193,21 +194,16 @@ for L in range(len(optiLevel)):
                     if s==1:
                         costOne=float(tmp[1])
                         costOneAll[L]=float(tmp[1])
-                    #print 'cost',cost[i]
                 elif k==1:
                     factoryNum[L,V,i]=float(tmp[1])
                     if s==1:
                         factoryNumOneAll[L]=float(tmp[1])
-                    #print 'factoryNum',factoryNum[i]
                 elif k==2:
                     pctTrans[i]=float(tmp[1])
-                    #print 'pctTrans',pctTrans[i]
                 elif k==3:
                     pctIngredient[i]=float(tmp[1])
-                    #print 'pctIngredient',pctIngredient[i]
                 elif k==4:
                     avgShipments[i]=float(tmp[1])
-                    #print 'avgShipments',avgShipments[i]
                 else:
                     j+=1
                     country=tmp[0]
@@ -257,6 +253,7 @@ for L in range(len(optiLevel)):
             sizeMinMax[0,i,1]=np.amax(factorySizeS)
             sizeMinMax[1,i,1]=np.amax(factorySizeM)
         factorySizeAll=np.ma.masked_array(factorySizeAll,factorySizeAllMask)
+        exit()
         pctLocalOneAll[L,:]=pctLocalOneAll[L,:]/capacityOne[:]
         
         totalCapacity = np.zeros(shape=(2,len(factorySizeAll[0])))
@@ -541,6 +538,8 @@ for L in range(len(optiLevel)):
     ###########################
     # Skeleton
     ###########################
+    current_countrycosted = np.load(wdvars+'currentcountrycosted.npy')
+    current_factoryLatLon = np.load(wdvars+'current_capitalLatLon.npy')
     if MakeSkeleton:
         shapename = 'admin_0_countries'
         countries_shp = shpreader.natural_earth(resolution='110m',
@@ -551,26 +550,22 @@ for L in range(len(optiLevel)):
         ax.set_extent([-19, 53, -37, 39], ccrs.PlateCarree())
         ax.coastlines()
 
-        plt.plot(capitalLatLon[1,8], capitalLatLon[0,8], marker='*', markersize=9, color='orangered', label='Possible Factories')
-        plt.plot(capitalLatLon[1,30], capitalLatLon[0,30], marker='o', markersize=8, color='dodgerblue', label = 'Possible Intl Shipment Ports')
-        plt.plot(SScapitalLatLon[1,9],SScapitalLatLon[0,9], marker='^', markersize=8, color='mediumpurple', label = 'Recieves Treatment')
+        # Legend
+        plt.plot(capitalLatLon[1,8], capitalLatLon[0,8], marker='*', markersize=10, color='darkviolet', label='Current Factories')
+        plt.plot(capitalLatLon[1,8], capitalLatLon[0,8], marker='*', markersize=10, color='orangered', label='Possible Factories')
+        plt.plot(capitalLatLon[1,30], capitalLatLon[0,30], marker='o', markersize=9, color='dodgerblue', label = 'Possible Intl Shipment Ports')
+        #plt.plot(SScapitalLatLon[1,9],SScapitalLatLon[0,9], marker='^', markersize=8, color='mediumpurple', label = 'Recieves Treatment')
 
+        # Lines from each new factory to each country
         for country in shpreader.Reader(countries_shp).records():
             cName=country.attributes['NAME_LONG']
-            if cName[-6:]=='Ivoire':
-                cName="Ivory Coast"
-            if cName=='Democratic Republic of the Congo':
-                cName='DRC'
-            if cName=='Republic of the Congo':
-                cName='Congo'
-            if cName=='eSwatini':
-                cName='Swaziland'
-            if cName=='The Gambia':
-                cName='Gambia'
-            if cName=='Somaliland':
-                cName='Somalia'
-            if np.amax(cName==subsaharancountry)==0:
-                continue
+            if cName[-6:]=='Ivoire': cName="Ivory Coast"
+            if cName=='Democratic Republic of the Congo': cName='DRC'
+            if cName=='Republic of the Congo': cName='Congo'
+            if cName=='eSwatini': cName='Swaziland'
+            if cName=='The Gambia': cName='Gambia'
+            if cName=='Somaliland': cName='Somalia'
+            if np.amax(cName==subsaharancountry)==0: continue
             if np.amax(cName==countrycosted)!=0:
                 c=np.where(cName==countrycosted)[0][0]
                 lon1=capitalLatLon[1,c]
@@ -582,6 +577,7 @@ for L in range(len(optiLevel)):
                     if dist<15:
                         plt.plot([lon1,lon2] , [lat1,lat2], color='gray', linestyle='--', linewidth = 0.5, transform=ccrs.PlateCarree() )
         
+        # Lines from each port to each country
         for icoast in range(24,len(countrycosted)):
             lon1=capitalLatLon[1,icoast]
             lat1=capitalLatLon[0,icoast]
@@ -592,39 +588,46 @@ for L in range(len(optiLevel)):
                 if dist<17:
                     plt.plot([lon1,lon2] , [lat1,lat2], color='gray', linestyle='--', linewidth = 0.5, transform=ccrs.PlateCarree() )
 
+        colors = np.array([177,253,177])/255.
+
+        # Plot locations
         for country in shpreader.Reader(countries_shp).records():
             cName=country.attributes['NAME_LONG']
-            if cName[-6:]=='Ivoire':
-                cName="Ivory Coast"
-            if cName=='Democratic Republic of the Congo':
-                cName='DRC'
-            if cName=='Republic of the Congo':
-                cName='Congo'
-            if cName=='eSwatini':
-                cName='Swaziland'
-            if cName=='The Gambia':
-                cName='Gambia'
-            if cName=='Somaliland':
-                cName='Somalia'
-            if np.amax(cName==subsaharancountry)==0:
-                continue
+            if cName[-6:]=='Ivoire': cName="Ivory Coast"
+            if cName=='Democratic Republic of the Congo': cName='DRC'
+            if cName=='Republic of the Congo': cName='Congo'
+            if cName=='eSwatini': cName='Swaziland'
+            if cName=='The Gambia': cName='Gambia'
+            if cName=='Somaliland': cName='Somalia'
+            if np.amax(cName==subsaharancountry)==0: continue
             if np.amax(cName==countrycosted)==0:
                 ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black',
-                    facecolor='lightgray')
+                    facecolor=colors)
                 c=np.where(cName==subsaharancountry)[0][0]
-                plt.plot(SScapitalLatLon[1,c],SScapitalLatLon[0,c], marker='^', markersize=8, color='mediumpurple')
+                if (SScapitalLatLon[1,c] == current_factoryLatLon[1,:]).any(): continue
+                # subSaharan capitals
+                #plt.plot(SScapitalLatLon[1,c],SScapitalLatLon[0,c], marker='^', markersize=8, color='mediumpurple')
             else:
                 c=np.where(cName==countrycosted)[0][0]
-                ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black', facecolor='lightgreen',label=cName)
-                plt.plot(capitalLatLon[1,c], capitalLatLon[0,c], marker='*', markersize=9, color='orangered')
+                ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black', facecolor=colors,label=cName)
+                # new factories
+                plt.plot(capitalLatLon[1,c], capitalLatLon[0,c], marker='*', markersize=10, color='orangered')
 
-        for icoast in range(24,len(countrycosted)):
-            plt.plot(capitalLatLon[1,icoast], capitalLatLon[0,icoast], marker='o', markersize=8, color='dodgerblue')
+        for icoast in range(len(current_countrycosted)):
+            # ports
+            if current_countrycosted[icoast][:2] == 'I_': 
+                plt.plot(current_factoryLatLon[1,icoast], current_factoryLatLon[0,icoast], marker='o', markersize=9, color='dodgerblue')
 
-        plt.title('Supply Chain Optimization\nPossible Factory and Port Locations')
+        for ifactory in range(len(current_countrycosted)):
+            if current_countrycosted[ifactory][:2]=='I_': continue
+            # current factoriesk
+            plt.plot(current_factoryLatLon[1,ifactory], current_factoryLatLon[0,ifactory], marker = '*', markersize=10, color='darkviolet')
+
+        plt.title('Supply Chain Optimization\nPossible Factory and Port Locations',fontsize = 18)
         plt.legend(loc = 'lower left')
-        plt.text(-15,-10,'24 Possible Factories\n9 Possible Ports', bbox=dict(fc="none", boxstyle="round"), size = 10)
-        plt.savefig(wdfigs+'cost_optimization/'+'skeleton_map.pdf')
+        plt.text(-15,-10,'9 Current Factories\n24 Possible Factories\n15 Possible Ports', bbox=dict(fc="none", boxstyle="round"), size = 10)
+        plt.savefig(wdfigs+'cost_optimization/skeleton_map.pdf')
+        exit()
 
     ###########################
     # Supply Zones
@@ -632,9 +635,9 @@ for L in range(len(optiLevel)):
     if MakeExportPlots:
         ruftitles=['rutf','rusf']
         for g in range(2):
-            vars()['productarray'+ruftitles[g]] = np.load(wddata+'results2/example/'+optiLevel[L]+'/RN'+ruftitles[g]+'array.npy')
-            Rcountrycosted1=np.load(wddata+'results2/example/'+optiLevel[L]+'/RNcountry.npy')
-            Rsubsaharancountry1=np.load(wddata+'results2/example/'+optiLevel[L]+'/RNsubsaharancountry.npy')
+            vars()['productarray'+ruftitles[g]] = np.load(wddata+'results/example/'+optiLevel[L]+'/RN'+ruftitles[g]+'array.npy')
+            Rcountrycosted1=np.load(wddata+'results/example/'+optiLevel[L]+'/RNcountry.npy')
+            Rsubsaharancountry1=np.load(wddata+'results/example/'+optiLevel[L]+'/RNsubsaharancountry.npy')
             Rcountrycosted=[]
             for i in range(len(Rcountrycosted1)):
                 country=Rcountrycosted1[i]
@@ -668,7 +671,7 @@ for L in range(len(optiLevel)):
             
         shapename = 'admin_0_countries'
         countries_shp = shpreader.natural_earth(resolution='110m', category='cultural', name=shapename)
-        colors = [(240,59,32),(252,146,114),(254,178,76),(255,237,160),(35,132,67),(127,255,0),(229,245,224),(0,0,139),(49,130,189),(158,202,225),(136,86,167),(158,188,218)]                
+        colors = [(240,59,32),(252,146,114),(254,178,76),(255,237,160),(35,132,67),(127,255,0),(229,245,224),(0,0,139),(49,130,189),(158,202,225),(136,86,167),(255, 51, 153)]                
                 # colors = [(240,59,32),(252,146,114),(254,178,76),(255,237,160),(49,163,84),(161,217,155),(229,245,224),(49,130,189),(158,202,225),(136,86,167),(158,188,218)]
         # colors = [(128,0,0),(170,110,40),(128,128,0),(0,128,128),(0,0,128),(0,0,128),(0,0,0),(230,25,75),(245,130,48),(255,225,25),(210,245,60),(60,180,75),(70,240,240),(0,130,200),(145,30,180),(240,50,230),(128,128,128),(250,190,190),(255,215,180),(255,250,200),(170,255,195),(230,190,255),(255,255,255)]
         colors=colors[:len(Rcountrycosted)+1]
@@ -698,20 +701,13 @@ for L in range(len(optiLevel)):
 
         for country in shpreader.Reader(countries_shp).records():
             cName=country.attributes['NAME_LONG']
-            if cName[-6:]=='Ivoire':
-                cName="Ivory Coast"
-            if cName=='Democratic Republic of the Congo':
-                cName='DRC'
-            if cName=='Republic of the Congo':
-                cName='Congo'
-            if cName=='eSwatini':
-                cName='Swaziland'
-            if cName=='The Gambia':
-                cName='Gambia'
-            if cName=='Somaliland':
-                cName='Somalia'
-            if np.amax(cName==Rsubsaharancountry)==0:
-                continue
+            if cName[-6:]=='Ivoire': cName="Ivory Coast"
+            if cName=='Democratic Republic of the Congo': cName='DRC'
+            if cName=='Republic of the Congo': cName='Congo'
+            if cName=='eSwatini': cName='Swaziland'
+            if cName=='The Gambia': cName='Gambia'
+            if cName=='Somaliland': cName='Somalia'
+            if np.amax(cName==Rsubsaharancountry)==0: continue
             else:
                 poz=np.where(cName==Rsubsaharancountry)[0][0]
                 c=np.where(productarray[:,poz]==np.amax(productarray[:,poz]))[0][0]
@@ -722,20 +718,13 @@ for L in range(len(optiLevel)):
 
         for country in shpreader.Reader(countries_shp).records():
             cName=country.attributes['NAME_LONG']
-            if cName[-6:]=='Ivoire':
-                cName="Ivory Coast"
-            if cName=='Democratic Republic of the Congo':
-                cName='DRC'
-            if cName=='Republic of the Congo':
-                cName='Congo'
-            if cName=='eSwatini':
-                cName='Swaziland'
-            if cName=='The Gambia':
-                cName='Gambia'
-            if cName=='Somaliland':
-                cName='Somalia'
-            if np.amax(cName==Rsubsaharancountry)==0:
-                continue
+            if cName[-6:]=='Ivoire': cName="Ivory Coast"
+            if cName=='Democratic Republic of the Congo': cName='DRC'
+            if cName=='Republic of the Congo': cName='Congo'
+            if cName=='eSwatini': cName='Swaziland'
+            if cName=='The Gambia': cName='Gambia'
+            if cName=='Somaliland': cName='Somalia'
+            if np.amax(cName==Rsubsaharancountry)==0: continue
             else:
                 poz=np.where(cName==Rsubsaharancountry)[0][0]
                 c=np.where(productarray[:,poz]==np.amax(productarray[:,poz]))[0][0]
@@ -800,15 +789,16 @@ for L in range(len(optiLevel)):
         plt.title('Primary Supplier of Treatment by Country',fontsize=18)
         plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally', bbox=dict(fc="none", boxstyle="round"), size = 10)
         plt.savefig(wdfigs+'cost_optimization/'+Ltitles[L]+'/geographical/Supplyzone_map.pdf')
+        exit()
 
     ###########################
     # By factory import/export
     ###########################
     if MakeByFactoryPlots:
         for g in range(2):
-            productarray = np.load(wddata+'results2/example/'+optiLevel[L]+'/RN'+ruftitles[g]+'array.npy')
-            Rcountrycosted1=np.load(wddata+'results2/example/'+optiLevel[L]+'/RNcountry.npy')
-            Rsubsaharancountry1=np.load(wddata+'results2/example/'+optiLevel[L]+'/Rsubsaharancountry.npy')
+            productarray = np.load(wddata+'results/example/'+optiLevel[L]+'/RN'+ruftitles[g]+'array.npy')
+            Rcountrycosted1=np.load(wddata+'results/example/'+optiLevel[L]+'/RNcountry.npy')
+            Rsubsaharancountry1=np.load(wddata+'results/example/'+optiLevel[L]+'/Rsubsaharancountry.npy')
             Rcountrycosted=[]
             for i in range(len(Rcountrycosted1)):
                 country=Rcountrycosted1[i]
@@ -936,7 +926,7 @@ for L in range(len(optiLevel)):
                     plt.text(-15,-8,factory[2:]+' Port\n'+totalshipments+' Million Packets Procured', size = 10)
                     for r in range(len(impCountries)):
                         plt.text(-13,-10.4-1.7*r,'- '+impCountries[r]+', '+str(int(round(impPct[r])))+'%',size=10)
-                else:
+                else: 
                     plt.title(SMtitles[g]+' Treatment Supplied by '+factory+' Factory\n' + LTitles[L])
                     plt.text(-15,-8,factory+' Factory\n'+totalshipments+' Million Packets Procured', size = 10)
                     for r in range(len(impCountries)):
@@ -1007,7 +997,7 @@ for V in range(len(loopvar)):
     x = np.arange(mins[V],maxs[V],factor[V])
     x = x*100
     plt.clf()
-    plt.plot([100,100],[0.5,1.35],'k-')
+    plt.plot([100,100],[0,5],'k-')
     plt.plot(x,np.ma.compressed(np.ma.masked_array(cost1[2,V,:],Mask[2,V,:])),'r*-',label=LTitles[3])
     plt.plot(x,np.ma.compressed(np.ma.masked_array(cost1[1,V,:],Mask[1,V,:])),'b*-',label=LTitles[1])
     plt.plot(x,np.ma.compressed(np.ma.masked_array(cost1[0,V,:],Mask[0,V,:])),'g*-',label=LTitles[0])
@@ -1015,7 +1005,7 @@ for V in range(len(loopvar)):
     plt.title('Effect of '+VTitles[V]+' on Total Cost',fontsize=15)
     plt.xlabel(VTitles[V]+' Cost, % of Today')
     plt.ylabel('Procurement Cost for One Year (Billion USD)')
-    plt.ylim([0.5,1.35])
+    plt.ylim([0.9*np.amin(cost1[0:3]),1.01*np.amax(cost1[0:3])])
     plt.grid(True)
     plt.legend(loc='lower right')
     plt.savefig(wdfigs+'cost_optimization/summary/line_totalCost_vs_'+Vtitles[V]+'.pdf')

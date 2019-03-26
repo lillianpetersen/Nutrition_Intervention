@@ -40,7 +40,7 @@ from scipy.interpolate import griddata
 from scipy.interpolate import RegularGridInterpolator
 from sklearn import linear_model
 from sklearn.ensemble import RandomForestRegressor
-from sknn.mlp import Regressor
+#from sknn.mlp import Regressor
 import sklearn
 #import googlemaps
 
@@ -1262,6 +1262,7 @@ except:
 		icountry=int(countryToi[country])
 		GDPperCap[icountry,21]=float(tmp[1])
 	
+	np.save(wdvars+'country_correlates/GDPperCap',GDPperCap)
 	
 	################
 	index+=1
@@ -1330,8 +1331,10 @@ except:
 		years=j-0
 		for k in range(j+1,nyears):
 			girlEd[i,k]=diff/years+girlEd[i,k-1]
+
+	np.save(wdvars+'country_correlates/girlEd',girlEd)
 	
-	#################
+	################
 	f=open(wddata+'country_indices/electricity.csv','r')
 	
 	i=-2
@@ -1375,6 +1378,8 @@ except:
 		for k in range(j+1,nyears):
 			electricity[icountry,k]=diff/years+electricity[icountry,k-1]
 	
+	np.save(wdvars+'country_correlates/electricity',electricity)
+
 	################
 	f=open(wddata+'country_indices/cereal_yield.csv','r')
 	
@@ -1418,132 +1423,136 @@ except:
 		years=j-11
 		for k in range(j+1,nyears):
 			Yield[icountry,k]=diff/years+Yield[icountry,k-1]
+
+	np.save(wdvars+'country_correlates/Yield',Yield)
 	
 	################
-	#f=open(wddata+'country_indices/iq.csv','r')
-	#
-	#i=-2
-	#g=-1
-	#countries=[]
-	#iq=np.zeros(shape=(len(africanCountries),nyears))
-	#iqMask=np.zeros(shape=(len(africanCountries),nyears),dtype=bool)
-	#for line in f:
-	#	i+=1
-	#	if i==-1:
-	#		continue
-	#	tmp=np.array(line.split(','))
-	#	country=tmp[0]
-	#	if np.amax(country==np.array(africanCountries[:]))==0:
-	#		continue
-	#	countries.append(country)
-	#	icountry=int(countryToi[country])
-	#	g+=1
-	#	j=42 # 1998
-	#	for y in range(nyears):
-	#		j+=1
-	#		try:
-	#			iq[icountry,y]=float(tmp[2])
-	#		except:
-	#			iqMask[icountry,y]=1
-	#
-	################
-	#f=open(wddata+'country_indices/fertility.csv','r')
-	#
-	#i=-2
-	#g=-1
-	#countries=[]
-	#fertility=np.zeros(shape=(len(africanCountries),nyears))
-	#fertilityMask=np.zeros(shape=(len(africanCountries),nyears),dtype=bool)
-	#for line in f:
-	#	i+=1
-	#	if i==-1:
-	#		continue
-	#	line=line[:-2]
-	#	line=line.replace('"','')
-	#	tmp=np.array(line.split(','))
-	#	country=tmp[0]
-	#	if np.amax(country==np.array(africanCountries[:]))==0:
-	#		continue
-	#	countries.append(country)
-	#	icountry=int(countryToi[country])
-	#	g+=1
-	#	j=42 # 1998
-	#	for y in range(nyears):
-	#		j+=1
-	#		try:
-	#			fertility[icountry,y]=float(tmp[j])
-	#		except:
-	#			fertilityMask[icountry,y]=1
-	#
-	#Corr[index] = corr(np.ma.compressed(fertility),np.ma.compressed(malCountry))
-	#
-	################
-	#index+=1
-	#
-	#f=open(wddata+'country_indices/under5mortality.csv','r')
-	#
-	#i=-2
-	#g=-1
-	#countries=[]
-	#mortality5=np.zeros(shape=(len(africanCountries),nyears))
-	#mortality5Mask=np.zeros(shape=(len(africanCountries),nyears),dtype=bool)
-	#for line in f:
-	#	i+=1
-	#	if i==-1:
-	#		continue
-	#	line=line[:-2]
-	#	line=line.replace('"','')
-	#	tmp=np.array(line.split(','))
-	#	country=tmp[0]
-	#	if np.amax(country==np.array(africanCountries[:]))==0:
-	#		continue
-	#	countries.append(country)
-	#	icountry=int(countryToi[country])
-	#	g+=1
-	#	j=42 # 1998
-	#	for y in range(nyears):
-	#		j+=1
-	#		try:
-	#			mortality5[icountry,y]=float(tmp[j])
-	#		except:
-	#			mortality5Mask[icountry,y]=1
-	#
-	#Corr[index] = corr(np.ma.compressed(mortality5),np.ma.compressed(malCountry))
-	#
-	################
-	#index+=1
-	#
-	#f=open(wddata+'country_indices/corruption.csv','r')
-	#
-	#i=-2
-	#g=-1
-	#countries=[]
-	#corruption=np.zeros(shape=(len(africanCountries),nyears))
-	#corruptionMask=np.zeros(shape=(len(africanCountries),nyears),dtype=bool)
-	#for line in f:
-	#	i+=1
-	#	if i==-1:
-	#		continue
-	#	line=line[:-2]
-	#	line=line.replace('"','')
-	#	tmp=np.array(line.split(','))
-	#	country=tmp[0]
-	#	if np.amax(country==np.array(africanCountries[:]))==0:
-	#		continue
-	#	countries.append(country)
-	#	icountry=int(countryToi[country])
-	#	g+=1
-	#	j=42 # 1998
-	#	for y in range(nyears):
-	#		j+=1
-	#		try:
-	#			corruption[icountry,y]=float(tmp[6])
-	#		except:
-	#			corruptionMask[icountry,y]=1
-	#
-	#Corr[index] = corr(np.ma.compressed(corruption),np.ma.compressed(malCountry))
-	#
-	################
+	f=open(wddata+'country_indices/iq.csv','r')
+	
+	i=-2
+	g=-1
+	countries=[]
+	iq=np.zeros(shape=(len(africanCountries),nyears))
+	iqMask=np.zeros(shape=(len(africanCountries),nyears),dtype=bool)
+	for line in f:
+		i+=1
+		if i==-1:
+			continue
+		tmp=np.array(line.split(','))
+		country=tmp[0]
+		if np.amax(country==np.array(africanCountries[:]))==0:
+			continue
+		countries.append(country)
+		icountry=int(countryToi[country])
+		g+=1
+		j=42 # 1998
+		for y in range(nyears):
+			j+=1
+			try:
+				iq[icountry,y]=float(tmp[2])
+			except:
+				iqMask[icountry,y]=1
+
+	np.save(wdvars+'country_correlates/iq',iq)
+	
+	###############
+	f=open(wddata+'country_indices/fertility.csv','r')
+	
+	i=-2
+	g=-1
+	countries=[]
+	fertility=np.zeros(shape=(len(africanCountries),nyears))
+	fertilityMask=np.zeros(shape=(len(africanCountries),nyears),dtype=bool)
+	for line in f:
+		i+=1
+		if i==-1:
+			continue
+		line=line[:-2]
+		line=line.replace('"','')
+		tmp=np.array(line.split(','))
+		country=tmp[0]
+		if np.amax(country==np.array(africanCountries[:]))==0:
+			continue
+		countries.append(country)
+		icountry=int(countryToi[country])
+		g+=1
+		j=42 # 1998
+		for y in range(nyears):
+			j+=1
+			try:
+				fertility[icountry,y]=float(tmp[j])
+			except:
+				fertilityMask[icountry,y]=1
+	
+	np.save(wdvars+'country_correlates/fertility',fertility)
+	
+	###############
+	index+=1
+	
+	f=open(wddata+'country_indices/under5mortality.csv','r')
+	
+	i=-2
+	g=-1
+	countries=[]
+	mortality5=np.zeros(shape=(len(africanCountries),nyears))
+	mortality5Mask=np.zeros(shape=(len(africanCountries),nyears),dtype=bool)
+	for line in f:
+		i+=1
+		if i==-1:
+			continue
+		line=line[:-2]
+		line=line.replace('"','')
+		tmp=np.array(line.split(','))
+		country=tmp[0]
+		if np.amax(country==np.array(africanCountries[:]))==0:
+			continue
+		countries.append(country)
+		icountry=int(countryToi[country])
+		g+=1
+		j=42 # 1998
+		for y in range(nyears):
+			j+=1
+			try:
+				mortality5[icountry,y]=float(tmp[j])
+			except:
+				mortality5Mask[icountry,y]=1
+	
+	np.save(wdvars+'country_correlates/mortality5',mortality5)
+	
+	###############
+	index+=1
+	
+	f=open(wddata+'country_indices/corruption.csv','r')
+	
+	i=-2
+	g=-1
+	countries=[]
+	corruption=np.zeros(shape=(len(africanCountries),nyears))
+	corruptionMask=np.zeros(shape=(len(africanCountries),nyears),dtype=bool)
+	for line in f:
+		i+=1
+		if i==-1:
+			continue
+		line=line[:-2]
+		line=line.replace('"','')
+		tmp=np.array(line.split(','))
+		country=tmp[0]
+		if np.amax(country==np.array(africanCountries[:]))==0:
+			continue
+		countries.append(country)
+		icountry=int(countryToi[country])
+		g+=1
+		j=42 # 1998
+		for y in range(nyears):
+			j+=1
+			try:
+				corruption[icountry,y]=float(tmp[6])
+			except:
+				corruptionMask[icountry,y]=1
+	
+	np.save(wdvars+'country_correlates/corruption',corruption)
+	
+	###############
 	
 	#indices=[GDPperCap[:nyearsT],girlEd[:nyearsT],electricity[:nyearsT],Yield[:nyearsT],iq[:nyearsT]]
 	#indexNames=['GDPperCap','girlEd','electricity','Yield','iq']
@@ -1583,7 +1592,7 @@ except:
 	#yfit=slope*x+b
 	#
 	#YieldD[i]=Yield[i]-yfit
-	#
+	
 	######################
 	print 'Religion'
 	
@@ -1634,6 +1643,10 @@ except:
 		muslim[i,:] = np.mean(muslim[i,:][muslim[i,:]!=0])
 		christian[i,:] = np.mean(christian[i,:][christian[i,:]!=0])
 		animism[i,:] = np.mean(animism[i,:][animism[i,:]!=0])
+
+	np.save(wdvars+'country_correlates/animism',animism)
+	np.save(wdvars+'country_correlates/christian',christian)
+	np.save(wdvars+'country_correlates/muslim',muslim)
 	#########################
 
 	warBool = np.zeros(shape=(43,30))
@@ -1670,6 +1683,8 @@ except:
 	warBool[36,9:19]=1 # South Sudan
 	for i in range(43):
 		war[i,:] = np.sum(warBool[i,:])
+	
+	np.save(wdvars+'country_correlates/war',war)
 	#########################
 
 	###########################
@@ -1732,6 +1747,8 @@ except:
 		years=j-0
 		for k in range(j+1,nyears):
 			openDefecation[i,k]=diff/years+openDefecation[i,k-1]
+
+	np.save(wdvars+'country_correlates/openDefecation',openDefecation)
 
 	########################
 	# Refugees
@@ -1804,6 +1821,8 @@ except:
 	for i in range(43):
 		refugeesSum[i,:] = np.sum(refugees[i,:])
 
+	np.save(wdvars+'country_correlates/refugeesSum',refugeesSum)
+
 	########################
 	# Maternal Mortality
 	########################
@@ -1875,6 +1894,8 @@ except:
 	for i in range(43):
 		maternalMortalitySum[i,:] = np.sum(maternalMortality[i,:])
 
+	np.save(wdvars+'country_correlates/maternalMortalitySum',maternalMortalitySum)
+	exit()
 
 
 	#xyear = np.arange(1999,2021)
