@@ -441,9 +441,9 @@ for iAM in range(2):
                                 rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]
                             else:
                                 if(optiLevel[k]=='AllIntl'):
-                                    rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]*mTariffV*2.
+                                    rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+(rutfcostarray[i,j]-0.146)*countryCostedTariff[i]*mTariffV*2.
                                 else:
-                                    rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]*mTariffV
+                                    rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+(rutfcostarray[i,j]-0.146)*countryCostedTariff[i]*mTariffV
 
 
                     with open(wddata+'optiarrays/rutfdictionary.json', 'w') as fp:
@@ -475,9 +475,9 @@ for iAM in range(2):
                             mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]
                         else:
                             if(optiLevel[k]=='AllIntl'):
-                                mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]*mTariffV*2.
+                                mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+(mamcostarray[i,j]-0.146)*countryCostedTariff[i]*mTariffV*2.
                             else:
-                                mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]*mTariffV
+                                mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+(mamcostarray[i,j]-0.146)*countryCostedTariff[i]*mTariffV
             
                 with open(wddata+'optiarrays/mamdictionary.json', 'w') as fp:
                     json.dump(mamdictionary, fp, sort_keys=True)

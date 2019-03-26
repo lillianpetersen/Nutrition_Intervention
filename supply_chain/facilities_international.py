@@ -475,9 +475,9 @@ for k in range(len(optiLevel)):
                         rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]
                     else:
                         if(optiLevel[k]=='AllIntl'):
-                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]/100*mTariffV*2.
+                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+(rutfcostarray[i,j]-0.146)*countryCostedTariff[i]/100*mTariffV*2.
                         else:
-                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+rutfcostarray[i,j]*countryCostedTariff[i]/100*mTariffV
+                            rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]+(rutfcostarray[i,j]-0.146)*countryCostedTariff[i]/100*mTariffV
             
             with open(wddata+'optiarrays/rutfdictionary.json', 'w') as fp:
                 json.dump(rutfdictionary, fp, sort_keys=True)
@@ -508,9 +508,9 @@ for k in range(len(optiLevel)):
                         mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]
                     else:
                         if(optiLevel[k]=='AllIntl'):
-                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]/100*mTariffV*2.
+                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+(mamcostarray[i,j]-0.146)*countryCostedTariff[i]/100*mTariffV*2.
                         else:
-                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+mamcostarray[i,j]*countryCostedTariff[i]/100*mTariffV
+                            mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+(mamcostarray[i,j]-0.146)*countryCostedTariff[i]/100*mTariffV
             
             with open(wddata+'optiarrays/mamdictionary.json', 'w') as fp:
                 json.dump(mamdictionary, fp, sort_keys=True)
@@ -568,8 +568,7 @@ for k in range(len(optiLevel)):
             rutfdemandarray = np.genfromtxt(wddata+'optiarrays/SAMdemand.csv', delimiter=',')
             DemandRUTF = dict(zip(location, rutfdemandarray))
             
-            # mamdemandarray = np.genfromtxt(wddata+'optiarrays/MAMdemand.csv', delimiter=',')
-            mamdemandarray=np.zeros(shape=43)
+            mamdemandarray = np.genfromtxt(wddata+'optiarrays/MAMdemand.csv', delimiter=',')
             DemandMAM = dict(zip(location, mamdemandarray))
         
             # cost to location
