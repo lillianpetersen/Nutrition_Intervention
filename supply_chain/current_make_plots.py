@@ -603,7 +603,6 @@ for L in range(len(optiLevel)):
             plt.text(100,-4,'Today',horizontalalignment='center')
             ax.legend((pvars[::-1]),(Otitles[::-1]),bbox_to_anchor=(1, 0.98),prop=fontP)
             plt.savefig(wdfigs+'cost_optimization/'+Ltitles[L]+'/'+Vtitles[V]+'/FactoryPct_vs_'+Vtitles[V]+'.pdf')
-    exit()
 
     ##################################################################
     # MAPS
@@ -1124,7 +1123,7 @@ for L in range(len(optiLevel)):
 fig = plt.figure(figsize=(6, 5))
 plt.clf()
 x=np.array([1,2,3])
-ydata = (np.array([costOneAll[0],costOneAll[1],costOneAll[2]])/1e9)[::-1]
+ydata = (np.array([costOneAll[0])/1e9)[::-1]
 colors=['g','b','r'][::-1]
 plt.bar(x,ydata,color=colors,tick_label=['Current'])
 plt.ylabel('Total Cost of Procurement for 1 Year (Billion USD)')

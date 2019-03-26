@@ -76,6 +76,8 @@ except:
 MakeLinePlots=False
 MakeStackedBarPlots=False
 MakeExportPlots=False
+MakeStackedBarPlots=True
+MakeExportPlots=True
 MakeSkeleton=False
 MakeByFactoryPlots=False
 
@@ -254,7 +256,6 @@ for L in range(len(optiLevel)):
             sizeMinMax[0,i,1]=np.amax(factorySizeS)
             sizeMinMax[1,i,1]=np.amax(factorySizeM)
         factorySizeAll=np.ma.masked_array(factorySizeAll,factorySizeAllMask)
-
         pctLocalOneAll[L,:]=pctLocalOneAll[L,:]/capacityOne[:]
         
         totalCapacity = np.zeros(shape=(2,len(factorySizeAll[0])))
