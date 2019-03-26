@@ -305,7 +305,7 @@ for k in range(len(optiLevel)):
             for i in range(len(countrycosted)):
                 rutfdictionary[countrycosted[i]]={}
                 for j in range(len(subsaharancountry)):
-                    if(countrycosted[i][:2]=='I_'):
+                    if countrycosted[i][:2]=='I_' or countrycosted[i]=='South Africa':
                         rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]
                     else:
                         if(optiLevel[k]=='AllIntl'):
