@@ -28,8 +28,9 @@ countryCostedTariff = countryCostedTariff/100.
 
 bigloop=True
 if(bigloop):
-    AM=['SAM','MAM']
-    optiLevel = ['AllarOpti','LocalOpti','AllIntl']
+    AM=['MAM']
+    #optiLevel = ['AllarOpti','LocalOpti','AllIntl']
+    optiLevel = ['AllIntl']
     loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff', 'budget']
     mins= np.array([0.2,0.2,0.2,0.2, 0.2, 0.2])
     factor = np.array([0.2,0.2,0.2,0.2, 0.2, 0.2])
@@ -45,7 +46,7 @@ else:
     factor=np.array([1])
     maxs=np.array([3])
 
-for iAM in range(2):
+for iAM in range(len(AM)):
     if(AM[iAM]=='SAM'):
         mSAM=1
         mMAM=0
@@ -678,6 +679,7 @@ for iAM in range(2):
                         rutfsupplyarray[i,j]=varsdict["Supply_of_RUTF_"+countrycosted[i]+subsaharancountry[j]]
                 
                 rutftotaled=np.sum(rutfsupplyarray,axis=1)
+                rutftotaled = np.round(rutftotaled,4)
     
                 rusfsupplyarray=np.zeros(shape=(33,43))
                 
@@ -686,6 +688,7 @@ for iAM in range(2):
                         rusfsupplyarray[i,j]=varsdict["Supply_of_MAM_Treatment_"+countrycosted[i]+subsaharancountry[j]]
                     
                 rusftotaled=np.sum(rusfsupplyarray,axis=1)
+                rusftotaled = np.round(rusftotaled,4)
             
                 ingredientcosttotalpercent=np.sum(rutfsupplyarray*rutfcostarray+rusfsupplyarray*mamcostarray)/value(prob.objective)
                 

@@ -276,7 +276,7 @@ for L in range(len(optiLevel)):
         totalCapacity = np.zeros(shape=(shp))
         totalCapacity = np.sum(factorySizeAll,axis=1)
         factoryPct = np.swapaxes(factoryPct,0,1)
-        for p in range(27):
+        for p in range(len(countrycosted)):
             factoryPct[p] = 100*factoryPct[p]/totalCapacity
     
         if not os.path.exists(wdfigs+'cost_optimization/'+Ltitles[L]+'/'+Vtitles[V]):
@@ -363,6 +363,8 @@ for L in range(len(optiLevel)):
                 productarray = np.load(wddata+'results/current/current_'+loopvar[V]+'/RNrutfsupplyarraycurrent_'+loopvar[V]+str(s)+'.npy')
                 Rcountrycosted1=np.load(wddata+'results/current/current_'+loopvar[V]+'/RNcountrycostedcurrent_'+loopvar[V]+str(s)+'.npy')
                 Rsubsaharancountry1=np.load(wddata+'results/current/current_'+loopvar[V]+'/RNsubsaharancountrycurrent_'+loopvar[V]+str(s)+'.npy')
+                productarray = productarray[:-2]
+                Rcountrycosted1 = Rcountrycosted1[:-2]
         
                 # replace underscores with spaces
                 Rcountrycosted=[]
@@ -919,7 +921,7 @@ for L in range(len(optiLevel)):
                 lat2=SScapitalLatLon[0,p]
                 lon2=SScapitalLatLon[1,p]
 
-                supplier=Rcountrycosted1[c]
+                supplier=Rcountrycosted[c]
                 p2=np.where(supplier==countrycosted)[0][0]
                 lat1=capitalLatLon[0,p2]
                 lon1=capitalLatLon[1,p2]
@@ -1051,18 +1053,12 @@ for L in range(len(optiLevel)):
                     
                 for country in shpreader.Reader(countries_shp).records():
                     cName=country.attributes['NAME_LONG']
-                    if cName[-6:]=='Ivoire':
-                        cName="Ivory Coast"
-                    if cName=='Democratic Republic of the Congo':
-                        cName='DRC'
-                    if cName=='Republic of the Congo':
-                        cName='Congo'
-                    if cName=='eSwatini':
-                        cName='Swaziland'
-                    if cName=='The Gambia':
-                        cName='Gambia'
-                    if np.amax(cName==subsaharancountry)==0:
-                        continue
+                    if cName[-6:]=='Ivoire': cName="Ivory Coast"
+                    if cName=='Democratic Republic of the Congo': cName='DRC'
+                    if cName=='Republic of the Congo': cName='Congo'
+                    if cName=='eSwatini': cName='Swaziland'
+                    if cName=='The Gambia': cName='Gambia'
+                    if np.amax(cName==subsaharancountry)==0: continue
                     impc=np.where(cName==subsaharancountry)[0][0]
                     x=productarray[f,impc]
                     y=y1+(y2-y1)/(cmax-cmin)*(x-cmin)
@@ -1119,11 +1115,12 @@ for L in range(len(optiLevel)):
                 plt.legend(loc = 'lower left')
                 plt.savefig(wdfigs+'cost_optimization/'+Ltitles[L]+'/exports_by_country/'+Ltitles[L]+'_'+factory+'_exports.pdf')
     
+exit()
 ## cost barchart ##
 fig = plt.figure(figsize=(6, 5))
 plt.clf()
 x=np.array([1,2,3])
-ydata = (np.array([costOneAll[0])/1e9)[::-1]
+ydata = (np.array([costOneAll[0]])/1e9)[::-1]
 colors=['g','b','r'][::-1]
 plt.bar(x,ydata,color=colors,tick_label=['Current'])
 plt.ylabel('Total Cost of Procurement for 1 Year (Billion USD)')

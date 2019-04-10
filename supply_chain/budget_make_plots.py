@@ -72,10 +72,9 @@ except:
     wdfigs='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/figs/budget/'
     wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
 
-MakePlots=True
 MakeLinePlots=False
-MakeStackedBarPlots=False
-MakeExportPlots=False
+MakeStackedBarPlots=True
+MakeExportPlots=True
 MakeSkeleton=False
 MakeByFactoryPlots=False
 

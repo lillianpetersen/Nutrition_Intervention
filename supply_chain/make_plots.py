@@ -445,8 +445,10 @@ for L in range(len(optiLevel)):
         colors = [(255,255,255),(152, 240, 152), (97, 218, 97), (65, 196, 65), (42, 175, 42), (28, 162, 28), (17, 149, 17), (7, 135, 7), (0, 118, 0)]
         my_cmap = make_cmap(colors,bit=True)
         shapename = 'admin_0_countries'
+        print '1'
         countries_shp = shpreader.natural_earth(resolution='110m',
             category='cultural', name=shapename)
+        print '2'
         
         plt.clf()
         cmapArray=my_cmap(np.arange(256))
@@ -454,6 +456,7 @@ for L in range(len(optiLevel)):
         cmax=np.amax(np.sum(factoryPctOne[:,:],axis=0)) #*0.9
         y1=0
         y2=255
+        print '3'
         
         fig = plt.figure(figsize=(10, 8))
         MinMaxArray=np.ones(shape=(3,2))
@@ -462,6 +465,7 @@ for L in range(len(optiLevel)):
         MinMaxArray[1,0]=cmax/1e9
         plt.imshow(MinMaxArray,cmap=my_cmap)
         plt.colorbar(label='Number of Packets (Billions)')
+        print '4'
         
         ax = plt.axes([0.05,0.05,0.8,0.85],projection=ccrs.PlateCarree())
         ax.set_extent([-19, 53, -37, 39], ccrs.PlateCarree())
@@ -477,24 +481,13 @@ for L in range(len(optiLevel)):
         
         for country in shpreader.Reader(countries_shp).records():
             cName=country.attributes['NAME_LONG']
-            if cName=='Guinea_Bissau':
-                cName='Guinea-Bissau'
-            if cName=='Guinea Bissau':
-                cName='Guinea-Bissau'
-            if cName[-6:]=='Ivoire':
-                cName="Ivory Coast"
-            if cName=='Democratic Republic of the Congo':
-                cName='DRC'
-            if cName=='Republic of the Congo':
-                cName='Congo'
-            if cName=='eSwatini':
-                cName='Swaziland'
-            if cName=='The Gambia':
-                cName='Gambia'
-            if cName=='Somaliland':
-                cName='Somalia'
-            if np.amax(cName==subsaharancountry)==0:
-                continue
+            if cName[-6:]=='Ivoire': cName="Ivory Coast"
+            if cName=='Democratic Republic of the Congo': cName='DRC'
+            if cName=='Republic of the Congo': cName='Congo'
+            if cName=='eSwatini': cName='Swaziland'
+            if cName=='The Gambia': cName='Gambia'
+            if cName=='Somaliland': cName='Somalia'
+            if np.amax(cName==subsaharancountry)==0: continue
             if np.amax(cName==countrycosted)==0:
                 x=0
                 y=y1+(y2-y1)/(cmax-cmin)*(x-cmin)
