@@ -790,7 +790,7 @@ for k in range(len(optiLevel)):
             iSortedF = np.argsort(lonsF)
             iSortedC = np.argsort(lonsC)
             
-            subsaharancountry =  np.array(subsaharancountry)
+            subsaharancountry = np.array(subsaharancountry)
             
             RNcountrycosted = Rcountrycosted
             RNsubsaharancountry = subsaharancountry

@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.mlab as mlab
 import os
-from scipy.stats import norm
+# from scipy.stats import norm
 import matplotlib as mpl
 import matplotlib.cm as cm
 import matplotlib.colors as colors
@@ -73,9 +73,8 @@ except:
     wdfigs='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/figs/'
     wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
 
-MakePlots=False
 MakeLinePlots=False
-MakeStackedBarPlots=True
+MakeStackedBarPlots=False
 MakeExportPlots=False
 MakeSkeleton=False
 MakeByFactoryPlots=False
@@ -87,6 +86,8 @@ subsaharancountry = np.load(wdvars+'subsaharancountry.npy')
 subsaharancountry[subsaharancountry=='Congo']='DRC'
 subsaharancountry[subsaharancountry=='Congo (Republic of the)']='Congo'
 subsaharancountry[subsaharancountry=="Cote d'Ivoire"]='Ivory Coast'
+subsaharancountry[subsaharancountry=="Guinea_Bissau"]='Guinea-Bissau'
+
 
 countrycosted=np.load(wdvars+'countrycosted.npy')
 countrycosted[countrycosted=='Congo']='DRC'
@@ -130,7 +131,7 @@ VTitles = ['Shipping','Import/Export','Startup','Trucking', 'Tariff']
 Ltitles = ['AllOpti','LocalOpti', 'AllIntl']
 Vtitles = ['shipping','importexport','startup','trucking', 'tariff']
 
-mTrueins= np.array([0.2,0.2,0.2,0.2,0.2])
+mins= np.array([0.2,0.2,0.2,0.2,0.2])
 factor = np.array([0.2,0.2,0.2,0.2,0.2])
 maxs = np.array([5.01,5.01,5.01,5.01,5.01])
 #LTitles = ['All Optimized','Local Optimized','Local Producing Optimized International with Tariff','Local Producing International with Tariff','Local Optimized with Tariff','All Optimized with Tariff','Local Producing Optimized International']
@@ -185,7 +186,7 @@ for L in range(len(optiLevel)):
             k=-1
             j=-1
             for line in f:
-                line = line[:-2]
+                
                 k+=1
                 tmp=line.split(',')
                 if k==0:
@@ -253,7 +254,7 @@ for L in range(len(optiLevel)):
             sizeMinMax[0,i,1]=np.amax(factorySizeS)
             sizeMinMax[1,i,1]=np.amax(factorySizeM)
         factorySizeAll=np.ma.masked_array(factorySizeAll,factorySizeAllMask)
-        exit()
+
         pctLocalOneAll[L,:]=pctLocalOneAll[L,:]/capacityOne[:]
         
         totalCapacity = np.zeros(shape=(2,len(factorySizeAll[0])))
@@ -475,6 +476,10 @@ for L in range(len(optiLevel)):
         
         for country in shpreader.Reader(countries_shp).records():
             cName=country.attributes['NAME_LONG']
+            if cName=='Guinea_Bissau':
+                cName='Guinea-Bissau'
+            if cName=='Guinea Bissau':
+                cName='Guinea-Bissau'
             if cName[-6:]=='Ivoire':
                 cName="Ivory Coast"
             if cName=='Democratic Republic of the Congo':
@@ -538,9 +543,9 @@ for L in range(len(optiLevel)):
     ###########################
     # Skeleton
     ###########################
-    current_countrycosted = np.load(wdvars+'currentcountrycosted.npy')
-    current_factoryLatLon = np.load(wdvars+'current_capitalLatLon.npy')
     if MakeSkeleton:
+        current_countrycosted = np.load(wdvars+'currentcountrycosted.npy')
+        current_factoryLatLon = np.load(wdvars+'current_capitalLatLon.npy')
         shapename = 'admin_0_countries'
         countries_shp = shpreader.natural_earth(resolution='110m',
             category='cultural', name=shapename)
@@ -560,6 +565,8 @@ for L in range(len(optiLevel)):
         for country in shpreader.Reader(countries_shp).records():
             cName=country.attributes['NAME_LONG']
             if cName[-6:]=='Ivoire': cName="Ivory Coast"
+            if cName=='Guinea_Bissau': cName='Guinea-Bissau'
+            if cName=='Guinea Bissau': cName='Guinea-Bissau'
             if cName=='Democratic Republic of the Congo': cName='DRC'
             if cName=='Republic of the Congo': cName='Congo'
             if cName=='eSwatini': cName='Swaziland'
@@ -594,6 +601,8 @@ for L in range(len(optiLevel)):
         for country in shpreader.Reader(countries_shp).records():
             cName=country.attributes['NAME_LONG']
             if cName[-6:]=='Ivoire': cName="Ivory Coast"
+            if cName=='Guinea_Bissau': cName='Guinea-Bissau'
+            if cName=='Guinea Bissau': cName='Guinea-Bissau'
             if cName=='Democratic Republic of the Congo': cName='DRC'
             if cName=='Republic of the Congo': cName='Congo'
             if cName=='eSwatini': cName='Swaziland'
@@ -627,7 +636,7 @@ for L in range(len(optiLevel)):
         plt.legend(loc = 'lower left')
         plt.text(-15,-10,'9 Current Factories\n24 Possible Factories\n15 Possible Ports', bbox=dict(fc="none", boxstyle="round"), size = 10)
         plt.savefig(wdfigs+'cost_optimization/skeleton_map.pdf')
-        exit()
+
 
     ###########################
     # Supply Zones
@@ -662,6 +671,8 @@ for L in range(len(optiLevel)):
             Rsubsaharancountry[Rsubsaharancountry=='Congo']='DRC'
             Rsubsaharancountry[Rsubsaharancountry=='Congo (Republic of the)']='Congo'
             Rsubsaharancountry[Rsubsaharancountry=="Cote d'Ivoire"]='Ivory Coast'
+            Rsubsaharancountry[Rsubsaharancountry=="Guinea_Bissau"]='Guinea-Bissau'
+            Rsubsaharancountry[Rsubsaharancountry=="Guinea Bissau"]="Guinea-Bissau"
             Rcountrycosted[Rcountrycosted=='Congo']='DRC'
             Rcountrycosted[Rcountrycosted=='Congo (Republic of the)']='Congo'
             Rcountrycosted[Rcountrycosted=="I_Cote d'Ivoire"]='I_Ivory Coast'
@@ -702,6 +713,8 @@ for L in range(len(optiLevel)):
         for country in shpreader.Reader(countries_shp).records():
             cName=country.attributes['NAME_LONG']
             if cName[-6:]=='Ivoire': cName="Ivory Coast"
+            if cName=='Guinea_Bissau': cName='Guinea-Bissau'
+            if cName=='Guinea Bissau': cName='Guinea-Bissau'
             if cName=='Democratic Republic of the Congo': cName='DRC'
             if cName=='Republic of the Congo': cName='Congo'
             if cName=='eSwatini': cName='Swaziland'
@@ -719,6 +732,8 @@ for L in range(len(optiLevel)):
         for country in shpreader.Reader(countries_shp).records():
             cName=country.attributes['NAME_LONG']
             if cName[-6:]=='Ivoire': cName="Ivory Coast"
+            if cName=='Guinea_Bissau': cName='Guinea-Bissau'
+            if cName=='Guinea Bissau': cName='Guinea-Bissau'
             if cName=='Democratic Republic of the Congo': cName='DRC'
             if cName=='Republic of the Congo': cName='Congo'
             if cName=='eSwatini': cName='Swaziland'
@@ -789,7 +804,6 @@ for L in range(len(optiLevel)):
         plt.title('Primary Supplier of Treatment by Country',fontsize=18)
         plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally', bbox=dict(fc="none", boxstyle="round"), size = 10)
         plt.savefig(wdfigs+'cost_optimization/'+Ltitles[L]+'/geographical/Supplyzone_map.pdf')
-        exit()
 
     ###########################
     # By factory import/export
@@ -823,6 +837,8 @@ for L in range(len(optiLevel)):
             Rsubsaharancountry[Rsubsaharancountry=='Congo']='DRC'
             Rsubsaharancountry[Rsubsaharancountry=='Congo (Republic of the)']='Congo'
             Rsubsaharancountry[Rsubsaharancountry=="Cote d'Ivoire"]='Ivory Coast'
+            Rsubsaharancountry[Rsubsaharancountry=="Guinea_Bissau"]="Guinea-Bissau"
+            Rsubsaharancountry[Rsubsaharancountry=="Guinea Bissau"]="Guinea-Bissau"
             Rcountrycosted[Rcountrycosted=='Congo']='DRC'
             Rcountrycosted[Rcountrycosted=='Congo (Republic of the)']='Congo'
             Rcountrycosted[Rcountrycosted=="I_Cote d'Ivoire"]='I_Ivory Coast'
@@ -869,6 +885,10 @@ for L in range(len(optiLevel)):
                     cName=country.attributes['NAME_LONG']
                     if cName[-6:]=='Ivoire':
                         cName="Ivory Coast"
+                    if cName=='Guinea Bissau': 
+                        cName='Guinea-Bissau'
+                    if cName=='Guinea_Bissau': 
+                        cName='Guinea-Bissau'
                     if cName=='Democratic Republic of the Congo':
                         cName='DRC'
                     if cName=='Republic of the Congo':
@@ -946,6 +966,7 @@ plt.ylabel('Total Cost of Procurement for 1 Year (Billion USD)')
 plt.title('Total Modeled Cost',fontsize=18)
 plt.grid(True,linestyle=':')
 plt.savefig(wdfigs+'cost_optimization/summary/barchart_cost.pdf')
+exit()
 
 ## % local barchart ##
 fig = plt.figure(figsize=(6, 5))
