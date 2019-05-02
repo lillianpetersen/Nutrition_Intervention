@@ -28,9 +28,8 @@ countryCostedTariff = countryCostedTariff/100.
 
 bigloop=False
 if(bigloop):
-    AM=['MAM']
-    #optiLevel = ['AllarOpti','LocalOpti','AllIntl']
-    optiLevel = ['AllIntl']
+    AM=['MAM','SAM',]
+    optiLevel = ['AllarOpti','LocalOpti','AllIntl']
     loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff', 'budget']
     mins= np.array([0.2,0.2,0.2,0.2, 0.2, 0.2])
     factor = np.array([0.2,0.2,0.2,0.2, 0.2, 0.2])
@@ -38,21 +37,21 @@ if(bigloop):
     
 else:
     import matplotlib.pyplot as plt
-    AM=['MAM']
+    AM=['SAM']
     optiLevel=['AllarOpti']
     # optiLevel=['AllIntl_trf','AllarOpti','LocalOpti','AllIntl_opti_trf', 'LocalOpti_trf','AllarOpti_trf','AllIntl_opti','AllIntl']
     loopvar=['shipcost']
-    mins=np.array([1])
+    mins=np.array([0])
     factor=np.array([1])
-    maxs=np.array([2])
+    maxs=np.array([10])
 
 for iAM in range(len(AM)):
     if(AM[iAM]=='SAM'):
-        mSAM=1
-        mMAM=0
+        mSAM=True
+        mMAM=False
     if(AM[iAM]=='MAM'):
-        mMAM=1
-        mSAM=0 
+        mMAM=True
+        mSAM=False
     print AM[iAM]
     for k in range(len(optiLevel)):
             # for x in range(len(countrycosted)):
@@ -369,7 +368,7 @@ for iAM in range(len(AM)):
                 elif(mBudget==True):
                     mBudgetV=s
                 transportcostArray = np.load(wddata+'travel_time/totalTruckingCost.npy')
-                transportcostArray = mTruckV*transportcostArray/1000
+                transportcostArray = mTruckV*transportcostArray/1000.
                 # transportcostArray=np.zeros(shape=(33,43))
                 # f=open(wddata+'travel_time/INTLcapitaldistanceArray.csv','r')
                 # i=-1
@@ -557,7 +556,7 @@ for iAM in range(len(AM)):
                 
                 SAMCostTransport = samtransportcostdictionary
                 
-                QuantityRUTF = LpVariable.dicts ('Supply of RUTF %s%s',(facility, location),cat = 'Continuous',lowBound = 0,upBound = None)
+                QuantityRUTF = LpVariable.dicts ('Supply of RUTF %s%s',(facility, location),cat = 'Continuous',lowBound = 0, upBound = None)
                 
                 QuantityMAM = LpVariable.dicts ('Supply of MAM Treatment %s%s',(facility, location),cat = 'Continuous',lowBound = 0, upBound = None)
                 
@@ -595,33 +594,30 @@ for iAM in range(len(AM)):
                     prob += sum(QuantityRUTF[i][j] for i in facility) <= DemandRUTF[j]
                 for j in location:
                     prob += sum(QuantityMAM[i][j] for i in facility) <= DemandMAM[j]
-                for j in location:
-                    prob += sum(QuantityRUTF[i][j] for i in facility) >= 0
-                for j in location:
-                    prob += sum(QuantityMAM[i][j] for i in facility) >= 0
+                for i in facility:
+                    prob += sum(QuantityRUTF[i][j] for j in location) >= 0
+                for i in facility:
+                    prob += sum(QuantityMAM[i][j] for j in location) >= 0
                 #cost must be within budget:
                 if(mSAM):
-                    budgettotal = 240000000
-
+                    budgettotal = 240.
                 elif(mMAM):
-                    budgettotal = 315000000
+                    budgettotal = 315.
                                     
                 budgettotal = budgettotal * mBudgetV
-                
+                                
                 tmpc1 = sum(costM1[i] * Machine1[i] for i in facility)
                 tmpc2 = sum(costM2[i] * Machine2[i] for i in facility)
                 tmpc3 = sum(startupcost[i] * Open[i] for i in facility)
                 tmpc4 = sum(upgradecost[i] * Factorysize[i] for i in facility)
-                tmpc5 = sum(sum((CostRUTF[i][j] * QuantityRUTF[i][j]) + (SAMCostTransport[i][j] * QuantityRUTF[i][j]) for j in location) for i in facility)
-                tmpc6 = sum(sum((CostMAM[i][j] * QuantityMAM[i][j]) + (MAMCostTransport[i][j] * QuantityMAM[i][j]) for j in location) for i in facility)
-                prob += (tmpc1+tmpc2+tmpc3+tmpc4+tmpc6) <= budgettotal
+                tmpc5 = sum(sum(CostRUTF[i][j] * QuantityRUTF[i][j] for j in location) for i in facility)
+                tmpc6 = sum(sum(SAMCostTransport[i][j] * QuantityRUTF[i][j] for j in location) for i in facility)
+                tmpc7 = sum(sum(CostMAM[i][j] * QuantityMAM[i][j] for j in location) for i in facility)
+                tmpc8 = sum(sum(MAMCostTransport[i][j] * QuantityMAM[i][j] for j in location) for i in facility)
+                prob +=(tmpc1+tmpc2+tmpc3+tmpc4+tmpc5+tmpc6+tmpc7+tmpc8)/1000000. <= budgettotal
                 
                 prob.solve()
-                #prob.ActualSolve()
-                # print(LpStatus[prob.status])
-                # print("Objective:")
-                # print s
-                # print z
+                
                 print(value(prob.objective))
                 
                 # for v in prob.variables():
@@ -652,9 +648,9 @@ for iAM in range(len(AM)):
                 countries=[]
                 children=value(prob.objective)
                 if(mSAM):
-                    children=children/150
+                    children=children/150.
                 elif(mMAM):
-                    children=children/50
+                    children=children/50.
                 sizes=[]
                 mamsup=[]
                 samsup=[]
@@ -685,7 +681,7 @@ for iAM in range(len(AM)):
                 
                 rutftotaled=np.sum(rutfsupplyarray,axis=1)
                 rutftotaled = np.round(rutftotaled,4)
-    
+
                 rusfsupplyarray=np.zeros(shape=(33,43))
                 
                 for i in range(len(countrycosted)):
