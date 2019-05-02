@@ -19,7 +19,7 @@ except:
 
 countryCostedTariff = np.load(wdvars+'tariff_by_country.npy')
 
-bigloop=True
+bigloop=False
 
 if(bigloop): 
 
@@ -31,7 +31,8 @@ if(bigloop):
 
 else:
     import matplotlib.pyplot as plt
-    optiLevel= ['current_factory_local_ingredientcost']
+    # optiLevel= ['current_factory_local_ingredientcost']
+    optiLevel= ['AllarOpti']
     # optiLevel=['AllIntl_trf','AllarOpti','LocalOpti','AllIntl_opti_trf', 'LocalOpti_trf','AllarOpti_trf','AllIntl_opti','AllIntl']
     loopvar=['shipcost', 'impexp','strtup','truckfactor', 'tariff']
     mins=np.array([1])
@@ -699,7 +700,7 @@ for k in range(len(optiLevel)):
             rusftotaled=np.sum(rusfsupplyarray,axis=1)
         
             ingredientcosttotalpercent=np.sum(rutfsupplyarray*rutfcostarray+rusfsupplyarray*mamcostarray)/value(prob.objective)
-            
+                
             MAMtransportcostarray=np.zeros(shape=(33,43))
             RUTFtransportcostarray=np.zeros(shape=(33,43))
             for i in range(len(countrycosted)):
@@ -710,7 +711,7 @@ for k in range(len(optiLevel)):
                     else:
                         MAMtransportcostarray[i,j]=(109.5/1000000.)*transportcostArray[i,j]+(109.5/1000000.)*importExportCosts[i,j]/15.
         
-            
+        
             transportpercent = np.sum(MAMtransportcostarray*rusfsupplyarray+RUTFtransportcostarray*rutfsupplyarray)/value(prob.objective)
             
             if(bigloop):

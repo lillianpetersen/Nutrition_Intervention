@@ -26,7 +26,7 @@ except:
 countryCostedTariff = np.load(wdvars+'tariff_by_country.npy')
 countryCostedTariff = countryCostedTariff/100.
 
-bigloop=True
+bigloop=False
 if(bigloop):
     AM=['MAM']
     #optiLevel = ['AllarOpti','LocalOpti','AllIntl']
@@ -34,17 +34,17 @@ if(bigloop):
     loopvar = ['shipcost', 'impexp','strtup','truckfactor', 'tariff', 'budget']
     mins= np.array([0.2,0.2,0.2,0.2, 0.2, 0.2])
     factor = np.array([0.2,0.2,0.2,0.2, 0.2, 0.2])
-    maxs = np.array([5.01,5.01,5.01,5.01, 5.01, 20.01])
+    maxs = np.array([5.01, 5.01, 5.01, 5.01, 5.01, 20.01])
     
 else:
     import matplotlib.pyplot as plt
     AM=['MAM']
     optiLevel=['AllarOpti']
     # optiLevel=['AllIntl_trf','AllarOpti','LocalOpti','AllIntl_opti_trf', 'LocalOpti_trf','AllarOpti_trf','AllIntl_opti','AllIntl']
-    loopvar=['budget']
+    loopvar=['shipcost']
     mins=np.array([1])
     factor=np.array([1])
-    maxs=np.array([3])
+    maxs=np.array([2])
 
 for iAM in range(len(AM)):
     if(AM[iAM]=='SAM'):
@@ -577,20 +577,12 @@ for iAM in range(len(AM)):
                                     lowBound = 0,
                                     cat='Integer')
 
-                prob = LpProblem('problem', LpMaximize)
+                prob = LpProblem('Fixed Charge', LpMaximize)
                 tmp1 = sum(sum(QuantityRUTF[i][j] for j in location) for i in facility)
                 tmp2 = sum(sum(QuantityMAM[i][j] for j in location) for i in facility)
+                # tmp2 = sum(sum(QuantityMAM[i][j] for j in location) for i in facility)
                 prob += tmp1+tmp2
-            
-                # prob = LpProblem('Fixed Charge', LpMaximize)
-                # tmp1 = sum(costM1[i] * Machine1[i] for i in facility)
-                # tmp2 = sum(costM2[i] * Machine2[i] for i in facility)
-                # tmp3 = sum(startupcost[i] * Open[i] for i in facility)
-                # tmp4 = sum(upgradecost[i] * Factorysize[i] for i in facility)
-                # tmp5 = sum(sum((CostRUTF[i][j] * QuantityRUTF[i][j]) + (SAMCostTransport[i][j] * QuantityRUTF[i][j]) for j in location) for i in facility)
-                # tmp6 = sum(sum((CostMAM[i][j] * QuantityMAM[i][j]) + (MAMCostTransport[i][j] * QuantityMAM[i][j]) for j in location) for i in facility)
-                # prob+=tmp1+tmp2+tmp3+tmp4+tmp5+tmp6
-                # 
+                
                 #must be less than small machinery
                 for i in facility:
                     prob += sum(QuantityRUTF[i][j]+QuantityMAM[i][j] for j in location) <= (Capacity1*Machine1[i] + Capacity2*Machine2[i])
@@ -603,15 +595,27 @@ for iAM in range(len(AM)):
                     prob += sum(QuantityRUTF[i][j] for i in facility) <= DemandRUTF[j]
                 for j in location:
                     prob += sum(QuantityMAM[i][j] for i in facility) <= DemandMAM[j]
+                for j in location:
+                    prob += sum(QuantityRUTF[i][j] for i in facility) >= 0
+                for j in location:
+                    prob += sum(QuantityMAM[i][j] for i in facility) >= 0
                 #cost must be within budget:
                 if(mSAM):
-                    budgettotal = 54000000
+                    budgettotal = 240000000
+
                 elif(mMAM):
-                    budgettotal = 54000000
-                
+                    budgettotal = 315000000
+                                    
                 budgettotal = budgettotal * mBudgetV
-                prob += sum(costM1[i] * Machine1[i] + costM2[i] * Machine2[i] + upgradecost[i] * Factorysize[i] + sum((CostMAM[i][j] * QuantityMAM[i][j]) + (MAMCostTransport[i][j] * QuantityMAM[i][j]) + (CostRUTF[i][j] * QuantityRUTF[i][j]) + (SAMCostTransport[i][j] * QuantityRUTF[i][j]) for j in location) for i in facility) <= budgettotal
-                    
+                
+                tmpc1 = sum(costM1[i] * Machine1[i] for i in facility)
+                tmpc2 = sum(costM2[i] * Machine2[i] for i in facility)
+                tmpc3 = sum(startupcost[i] * Open[i] for i in facility)
+                tmpc4 = sum(upgradecost[i] * Factorysize[i] for i in facility)
+                tmpc5 = sum(sum((CostRUTF[i][j] * QuantityRUTF[i][j]) + (SAMCostTransport[i][j] * QuantityRUTF[i][j]) for j in location) for i in facility)
+                tmpc6 = sum(sum((CostMAM[i][j] * QuantityMAM[i][j]) + (MAMCostTransport[i][j] * QuantityMAM[i][j]) for j in location) for i in facility)
+                prob += (tmpc1+tmpc2+tmpc3+tmpc4+tmpc6) <= budgettotal
+                
                 prob.solve()
                 #prob.ActualSolve()
                 # print(LpStatus[prob.status])
@@ -619,6 +623,7 @@ for iAM in range(len(AM)):
                 # print s
                 # print z
                 print(value(prob.objective))
+                
                 # for v in prob.variables():
                 #     if(v.varValue>0):
                 #         print (v.name, "=", v.varValue)
@@ -707,9 +712,9 @@ for iAM in range(len(AM)):
                 
                 if(bigloop):
                     ##recipetype_factorchanged
-                    if not os.path.exists(wddata+'/resultstmp/budget/'+AM[iAM]+'/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/'):
-                        os.makedirs(wddata+'/resultstmp/budget/'+AM[iAM]+'/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/')
-                    f = open(wddata+'/resultstmp/budget/'+AM[iAM]+'/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/' +str(optiLevel[k])+'_'+str(loopvar[z])+str(np.round(s,2))+'.csv','w')
+                    if not os.path.exists(wddata+'/results/budget/'+AM[iAM]+'/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/'):
+                        os.makedirs(wddata+'/results/budget/'+AM[iAM]+'/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/')
+                    f = open(wddata+'/results/budget/'+AM[iAM]+'/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/' +str(optiLevel[k])+'_'+str(loopvar[z])+str(np.round(s,2))+'.csv','w')
                     f.write('children'+','+str(children)+'\n')
                     f.write('num_factories'+','+str(factorynum)+'\n')
                     f.write('percent_transport'+','+str(transportpercent)+'\n')
@@ -720,9 +725,9 @@ for iAM in range(len(AM)):
                             f.write(str(countrycosted[i])+','+str(rutftotaled[i])+','+str(rusftotaled[i])+'\n')
                     f.close()
                 else:
-                    if not os.path.exists(wddata+'/resultstmp/budget/'+AM[iAM]+'/'+'special/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/'):
-                        os.makedirs(wddata+'/resultstmp/budget/'+AM[iAM]+'/'+'special/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/')
-                    f = open(wddata+'/resultstmp/budget/'+AM[iAM]+'/'+'special/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/' +str(optiLevel[k])+'_'+str(loopvar[z])+str(np.round(s,2))+'.csv','w')
+                    if not os.path.exists(wddata+'/results/budget/'+AM[iAM]+'/'+'special/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/'):
+                        os.makedirs(wddata+'/results/budget/'+AM[iAM]+'/'+'special/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/')
+                    f = open(wddata+'/results/budget/'+AM[iAM]+'/'+'special/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/' +str(optiLevel[k])+'_'+str(loopvar[z])+str(np.round(s,2))+'.csv','w')
                     f.write('children'+','+str(children)+'\n')
                     f.write('num_factories'+','+str(factorynum)+'\n')
                     f.write('percent_transport'+','+str(transportpercent)+'\n')
@@ -738,7 +743,7 @@ for iAM in range(len(AM)):
                 Rrusfsupplyarray=np.zeros(shape=(lngth,43))
                 o=0
                 for i in range(len(countrycosted)):
-                    if(rutftotaled[i]!=0 or rusftotaled[i]!=0):
+                    if(rutftotaled[i]>0 or rusftotaled[i]>0):
                         Rcountrycosted.append(countrycosted[i])
                         Rrutfsupplyarray[o,:]=rutfsupplyarray[i,:]
                         Rrusfsupplyarray[o,:]=rusfsupplyarray[i,:]

@@ -17,9 +17,8 @@ except:
     wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
 # 'AllIntl_opti',
 
-countryCostedTariff = np.load(wdvars+'current_tariff_by_country.npy')
-
 UNICEF = True
+calculated = True
 bigloop = False
 
 if(bigloop): 
@@ -90,7 +89,10 @@ for k in range(len(optiLevel)):
                 rusfprice=[]
                 scplusprice=[]
                 capitalcosted=[]
-                f=open(wddata+'foodstuffs/current_prices.csv')
+                if(calculated):
+                    f=open(wddata+'foodstuffs/current_prices_calculated.csv')
+                else:
+                    f=open(wddata+'foodstuffs/current_prices.csv')
                 code=np.zeros(shape=(247),dtype=int)
                 i=-1
                 for line in f:
@@ -216,7 +218,7 @@ for k in range(len(optiLevel)):
                                 importCost=mImpExpV*(float(tmp[8])+float(tmp[10]))
                                 break
                         # importExportCosts[x,y]=importCost+exportCost
-                        # THIS IS WRONG THIS IS WRONG THIS IS WRONG THIS IS WRONG
+                        # THIS IS FOR UNICEF CONSISTENCY
                         importExportCosts[x,y]=exportCost
                 else:
                     xCountry=countrycosted[x]
@@ -238,7 +240,7 @@ for k in range(len(optiLevel)):
                                 importCost=mImpExpV*(float(tmp[8])+float(tmp[10]))
                                 break
                         # importExportCosts[x,y]=importCost+exportCost
-                        # THIS IS WRONG THIS IS WRONG THIS IS WRONG THIS IS WRONG
+                        # THIS IS FOR UNICEF CONSISTENCY
                         importExportCosts[x,y]=0
 
             #cost dabber RUTF ########################################################################
@@ -256,7 +258,7 @@ for k in range(len(optiLevel)):
                     if countrycosted[i][:2]=='I_' or countrycosted[i]=='South Africa':
                         rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]
                     else:
-                        if(optiLevel[k]=='AllIntl'):
+                        if(calculated==True):
                             rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]-rutfcostarray[i,j]*mTariffV*2.
                         else:
                             rutfdictionary[countrycosted[i]][subsaharancountry[j]]=rutfcostarray[i,j]-rutfcostarray[i,j]*mTariffV
@@ -412,7 +414,6 @@ for k in range(len(optiLevel)):
             # #procurement according to current
             prob += sum(QuantityRUTF['Kenya'][j]+QuantityMAM['Kenya'][j] for j in location) >= 79685256
             prob += sum(QuantityRUTF['South Africa'][j]+QuantityMAM['South Africa'][j] for j in location) >=75871293
-            
             
             prob += sum(sum(QuantityRUTF[i][j]+QuantityMAM[i][j] for j in location) for i in facility[9:]) <= 157875000.0
             
