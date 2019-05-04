@@ -1,4 +1,4 @@
-################################################################
+#"###############################################################
 # Step 3: Optimize SNF Supply Logistics
 # Makes Plots
 # Plots for minimum cost while treating all cases
@@ -74,10 +74,8 @@ except:
     wdvars='C:/Users/garyk/Documents/code/riskAssessmentFromPovertyEstimations/supply_chain/vars/'
 
 MakeLinePlots=False
-MakeStackedBarPlots=False
-MakeExportPlots=False
-MakeStackedBarPlots=True
 MakeExportPlots=True
+MakeStackedBarPlots=True
 MakeSkeleton=False
 MakeByFactoryPlots=False
 
@@ -385,15 +383,17 @@ for L in range(len(optiLevel)):
         if MakeStackedBarPlots:
             Dcolors = ['firebrick','m','darkorange','crimson','yellow','indianred','goldenrod','mediumpurple','navajowhite','peru','tomato','magenta','deeppink','lightcoral','lemonchiffon','sandybrown','r','gold','moccasin','peachpuff','orangered','orange','rosybrown','papayawhip']
             Icolors = ['navy','lawngreen','darkgreen','deepskyblue','darkslategray','mediumseagreen','lightseagreen','powderblue','midnightblue','forestgreen']
-            if Vtitles[V]=='shipping' or Vtitles[V]=='tariff':
-                width = 7 
-                plt.bar(100,102,width=width+4,color='k')
-            if Vtitles[V]=='startup':
-                width = 22 
-                plt.bar(100,102,width=width+14,color='k')
-            if Vtitles[V]=='importexport':
-                width = 10 
-                plt.bar(100,102,width=width+4,color='k')
+            #if Vtitles[V]=='shipping' or Vtitles[V]=='tariff':
+            #    width = 7 
+            #    plt.bar(100,102,width=width+4,color='k')
+            #if Vtitles[V]=='startup':
+            #    width = 22 
+            #    plt.bar(100,102,width=width+14,color='k')
+            #if Vtitles[V]=='importexport':
+            #    width = 10 
+            #    plt.bar(100,102,width=width+4,color='k')
+            width = 10 
+            plt.bar(100,101,width=width+6,color='k')
 
             pvars=[]
             inter=-1
@@ -424,7 +424,7 @@ for L in range(len(optiLevel)):
             plt.xlabel(''+VTitles[V]+' Cost, % of Today')
             plt.ylabel('% of Total Production')
             plt.ylim([0,102])
-            plt.text(100,-4,'Today',horizontalalignment='center')
+            plt.text(100,-7,'Today',horizontalalignment='center')
             ax.legend((pvars[::-1]),(Otitles[::-1]),bbox_to_anchor=(1, 0.98),prop=fontP)
             plt.savefig(wdfigs+'cost_optimization/'+Ltitles[L]+'/'+Vtitles[V]+'/FactoryPct_vs_'+Vtitles[V]+'.pdf')
 
@@ -445,10 +445,8 @@ for L in range(len(optiLevel)):
         colors = [(255,255,255),(152, 240, 152), (97, 218, 97), (65, 196, 65), (42, 175, 42), (28, 162, 28), (17, 149, 17), (7, 135, 7), (0, 118, 0)]
         my_cmap = make_cmap(colors,bit=True)
         shapename = 'admin_0_countries'
-        print '1'
         countries_shp = shpreader.natural_earth(resolution='110m',
             category='cultural', name=shapename)
-        print '2'
         
         plt.clf()
         cmapArray=my_cmap(np.arange(256))
@@ -456,7 +454,6 @@ for L in range(len(optiLevel)):
         cmax=np.amax(np.sum(factoryPctOne[:,:],axis=0)) #*0.9
         y1=0
         y2=255
-        print '3'
         
         fig = plt.figure(figsize=(10, 8))
         MinMaxArray=np.ones(shape=(3,2))
@@ -465,7 +462,6 @@ for L in range(len(optiLevel)):
         MinMaxArray[1,0]=cmax/1e9
         plt.imshow(MinMaxArray,cmap=my_cmap)
         plt.colorbar(label='Number of Packets (Billions)')
-        print '4'
         
         ax = plt.axes([0.05,0.05,0.8,0.85],projection=ccrs.PlateCarree())
         ax.set_extent([-19, 53, -37, 39], ccrs.PlateCarree())
@@ -487,6 +483,7 @@ for L in range(len(optiLevel)):
             if cName=='eSwatini': cName='Swaziland'
             if cName=='The Gambia': cName='Gambia'
             if cName=='Somaliland': cName='Somalia'
+            cName = str(cName)
             if np.amax(cName==subsaharancountry)==0: continue
             if np.amax(cName==countrycosted)==0:
                 x=0
@@ -495,7 +492,7 @@ for L in range(len(optiLevel)):
                 icmap=max(0,int(round(icmap,1)))
                 ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black',
                     facecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]],label=cName)
-            else:
+            if np.amax(cName==countrycosted)==1:
                 c=np.where(cName==countrycosted)[0][0]
                 x=np.sum(factoryPctOne[:,c])
                 y=y1+(y2-y1)/(cmax-cmin)*(x-cmin)
@@ -714,6 +711,7 @@ for L in range(len(optiLevel)):
             if cName=='eSwatini': cName='Swaziland'
             if cName=='The Gambia': cName='Gambia'
             if cName=='Somaliland': cName='Somalia'
+            cName = str(cName)
             if np.amax(cName==Rsubsaharancountry)==0: continue
             else:
                 poz=np.where(cName==Rsubsaharancountry)[0][0]
@@ -733,6 +731,7 @@ for L in range(len(optiLevel)):
             if cName=='eSwatini': cName='Swaziland'
             if cName=='The Gambia': cName='Gambia'
             if cName=='Somaliland': cName='Somalia'
+            cName = str(cName)
             if np.amax(cName==Rsubsaharancountry)==0: continue
             else:
                 poz=np.where(cName==Rsubsaharancountry)[0][0]
@@ -798,6 +797,7 @@ for L in range(len(optiLevel)):
         plt.title('Primary Supplier of Treatment by Country',fontsize=18)
         plt.text(-15,-10,str(factoryNumOne)+' Factories Open\n'+str(IntlNumOne)+' Ports Open\n'+local+'% Produced Locally', bbox=dict(fc="none", boxstyle="round"), size = 10)
         plt.savefig(wdfigs+'cost_optimization/'+Ltitles[L]+'/geographical/Supplyzone_map.pdf')
+        exit()
 
     ###########################
     # By factory import/export
@@ -960,7 +960,6 @@ plt.ylabel('Total Cost of Procurement for 1 Year (Billion USD)')
 plt.title('Total Modeled Cost',fontsize=18)
 plt.grid(True,linestyle=':')
 plt.savefig(wdfigs+'cost_optimization/summary/barchart_cost.pdf')
-exit()
 
 ## % local barchart ##
 fig = plt.figure(figsize=(6, 5))

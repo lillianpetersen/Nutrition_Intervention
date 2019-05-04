@@ -483,7 +483,7 @@ for k in range(len(optiLevel)):
             with open(wddata+'optiarrays/rutfdictionary.json', 'w') as fp:
                 json.dump(rutfdictionary, fp, sort_keys=True)
             
-            np.savetxt(wddata + "foodstuffs/rutfcostarray.csv", rutfcostarray, delimiter=",")
+            #np.savetxt(wddata + "foodstuffs/rutfcostarray.csv", rutfcostarray, delimiter=",")
             
             #cost dabber MAM ########################################################################
             SCPuse=np.zeros(shape=(33,43))
@@ -498,7 +498,7 @@ for k in range(len(optiLevel)):
                             for j in range(len(indexedSAM)):
                                 mamcostarray[i,j]=float(rusfprice[i])
             
-            np.savetxt(wddata + "foodstuffs/mamcostarray.csv", mamcostarray, delimiter=",")
+            #np.savetxt(wddata + "foodstuffs/mamcostarray.csv", mamcostarray, delimiter=",")
             
             mamdictionary={}
             ### array to dict
@@ -513,8 +513,8 @@ for k in range(len(optiLevel)):
                         else:
                             mamdictionary[countrycosted[i]][subsaharancountry[j]]=mamcostarray[i,j]+(mamcostarray[i,j]-0.146)*countryCostedTariff[i]/100*mTariffV
             
-            with open(wddata+'optiarrays/mamdictionary.json', 'w') as fp:
-                json.dump(mamdictionary, fp, sort_keys=True)
+            #with open(wddata+'optiarrays/mamdictionary.json', 'w') as fp:
+            #    json.dump(mamdictionary, fp, sort_keys=True)
                 
             # transport cost dabber
             samtransportcostarray=np.zeros(shape=(33,43))
@@ -642,8 +642,8 @@ for k in range(len(optiLevel)):
             for v in prob.variables():
                 varsdict[v.name] = v.varValue
             
-            with open(wddata+'optiarrays/temp_results.json', 'w') as fp:
-                json.dump(varsdict, fp, sort_keys=True)
+            #with open(wddata+'optiarrays/temp_results.json', 'w') as fp:
+            #    json.dump(varsdict, fp, sort_keys=True)
             
             
             for i in range(len(subsaharancountry)):
@@ -718,29 +718,29 @@ for k in range(len(optiLevel)):
                 ##recipetype_factorchanged
                 if not os.path.exists(wddata+'/results/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/'):
                     os.makedirs(wddata+'/results/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/')
-                f = open(wddata+'/results/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/' +str(optiLevel[k])+'_'+str(loopvar[z])+str(np.round(s,2))+'.csv','w')
-                f.write('cost'+','+str(cost)+'\n')
-                f.write('num_factories'+','+str(factorynum)+'\n')
-                f.write('percent_transport'+','+str(transportpercent)+'\n')
-                f.write('percent_ingredient'+','+str(ingredientcosttotalpercent)+'\n')
-                f.write('average_shipments_per_local+factory'+','+str(averageshipments)+'\n')
-                for i in range(len(countrycosted)):
-                    if(rutftotaled[i]!=0 or rusftotaled[i]!=0):
-                        f.write(str(countrycosted[i])+','+str(rutftotaled[i])+','+str(rusftotaled[i])+'\n')
-                f.close()
+                #f = open(wddata+'/results/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/' +str(optiLevel[k])+'_'+str(loopvar[z])+str(np.round(s,2))+'.csv','w')
+                #f.write('cost'+','+str(cost)+'\n')
+                #f.write('num_factories'+','+str(factorynum)+'\n')
+                #f.write('percent_transport'+','+str(transportpercent)+'\n')
+                #f.write('percent_ingredient'+','+str(ingredientcosttotalpercent)+'\n')
+                #f.write('average_shipments_per_local+factory'+','+str(averageshipments)+'\n')
+                #for i in range(len(countrycosted)):
+                #    if(rutftotaled[i]!=0 or rusftotaled[i]!=0):
+                #        f.write(str(countrycosted[i])+','+str(rutftotaled[i])+','+str(rusftotaled[i])+'\n')
+                #f.close()
             else:
                 if not os.path.exists(wddata+'/results/special/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/'):
                     os.makedirs(wddata+'/results/special/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/')
-                f = open(wddata+'/results/special/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/' +str(optiLevel[k])+'_'+str(loopvar[z])+str(np.round(s,2))+'.csv','w')
-                f.write('cost'+','+str(cost)+'\n')
-                f.write('num_factories'+','+str(factorynum)+'\n')
-                f.write('percent_transport'+','+str(transportpercent)+'\n')
-                f.write('percent_ingredient'+','+str(ingredientcosttotalpercent)+'\n')
-                f.write('average_shipments_per_local+factory'+','+str(averageshipments)+'\n')
-                for i in range(len(countrycosted)):
-                    if(rutftotaled[i]!=0 or rusftotaled[i]!=0):
-                        f.write(str(countrycosted[i])+','+str(rutftotaled[i])+','+str(rusftotaled[i])+'\n')
-                f.close()
+                #f = open(wddata+'/results/special/'+str(optiLevel[k])+'_'+str(loopvar[z])+'/' +str(optiLevel[k])+'_'+str(loopvar[z])+str(np.round(s,2))+'.csv','w')
+                #f.write('cost'+','+str(cost)+'\n')
+                #f.write('num_factories'+','+str(factorynum)+'\n')
+                #f.write('percent_transport'+','+str(transportpercent)+'\n')
+                #f.write('percent_ingredient'+','+str(ingredientcosttotalpercent)+'\n')
+                #f.write('average_shipments_per_local+factory'+','+str(averageshipments)+'\n')
+                #for i in range(len(countrycosted)):
+                #    if(rutftotaled[i]!=0 or rusftotaled[i]!=0):
+                #        f.write(str(countrycosted[i])+','+str(rutftotaled[i])+','+str(rusftotaled[i])+'\n')
+                #f.close()
             Rcountrycosted=[]
             lngth=len(np.where(rutftotaled + rusftotaled>0)[0])
             Rrutfsupplyarray=np.zeros(shape=(lngth,43))
@@ -811,18 +811,18 @@ for k in range(len(optiLevel)):
                 os.makedirs(wddata+'/results/example/'+str(optiLevel[k])+'/')
             
             if(s==1):
-                np.save(wddata+'/results/example/'+str(optiLevel[k])+"/RNcountry", RNcountrycosted)
-                np.save(wddata+'/results/example/'+str(optiLevel[k])+"/RNsubsaharancountry", RNsubsaharancountry)
-                np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/RNrutfarray", RNrutfsupplyarray)
-                np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/RNrusfarray", RNrusfsupplyarray)
-                
-                np.save(wddata+'/results/example/'+str(optiLevel[k])+"/Rcountry", Rcountrycosted)
-                np.save(wddata+'/results/example/'+str(optiLevel[k])+"/Rsubsaharancountry", Rsubsaharancountry)
-                np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/Rrutfarray", Rrutfsupplyarray)
-                np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/Rrusfarray", Rrusfsupplyarray)
+                #np.save(wddata+'/results/example/'+str(optiLevel[k])+"/RNcountry", RNcountrycosted)
+                #np.save(wddata+'/results/example/'+str(optiLevel[k])+"/RNsubsaharancountry", RNsubsaharancountry)
+                #np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/RNrutfarray", RNrutfsupplyarray)
+                #np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/RNrusfarray", RNrusfsupplyarray)
+                #
+                #np.save(wddata+'/results/example/'+str(optiLevel[k])+"/Rcountry", Rcountrycosted)
+                #np.save(wddata+'/results/example/'+str(optiLevel[k])+"/Rsubsaharancountry", Rsubsaharancountry)
+                #np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/Rrutfarray", Rrutfsupplyarray)
+                #np.save(wddata+'/results/example/'+str(optiLevel[k])+ "/Rrusfarray", Rrusfsupplyarray)
     
-                np.save(wddata+'/boundaries/countrycosted',countrycosted)
-                np.save(wddata+'/boundaries/subsaharancountry',subsaharancountry)
+                #np.save(wddata+'/boundaries/countrycosted',countrycosted)
+                #np.save(wddata+'/boundaries/subsaharancountry',subsaharancountry)
                 
                 rusfarray = np.load(wddata+'/results/example/'+str(optiLevel[k])+'/Rrusfarray.npy')
                 rutfarray = np.load(wddata+'/results/example/'+str(optiLevel[k])+'/Rrutfarray.npy')

@@ -134,7 +134,7 @@ def findGridDataLays(shapePoints,gridMid):
 				
 		
 def findGridAndDistance(shapePoints,gridMid):
-	''' Give it a list of points in a road, will return pixel of center of each segment'''
+	''' Give it a list of points in a road, will length of road in each pixel'''
 	midpointHits=np.zeros(shape=(len(shapePoints)-1,2))
 	dist=np.zeros(shape=(len(shapePoints)-1))
 	for i in range(len(shapePoints)-1):
@@ -428,43 +428,44 @@ def marketPotentials(pop,popCoord,gridMid,imageMask2):
 		for ilon in range(lenLon):
 			if imageMask2[ilat,ilon]==True:
 				continue
-			dists=np.sqrt((gridMid[ilat,ilon,0]-popCoord[:,0])**2+(gridMid[ilat,ilon,1]-popCoord[:,1])**2)
+			dists=np.sqrt((gridMid[ilat,ilon,0]-popCoord[:,0])**2+
+				(gridMid[ilat,ilon,1]-popCoord[:,1])**2)
 			MP[ilat,ilon]=np.sum(pop/(dists**1.2))
 	return MP
 
 def make_cmap(colors, position=None, bit=False):
-    '''
-    make_cmap takes a list of tuples which contain RGB values. The RGB
-    values may either be in 8-bit [0 to 255] (in which bit must be set to
-    True when called) or arithmetic [0 to 1] (default). make_cmap returns
-    a cmap with equally spaced colors.
-    Arrange your tuples so that the first color is the lowest value for the
-    colorbar and the last is the highest.
-    position contains values from 0 to 1 to dictate the location of each color.
-    '''
-    import matplotlib as mpl
-    import numpy as np
-    bit_rgb = np.linspace(0,1,256)
-    if position == None:
-        position = np.linspace(0,1,len(colors))
-    else:
-        if len(position) != len(colors):
-            sys.exit("position length must be the same as colors")
-        elif position[0] != 0 or position[-1] != 1:
-            sys.exit("position must start with 0 and end with 1")
-    if bit:
-        for i in range(len(colors)):
-            colors[i] = (bit_rgb[colors[i][0]],
-                         bit_rgb[colors[i][1]],
-                         bit_rgb[colors[i][2]])
-    cdict = {'red':[], 'green':[], 'blue':[]}
-    for pos, color in zip(position, colors):
-        cdict['red'].append((pos, color[0], color[0]))
-        cdict['green'].append((pos, color[1], color[1]))
-        cdict['blue'].append((pos, color[2], color[2]))
+	'''
+	make_cmap takes a list of tuples which contain RGB values. The RGB
+	values may either be in 8-bit [0 to 255] (in which bit must be set to
+	True when called) or arithmetic [0 to 1] (default). make_cmap returns
+	a cmap with equally spaced colors.
+	Arrange your tuples so that the first color is the lowest value for the
+	colorbar and the last is the highest.
+	position contains values from 0 to 1 to dictate the location of each color.
+	'''
+	import matplotlib as mpl
+	import numpy as np
+	bit_rgb = np.linspace(0,1,256)
+	if position == None:
+		position = np.linspace(0,1,len(colors))
+	else:
+		if len(position) != len(colors):
+			sys.exit("position length must be the same as colors")
+		elif position[0] != 0 or position[-1] != 1:
+			sys.exit("position must start with 0 and end with 1")
+	if bit:
+		for i in range(len(colors)):
+			colors[i] = (bit_rgb[colors[i][0]],
+						 bit_rgb[colors[i][1]],
+						 bit_rgb[colors[i][2]])
+	cdict = {'red':[], 'green':[], 'blue':[]}
+	for pos, color in zip(position, colors):
+		cdict['red'].append((pos, color[0], color[0]))
+		cdict['green'].append((pos, color[1], color[1]))
+		cdict['blue'].append((pos, color[2], color[2]))
 
-    cmap = mpl.colors.LinearSegmentedColormap('my_colormap',cdict,256)
-    return cmap
+	cmap = mpl.colors.LinearSegmentedColormap('my_colormap',cdict,256)
+	return cmap
 #, (50,205,50)(173,255,47) , 
 #colors = [(0,128,0) , (50,205,50) , (173,255,47) , (255,255,0) , (255,179,25) , (255,69,0) , (139,0,0)]
 colors = [(255,255,255) , (50,205,50) ,  (255,255,0) ,(255,213,0) , (255,179,25) ,  (255,69,0) , (255,0,0) , (139,0,0), (0,0,0)]
@@ -516,6 +517,7 @@ except:
 		
 		imageMask2=np.load(wdvars+'imageMask2.npy')
 		imageMask2_1year=imageMask2[0]
+		#imageMask2_1year[:700] = 1
 		imageMask2=np.zeros(shape=(nyears,len(latm),len(lonm)))
 		for y in range(nyears):
 			imageMask2[y]=imageMask2_1year
@@ -602,14 +604,17 @@ except:
 		imageMask2.dump(wdvars+'imageMask2')
 		
 	if MakePlots:
-		for y in range(nyearsT):
-			plt.clf()
-			plt.imshow(mal[y]*100,cmap=cm.jet,vmax=30)
-			plt.title(str(year)+': % Population with Acute Malnutrition')
-			plt.xticks([])
-			plt.yticks([])
-			plt.colorbar()
-			plt.savefig(wdfigs+'malnutrition_'+str(year),dpi=500)
+		#mal = mal[:,700:,:]
+		#for y in range(nyearsT):
+		#	year = y+2000
+		#	plt.clf()
+		#	plt.imshow(mal[y]*100,cmap=cm.jet,vmax=30)
+		#	plt.title('Acute Malnutrition Prevalence '+str(year))
+		#	plt.xticks([])
+		#	plt.yticks([])
+		#	plt.colorbar(label='Percent of Population')
+		#	plt.savefig(wdfigs+'malnutrition_'+str(year)+'_bottomHalf',dpi=500)
+		#exit()
 		
 		plt.clf()
 		plt.imshow(np.mean(mal,axis=0),cmap=cm.jet,vmax=0.3)
@@ -1262,7 +1267,7 @@ except:
 		icountry=int(countryToi[country])
 		GDPperCap[icountry,21]=float(tmp[1])
 	
-	np.save(wdvars+'country_correlates/GDPperCap',GDPperCap)
+	#np.save(wdvars+'country_correlates/GDPperCap',GDPperCap)
 	
 	################
 	index+=1
@@ -1332,7 +1337,7 @@ except:
 		for k in range(j+1,nyears):
 			girlEd[i,k]=diff/years+girlEd[i,k-1]
 
-	np.save(wdvars+'country_correlates/girlEd',girlEd)
+	#np.save(wdvars+'country_correlates/girlEd',girlEd)
 	
 	################
 	f=open(wddata+'country_indices/electricity.csv','r')
@@ -1378,7 +1383,7 @@ except:
 		for k in range(j+1,nyears):
 			electricity[icountry,k]=diff/years+electricity[icountry,k-1]
 	
-	np.save(wdvars+'country_correlates/electricity',electricity)
+	#np.save(wdvars+'country_correlates/electricity',electricity)
 
 	################
 	f=open(wddata+'country_indices/cereal_yield.csv','r')
@@ -1424,7 +1429,7 @@ except:
 		for k in range(j+1,nyears):
 			Yield[icountry,k]=diff/years+Yield[icountry,k-1]
 
-	np.save(wdvars+'country_correlates/Yield',Yield)
+	#np.save(wdvars+'country_correlates/Yield',Yield)
 	
 	################
 	f=open(wddata+'country_indices/iq.csv','r')
@@ -1453,7 +1458,7 @@ except:
 			except:
 				iqMask[icountry,y]=1
 
-	np.save(wdvars+'country_correlates/iq',iq)
+	#np.save(wdvars+'country_correlates/iq',iq)
 	
 	###############
 	f=open(wddata+'country_indices/fertility.csv','r')
@@ -1484,7 +1489,7 @@ except:
 			except:
 				fertilityMask[icountry,y]=1
 	
-	np.save(wdvars+'country_correlates/fertility',fertility)
+	#np.save(wdvars+'country_correlates/fertility',fertility)
 	
 	###############
 	index+=1
@@ -1517,7 +1522,7 @@ except:
 			except:
 				mortality5Mask[icountry,y]=1
 	
-	np.save(wdvars+'country_correlates/mortality5',mortality5)
+	#np.save(wdvars+'country_correlates/mortality5',mortality5)
 	
 	###############
 	index+=1
@@ -1550,7 +1555,7 @@ except:
 			except:
 				corruptionMask[icountry,y]=1
 	
-	np.save(wdvars+'country_correlates/corruption',corruption)
+	#np.save(wdvars+'country_correlates/corruption',corruption)
 	
 	###############
 	
@@ -1644,9 +1649,9 @@ except:
 		christian[i,:] = np.mean(christian[i,:][christian[i,:]!=0])
 		animism[i,:] = np.mean(animism[i,:][animism[i,:]!=0])
 
-	np.save(wdvars+'country_correlates/animism',animism)
-	np.save(wdvars+'country_correlates/christian',christian)
-	np.save(wdvars+'country_correlates/muslim',muslim)
+	#np.save(wdvars+'country_correlates/animism',animism)
+	#np.save(wdvars+'country_correlates/christian',christian)
+	#np.save(wdvars+'country_correlates/muslim',muslim)
 	#########################
 
 	warBool = np.zeros(shape=(43,30))
@@ -1684,7 +1689,7 @@ except:
 	for i in range(43):
 		war[i,:] = np.sum(warBool[i,:])
 	
-	np.save(wdvars+'country_correlates/war',war)
+	#np.save(wdvars+'country_correlates/war',war)
 	#########################
 
 	###########################
@@ -1748,7 +1753,7 @@ except:
 		for k in range(j+1,nyears):
 			openDefecation[i,k]=diff/years+openDefecation[i,k-1]
 
-	np.save(wdvars+'country_correlates/openDefecation',openDefecation)
+	#np.save(wdvars+'country_correlates/openDefecation',openDefecation)
 
 	########################
 	# Refugees
@@ -1821,7 +1826,7 @@ except:
 	for i in range(43):
 		refugeesSum[i,:] = np.sum(refugees[i,:])
 
-	np.save(wdvars+'country_correlates/refugeesSum',refugeesSum)
+	#np.save(wdvars+'country_correlates/refugeesSum',refugeesSum)
 
 	########################
 	# Maternal Mortality
@@ -1894,8 +1899,7 @@ except:
 	for i in range(43):
 		maternalMortalitySum[i,:] = np.sum(maternalMortality[i,:])
 
-	np.save(wdvars+'country_correlates/maternalMortalitySum',maternalMortalitySum)
-	exit()
+	#np.save(wdvars+'country_correlates/maternalMortalitySum',maternalMortalitySum)
 
 
 	#xyear = np.arange(1999,2021)
@@ -1917,9 +1921,9 @@ except:
 	#plt.ylim([0,27])
 	#plt.savefig(wdfigs+'world_bank_malnutrition_predictions.pdf')
 	
-	indices=[GDPperCap,girlEd,electricity,Yield,MAPprevalence,muslim,christian,animism,war,openDefecation,refugeesSum,maternalMortality]
-	indexNames=['GDPperCap','girlEd','electricity','Yield','MAPprevalence','muslim','christian','animism','war','openDefecation','refugeesSum','maternalMortality']
-	titles=['GDP per cap','% Females with Secondary School Education','% Population with Access to Electricity','Cereal Yield','MAP prevalence','Muslim','Christian','Animism','War','Open Defecation','Refugees Sum', 'Maternal Mortality']
+	indices=[GDPperCap,girlEd,electricity,Yield,MAPprevalence,muslim,christian,animism,war,openDefecation,refugeesSum,maternalMortality,corruption,mortality5]
+	indexNames=['GDPperCap','girlEd','electricity','Yield','MAPprevalence','muslim','christian','animism','war','openDefecation','refugeesSum','maternalMortality','Corruption','Mortality5']
+	titles=['GDP per cap','% Females with Secondary School Education','% Population with Access to Electricity','Cereal Yield','MAP prevalence','Muslim','Christian','Animism','War','Open Defecation','Refugees Sum', 'Maternal Mortality','Corruption','Under 5 Mortality']
 	
 	for j in range(len(indices)):
 		try:
@@ -1957,8 +1961,8 @@ except:
 	######################################
 	print 'data from Matt'
 	
-	#indices = ['ag_pct_gdp','assistance','bare','builtup','crop_prod','elevation','enrollment','fieldsize','forest','government_effectiveness','grid_gdp','grid_hdi','high_settle','low_settle','imports_percap','irrig_aai','irrig_aei','market_dist','mean_annual_precip','ndvi','nutritiondiversity','population','roughness','stability_violence','female_education']
-	indices = ['ag_pct_gdp','assistance','bare','crop_prod','elevation','enrollment','forest','government_effectiveness','grid_gdp','grid_hdi','high_settle','imports_percap','mean_annual_precip','nutritiondiversity','stability_violence','female_education']
+	indices = ['ag_pct_gdp','assistance','bare','builtup','crop_prod','elevation','enrollment','fieldsize','forest','government_effectiveness','grid_gdp','grid_hdi','high_settle','low_settle','imports_percap','irrig_aai','irrig_aei','market_dist','mean_annual_precip','ndvi','nutritiondiversity','population','roughness','stability_violence','female_education']
+	#indices = ['ag_pct_gdp','assistance','bare','crop_prod','elevation','enrollment','forest','government_effectiveness','grid_gdp','grid_hdi','high_settle','imports_percap','mean_annual_precip','nutritiondiversity','stability_violence','female_education']
 	
 	try:
 		for i in range(len(indices)):
@@ -2038,7 +2042,17 @@ except:
 				plt.colorbar()
 				plt.savefig(wdfigs +fromMatt+str(year),dpi=700)
 	
+
 	if MakePlots:
+
+		plt.clf()
+		plt.imshow(enrollment[15],cmap=cm.jet_r,vmin=0,vmax=100)
+		plt.colorbar()
+		plt.xticks([])
+		plt.yticks([])
+		plt.title('2015 School Enrollment')
+		plt.savefig(wdfigs+'enrollment_2015.png',dpi=500)
+
 		plt.clf()
 		plt.imshow(female_education[15],cmap=cm.nipy_spectral_r)
 		plt.colorbar()
@@ -2263,11 +2277,36 @@ except:
 ######################################
 # Machine learning 
 ######################################
+exit()
+plt.clf()
+plt.imshow(irrig_aei[15],cmap=cm.terrain_r,vmax=0.1)
+plt.colorbar()
+plt.xticks([])
+plt.yticks([])
+plt.title('Area Equipped for Irrigated')
+plt.savefig(wdfigs+'irrig_aei_2015.png',dpi=500)
+
+plt.clf()
+plt.imshow(muslimGrid[15],cmap=cm.Purples,vmin=0,vmax=0.95)
+plt.colorbar(label = 'Percent of Population')
+plt.xticks([])
+plt.yticks([])
+plt.title('2015 Islam')
+plt.savefig(wdfigs+'muslim_2015.png',dpi=500)
+
+plt.clf()
+plt.imshow(animismGrid[15],cmap=cm.Purples,vmin=0,vmax=0.95)
+plt.colorbar(label = 'Percent of Population')
+plt.xticks([])
+plt.yticks([])
+plt.title('2015 Animism')
+plt.savefig(wdfigs+'animism_2015.png',dpi=500)
+
 print 'Machine Learning'
 
-RemoveCountries = True
+RemoveCountries = False
 TrainOnAll = False
-Boxes = False
+Boxes = True
 ReadInOldStuff = False
 
 UseNationalPrevalence=False
@@ -2290,30 +2329,46 @@ if UseNationalPrevalence:
 		government_effectiveness, grid_gdp, imports_percap,
 		MPconflicts, grid_hdi, nutritiondiversity, pop5km, MAPprevalenceGrid]
 else:
-	#indexNames = ['female_education', 'mean_annual_precip', 'forest', 'enrollment',
-	#	'stability_violence', 'distToInlandCoastsi', 'YieldGrid',
-	#	'crop_prod', 'electricityGrid', 'distToCoasts', 'elevation',
-	#	'girlEdGrid', 'ag_pct_gdp', 'assistance', 'bare',
-	#	'government_effectiveness', 'grid_gdp', 'imports_percap',
-	#	'MPconflicts', 'grid_hdi', 'nutritiondiversity', 'pop5km',
-	#	'animismGrid','muslimGrid','christianGrid','warGrid','maternalMortalityGrid','refugeesSumGrid','openDefecationGrid']
-	#indices = [female_education, mean_annual_precip, forest, enrollment,
-	#	stability_violence, distToCoasts[:,1,:,:], YieldGrid,
-	#	crop_prod, electricityGrid, distToCoasts[:,0,:,:], elevation,
-	#	girlEdGrid, ag_pct_gdp, assistance, bare,
-	#	government_effectiveness, grid_gdp, imports_percap,
-	#	MPconflicts, grid_hdi, nutritiondiversity, pop5km, animismGrid, muslimGrid, christianGrid,warGrid,maternalMortalityGrid,refugeesSumGrid,openDefecationGrid]
-	# 18 featueres
-	indexNames = ['female_education', 'mean_annual_precip', 'forest', 'bare',
-		'electricityGrid', 'distToCoasts', 'elevation',
-		'girlEdGrid', 'ag_pct_gdp',	'grid_gdp',
+	indexNames = ['female_education', 'mean_annual_precip', 'forest', 'enrollment',
+		'stability_violence', 'distToInlandCoastsi', 'YieldGrid',
+		'crop_prod', 'electricityGrid', 'distToCoasts', 'elevation',
+		'girlEdGrid', 'ag_pct_gdp', 'assistance', 'bare',
+		'government_effectiveness', 'grid_gdp', 'imports_percap',
 		'MPconflicts', 'grid_hdi', 'nutritiondiversity', 'pop5km',
-		'muslimGrid','christianGrid','warGrid','refugeesSumGrid','openDefecationGrid']
-	indices = [female_education, mean_annual_precip, forest, bare,
-		electricityGrid, distToCoasts[:,0], elevation,
-		girlEdGrid, ag_pct_gdp,	grid_gdp,
+		'animismGrid','muslimGrid','christianGrid','warGrid','maternalMortalityGrid',
+		'refugeesSumGrid','openDefecationGrid']
+	indexTitles = ['Female Ed', 'Precipitation', 'Forest Cover', 'Enrollment',
+		'Stability Violence', 'Dist To Inland Coasts', 'Yield',
+		'Crop Production', 'Electricity', 'Dist To Coasts', 'Elevation',
+		'Girl Ed', 'Agriculture GDP', 'Assistance', 'Bare Ground',
+		'Gov Effectiveness', 'GDP', 'Imports Percap',
+		'Conflicts', 'HDI', 'Nutrition', 'Population',
+		'Animism','Muslim','Christian','War','Maternal Mortality',
+		'Refugees','Open Defecation']
+	indices = [female_education, mean_annual_precip, forest, enrollment,
+		stability_violence, distToCoasts[:,1,:,:], YieldGrid,
+		crop_prod, electricityGrid, distToCoasts[:,0,:,:], elevation,
+		girlEdGrid, ag_pct_gdp, assistance, bare,
+		government_effectiveness, grid_gdp, imports_percap,
 		MPconflicts, grid_hdi, nutritiondiversity, pop5km,
-		muslimGrid,christianGrid,warGrid,refugeesSumGrid,openDefecationGrid]
+		animismGrid, muslimGrid, christianGrid,warGrid,maternalMortalityGrid,
+		refugeesSumGrid,openDefecationGrid]
+	# 19 featueres
+	#indexNames = ['female_education', 'mean_annual_precip', 'forest', 'bare',
+	#	'electricityGrid', 'distToCoasts', 'elevation',
+	#	'girlEdGrid', 'ag_pct_gdp',	'grid_gdp',
+	#	'MPconflicts', 'grid_hdi', 'nutritiondiversity', 'pop5km',
+	#	'muslimGrid','christianGrid','warGrid','refugeesSumGrid','openDefecationGrid']
+	#indexTitles= np.array(['Female Ed', 'Precipitation', 'Forest Cover', 'Bare Ground',
+	#	'Electricity', 'Dist To Coasts', 'Elevation',
+	#	'Girl Ed', 'Agriculture GDP', 'GDP',
+	#	'Conflicts', 'HDI', 'Nutrition', 'Population',
+	#	'Muslim','Christian','War','Refugees','Open Defecation'])
+	#indices = [female_education, mean_annual_precip, forest, bare,
+	#	electricityGrid, distToCoasts[:,0], elevation,
+	#	girlEdGrid, ag_pct_gdp,	grid_gdp,
+	#	MPconflicts, grid_hdi, nutritiondiversity, pop5km,
+	#	muslimGrid,christianGrid,warGrid,refugeesSumGrid,openDefecationGrid]
 
 #indices = [ag_pct_gdp,assistance,bare,builtup,crop_prod,elevation,enrollment,fieldsize,forest,government_effectiveness,grid_gdp,grid_hdi,high_settle,low_settle,imports_percap,irrig_aai,irrig_aei,market_dist,mean_annual_precip,ndvi,nutritiondiversity,population,roughness,stability_violence,female_education,pop5km,distToCoasts[:,0,:,:],distToCoasts[:,1,:,:],MPconflicts,girlEdGrid,electricityGrid,YieldGrid,iqGrid]
 
@@ -2327,8 +2382,10 @@ except:
 		#	xMulti = np.load(wdvars+'stuffForFinalPrediction/xMulti_22indices.npy')
 		#	xMultiMask = np.load(wdvars+'stuffForFinalPrediction/xMultiMask_22indices.npy')
 		if not UseNationalPrevalence:
-			xMulti = np.load(wdvars+'stuffForFinalPrediction/xMulti_19indices.npy')
-			xMultiMask = np.load(wdvars+'stuffForFinalPrediction/xMultiMask_19indices.npy')
+			xMulti = np.load(wdvars+'stuffForFinalPrediction/xMulti_29indices_180419.npy')
+			xMultiMask = np.load(wdvars+'stuffForFinalPrediction/xMultiMask_29indices_180419.npy')
+			#xMulti = np.load(wdvars+'stuffForFinalPrediction/xMulti_19indices.npy')
+			#xMultiMask = np.load(wdvars+'stuffForFinalPrediction/xMultiMask_19indices.npy')
 	except:
 		print 'calculating xMulti'
 		xMulti=np.zeros(shape=(nyears,len(latm),len(lonm),len(indices)))
@@ -2350,321 +2407,402 @@ except:
 			print i
 		xMultiMask=np.array(xMultiMask,dtype=bool)
 		
-		np.save(wdvars+'stuffForFinalPrediction/xMulti_19indices.npy',xMulti)
-		np.save(wdvars+'stuffForFinalPrediction/xMultiMask_19indices.npy',xMultiMask)
+		np.save(wdvars+'stuffForFinalPrediction/xMulti_29indices_180419.npy',xMulti)
+		np.save(wdvars+'stuffForFinalPrediction/xMultiMask_29indices_180419.npy',xMultiMask)
 			
 ######################################
 # Remove Countries, then predict
 ######################################
 
-print 'remove countries'
-###########################
-# Training and Testing Set
-###########################
+if RemoveCountries:
+	print 'remove countries'
+	###########################
+	# Training and Testing Set
+	###########################
+	northernCountries = ['Benin', 'Burkina Faso', 'Cameroon', 'Central African Republic', 'Chad', "Cote d'Ivoire", 'Congo (DRC)', 'Djibouti', 'Equatorial Guinea', 'Eritrea', 'Ethiopia', 'Gabon', 'Gambia', 'Ghana', 'Guinea', 'Guinea-Bissau', 'Kenya', 'Liberia', 'Mali', 'Mauritania', 'Niger', 'Nigeria', 'Congo', 'Rwanda', 'Senegal', 'Sierra Leone', 'Somalia', 'Sudan', 'South Sudan', 'Togo', 'Uganda', ]
+	southernCountries = ['Angola','Rwanda','Burundi','Tanzania','Congo (DRC)','Congo','Zambia','Malawi','Mozambique','Namibia','Botswana','Zimbabwe','South Africa','Lesotho','Swaziland']
+	
+	for icountry in range(len(northernCountries)):
+		countryToRemove = northernCountries[icountry]
+		if countryToRemove!='South Sudan': continue
+		print '\n\n', countryToRemove, icountry
+		indexToRemove = countryToIndex[countryToRemove]
+		
+		trainingMask = np.zeros(shape=(nyearsT,len(latm),len(lonm)),dtype=bool)
+		testingMask = np.ones(shape=(nyearsT,len(latm),len(lonm)),dtype=bool)
+		trainingMask[imageMask2[:nyearsT]==True] = 1
+		for y in range(nyearsT):
+			trainingMask[y][nationsM==indexToRemove] = 1
+			testingMask[y][nationsM==indexToRemove] = 0
+		
+		maltrain=np.ma.array(mal)
+		maltrain=np.ma.masked_array(maltrain,trainingMask)
+		maltest=np.ma.array(mal)
+		maltest=np.ma.masked_array(maltest,testingMask)
+		
+		if not os.path.exists(wdfigs+'randomForest/'+countryToRemove):
+			os.makedirs(wdfigs+'randomForest/'+countryToRemove)
+		plt.clf()
+		plt.imshow(maltrain[14],cmap=cm.jet,vmin=0, vmax=0.3)
+		plt.title('Train Pixels')
+		plt.colorbar()
+		plt.savefig(wdfigs+'randomForest/'+countryToRemove+'/maltrain_countries.png',dpi=700)
+		plt.clf()
+		plt.imshow(maltest[14],cmap=cm.jet,vmin=0, vmax=0.3)
+		plt.title('Test Pixels')
+		plt.colorbar()
+		plt.savefig(wdfigs+'randomForest/'+countryToRemove+'/maltest_countries.png',dpi=700)
+		
+		#### Mask xMulti into Train and Test ####
+		print 'Mask xMulti into Train and Test'
+		trainMask_allIndices = np.zeros(shape=(nyearsT,len(latm),len(lonm),len(indices)),dtype=bool)
+		testMask_allIndices = np.zeros(shape=(nyearsT,len(latm),len(lonm),len(indices)),dtype=bool)
+		for i in range(len(indices)):
+			trainMask_allIndices[:,:,:,i] = trainingMask
+			testMask_allIndices[:,:,:,i] = testingMask
+			print 'index',i
+		
+		xMultiTest=np.ma.masked_array(xMulti[:nyearsT], testMask_allIndices)
+		xMultiTrain=np.ma.masked_array(xMulti[:nyearsT], trainMask_allIndices)
+		#########################################
+		
+		#### Compress xMulti ####
+		print 'Compress xMulti'
+		xMultiTrainC=np.zeros(shape=(len(np.ma.compressed(xMultiTrain[:,:,:,0])),len(indices)))
+		xMultiTestC=np.zeros(shape=(len(np.ma.compressed(xMultiTest[:,:,:,0])),len(indices)))
+		for i in range(len(indices)):
+			xMultiTrainC[:,i]=np.ma.compressed(xMultiTrain[:,:,:,i])
+			xMultiTestC[:,i]=np.ma.compressed(xMultiTest[:,:,:,i])
+			print 'index', i
+		ydataTrain=np.ma.compressed(maltrain)
+		ydataTest=np.ma.compressed(maltest)
+		#########################
+		
+		print 'fitting'
+		##############################
+		clf=RandomForestRegressor(n_estimators=numTrees,n_jobs=-1,verbose=2)
+		clf.fit(xMultiTrainC,ydataTrain)
+		malPred=clf.predict(xMultiTestC)
+		##############################
+		#pickle.dump(clf, open(wdvars+'stuffForFinalPrediction/randomForest_trained_notEthiopia_'+str(numTrees)+'trees', 'wb'))
+		
+		Corr = corr(malPred,ydataTest)
+		Error = np.zeros(shape=(len(malPred)))
+		Difference = np.zeros(shape=(len(malPred)))
+		for i in range(len(malPred)):
+			Error[i] = abs( (malPred[i]-ydataTest[i])/ydataTest[y] )
+			Difference[i] = abs( (malPred[i]-ydataTest[i]) )
+		np.savetxt(wdfigs+'randomForest/'+countryToRemove+'/error.csv',[Corr, np.mean(Error), np.mean(Difference)], delimiter=',', fmt='%s')
+		
+		importances = clf.feature_importances_
+		importanceOrder = np.argsort(importances)
+		indexNames = np.array(indexNames)
+		importanceVars = indexNames[importanceOrder][::-1]
+		importanceFeatures = importances[importanceOrder][::-1]
+		np.savetxt(wdfigs+'randomForest/'+countryToRemove+'/importances.csv',[importanceVars, importanceFeatures], delimiter=',',fmt='%s')
+		
+		x,y=ydataTest*100,malPred*100
+		slope,b=np.polyfit(x,y,1)
+		yfit=slope*x+b
+		error=np.mean((y-x)/x)*100
+		heatmap, xedges, yedges = np.histogram2d(x, y, bins=(200,200),normed=True)
+		extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+		heatmap = heatmap.T
+		
+		plt.clf()
+		fig = plt.figure(figsize=(7, 5))
+		ax = fig.add_subplot(111, title='Accuracy of Predicted Malnutrition, Corr = '+str(round(Corr,2))+', Avg Error ='+str(round(np.mean(Error*100),2))+'%')
+		X, Y = np.meshgrid(xedges, yedges)
+		ax.pcolormesh(X, Y, heatmap,cmap=cm.terrain_r)
+		plt.xlabel('Actual Malnutrition, % population')
+		plt.ylabel('Predicted Malnutrition, % population')
+		plt.plot([0,100],[0,100],'k-')
+		ax.set_xlim([np.amin(x),np.amax(x)])
+		ax.set_ylim([np.amin(x),np.amax(x)])
+		plt.savefig(wdfigs+'randomForest/'+countryToRemove+'/accuracy_predictions_heatmap_'+countryToRemove+'_'+str(numTrees)+'trees.pdf') 
+			
+		# Plot map
+			
+		y=15
+		
+		imageMask2=np.load(wdvars+'imageMask2.npy')
+		imageMask2_1year=imageMask2[0]
+		#imageMask2_1year[700:] = 1
+		imageMask2=np.zeros(shape=(nyears,len(latm),len(lonm)))
+		for y in range(nyearsT):
+			imageMask2[y]=imageMask2_1year
+		
+		traintmp=imageMask2[y]==testingMask[y]
+		testtmp=imageMask2[y]==trainingMask[y]
+		ydata=maltrain[y]
+		ydata=ydata.filled(0)
+		ydata=np.ma.masked_array(ydata,imageMask2[y])
+		
+		xMultiPlot=np.ma.zeros(shape=(xMultiTest[y].shape))
+		for i in range(len(indices)):
+			xMultiPlot[:,:,i]=np.ma.masked_array(xMultiTest[y,:,:,i],testtmp)
+		
+		malPredFull=np.zeros(shape=(len(latm),len(lonm)))
+		malPredFull=np.ma.masked_array(malPredFull,imageMask2[y])
+		malPredFullMask=np.zeros(shape=(len(latm),len(lonm)),dtype=bool)
+		
+		x1test=0
+		x1train=0
+		for i in range(len(latm)):
+			malPredFull[i]=ydata[i]
+			if len(np.where(ydata[i]==0)[0])!=0:
+				xplot=np.zeros(shape=(len(np.ma.compressed(xMultiPlot[i,:,0])),len(indices)))
+				for k in range(len(indices)):
+					xplot[:,k]=np.ma.compressed(xMultiPlot[i,:,k])
+				malPredFull[i][ydata[i]==0]=clf.predict(xplot)
+				malPredFullMask[i][ydata[i]==0][0]=0
+				malPredFullMask[i][ydata[i]==0][-1]=0
+			
+		plt.clf()
+		plt.imshow(100*malPredFull*100,cmap=cm.jet,vmin=0,vmax=30)
+		plt.colorbar(label='Percent of Population')
+		plt.yticks([])
+		plt.xticks([])
+		plt.title('Predicted Malnutrition in 2015')
+		plt.savefig(wdfigs+'randomForest/'+countryToRemove+'/malPred_Africa_'+countryToRemove+'_'+str(numTrees)+'trees2',dpi=700)
 
-for icountry in range(1,len(africanCountries)):
-	countryToRemove = africanCountries[icountry]
-	print '\n\n', countryToRemove, icountry
-	indexToRemove = countryToIndex[countryToRemove]
-	
-	trainingMask = np.zeros(shape=(nyearsT,len(latm),len(lonm)),dtype=bool)
-	testingMask = np.ones(shape=(nyearsT,len(latm),len(lonm)),dtype=bool)
-	trainingMask[imageMask2[:nyearsT]==True] = 1
-	for y in range(nyearsT):
-		trainingMask[y][nationsM==indexToRemove] = 1
-		testingMask[y][nationsM==indexToRemove] = 0
-	
-	maltrain=np.ma.array(mal)
-	maltrain=np.ma.masked_array(maltrain,trainingMask)
-	maltest=np.ma.array(mal)
-	maltest=np.ma.masked_array(maltest,testingMask)
-	
-	if not os.path.exists(wdfigs+'randomForest/'+countryToRemove):
-		os.makedirs(wdfigs+'randomForest/'+countryToRemove)
-	plt.clf()
-	plt.imshow(maltrain[14],cmap=cm.jet,vmin=0, vmax=0.3)
-	plt.title('Train Pixels')
-	plt.colorbar()
-	plt.savefig(wdfigs+'randomForest/'+countryToRemove+'/maltrain_countries.png',dpi=700)
-	plt.clf()
-	plt.imshow(maltest[14],cmap=cm.jet,vmin=0, vmax=0.3)
-	plt.title('Test Pixels')
-	plt.colorbar()
-	plt.savefig(wdfigs+'randomForest/'+countryToRemove+'/maltest_countries.png',dpi=700)
-	
-	#### Mask xMulti into Train and Test ####
-	print 'Mask xMulti into Train and Test'
-	trainMask_allIndices = np.zeros(shape=(nyearsT,len(latm),len(lonm),len(indices)),dtype=bool)
-	testMask_allIndices = np.zeros(shape=(nyearsT,len(latm),len(lonm),len(indices)),dtype=bool)
-	for i in range(len(indices)):
-		trainMask_allIndices[:,:,:,i] = trainingMask
-		testMask_allIndices[:,:,:,i] = testingMask
-		print 'index',i
-	
-	xMultiTest=np.ma.masked_array(xMulti[:nyearsT], testMask_allIndices)
-	xMultiTrain=np.ma.masked_array(xMulti[:nyearsT], trainMask_allIndices)
-	#########################################
-	
-	#### Compress xMulti ####
-	print 'Compress xMulti'
-	xMultiTrainC=np.zeros(shape=(len(np.ma.compressed(xMultiTrain[:,:,:,0])),len(indices)))
-	xMultiTestC=np.zeros(shape=(len(np.ma.compressed(xMultiTest[:,:,:,0])),len(indices)))
-	for i in range(len(indices)):
-		xMultiTrainC[:,i]=np.ma.compressed(xMultiTrain[:,:,:,i])
-		xMultiTestC[:,i]=np.ma.compressed(xMultiTest[:,:,:,i])
-		print 'index', i
-	ydataTrain=np.ma.compressed(maltrain)
-	ydataTest=np.ma.compressed(maltest)
-	#########################
-	
-	print 'fitting'
-	##############################
-	clf=Regressor(n_estimators=numTrees,n_jobs=-1,verbose=2)
-	clf.fit(xMultiTrainC,ydataTrain)
-	#pickle.dump(clf, open(wdvars+'stuffForFinalPrediction/randomForest_trained_notEthiopia_'+str(numTrees)+'trees', 'wb'))
-	malPred=clf.predict(xMultiTestC)
-	
-	Corr = corr(malPred,ydataTest)
-	Error = np.zeros(shape=(len(malPred)))
-	Difference = np.zeros(shape=(len(malPred)))
-	for i in range(len(malPred)):
-		Error[i] = abs( (malPred[i]-ydataTest[i])/ydataTest[y] )
-		Difference[i] = abs( (malPred[i]-ydataTest[i]) )
-	np.savetxt(wdfigs+'randomForest/'+countryToRemove+'/error.csv',[Corr, np.mean(Error), np.mean(Difference)], delimiter=',', fmt='%s')
-	
-	importances = clf.feature_importances_
-	importanceOrder = np.argsort(importances)
-	indexNames = np.array(indexNames)
-	importanceVars = indexNames[importanceOrder][::-1]
-	importanceFeatures = importances[importanceOrder][::-1]
-	np.savetxt(wdfigs+'randomForest/'+countryToRemove+'/importances.csv',[importanceVars, importanceFeatures], delimiter=',',fmt='%s')
-	
-	x,y=ydataTest*100,malPred*100
-	slope,b=np.polyfit(x,y,1)
-	yfit=slope*x+b
-	error=np.mean((y-x)/x)*100
-	heatmap, xedges, yedges = np.histogram2d(x, y, bins=(200,200),normed=True)
-	extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-	heatmap = heatmap.T
-	
-	plt.clf()
-	fig = plt.figure(figsize=(7, 5))
-	ax = fig.add_subplot(111, title='Accuracy of Predicted Malnutrition, Corr = '+str(round(Corr,2))+', Avg Error ='+str(round(np.mean(Error*100),2))+'%')
-	X, Y = np.meshgrid(xedges, yedges)
-	ax.pcolormesh(X, Y, heatmap,cmap=cm.terrain_r)
-	plt.xlabel('Actual Malnutrition, % population')
-	plt.ylabel('Predicted Malnutrition, % population')
-	plt.plot([0,100],[0,100],'k-')
-	ax.set_xlim([np.amin(x),np.amax(x)])
-	ax.set_ylim([np.amin(x),np.amax(x)])
-	plt.savefig(wdfigs+'randomForest/'+countryToRemove+'/accuracy_predictions_heatmap_'+countryToRemove+'_'+str(numTrees)+'trees.pdf') 
-		
-	# Plot map
-		
-	y=14
-	
-	imageMask2=np.load(wdvars+'imageMask2.npy')
-	traintmp=imageMask2[y]==testingMask[y]
-	testtmp=imageMask2[y]==trainingMask[y]
-	ydata=maltrain[y]
-	ydata=ydata.filled(0)
-	ydata=np.ma.masked_array(ydata,imageMask2[y])
-	
-	xMultiPlot=np.ma.zeros(shape=(xMultiTest[y].shape))
-	for i in range(len(indices)):
-		xMultiPlot[:,:,i]=np.ma.masked_array(xMultiTest[y,:,:,i],testtmp)
-	
-	malPredFull=np.zeros(shape=(len(latm),len(lonm)))
-	malPredFull=np.ma.masked_array(malPredFull,imageMask2[y])
-	malPredFullMask=np.zeros(shape=(len(latm),len(lonm)),dtype=bool)
-	
-	x1test=0
-	x1train=0
-	for i in range(len(latm)):
-		malPredFull[i]=ydata[i]
-		if len(np.where(ydata[i]==0)[0])!=0:
-			xplot=np.zeros(shape=(len(np.ma.compressed(xMultiPlot[i,:,0])),len(indices)))
-			for k in range(len(indices)):
-				xplot[:,k]=np.ma.compressed(xMultiPlot[i,:,k])
-			malPredFull[i][ydata[i]==0]=clf.predict(xplot)
-			malPredFullMask[i][ydata[i]==0][0]=0
-			malPredFullMask[i][ydata[i]==0][-1]=0
-		
-	plt.clf()
-	plt.imshow(malPredFull*100,cmap=cm.jet,vmin=0,vmax=30)
-	plt.colorbar(label='Percent of Population')
-	plt.yticks([])
-	plt.xticks([])
-	plt.title('Predicted Malnutrition in 2015')
-	plt.savefig(wdfigs+'randomForest/'+countryToRemove+'/malPred_Africa_'+countryToRemove+'_'+str(numTrees)+'trees',dpi=700)
-	##############################
-exit()
+		plt.clf()
+		plt.imshow(maltrain[y],cmap=cm.jet,vmin=0,vmax=0.3)
+		plt.colorbar()
+		plt.yticks([])
+		plt.xticks([])
+		plt.title('Training Data: Malnutrition Prevalence 2015')
+		plt.savefig(wdfigs+'randomforest/'+countryToRemove+'/maltrain_Africa',dpi=700)
+		##############################
 	
 ######################################
-# Train On All, Predict 2016-2021
+# Predict Following Year
 ######################################
 if TrainOnAll:
-	xMultiTrain=np.ma.masked_array(xMulti[:nyearsT], xMultiMask[:nyearsT]) # train on 2000-2015
-	xMultiTest=np.ma.masked_array(xMulti[nyearsT:], xMultiMask[nyearsT:]) # predict 2016-2021
-	ydata=np.ma.compressed(mal)
-	
-	tmp=np.ma.compressed(xMultiTrain[:,:,:,0])
-	xMultiTrainC=np.zeros(shape=(len(tmp),len(indices)))
-	tmp=np.ma.compressed(xMultiTest[:,:,:,0])
-	xMultiTestC=np.zeros(shape=(len(tmp),len(indices)))
-	for i in range(len(indices)):
-		xMultiTrainC[:,i]=np.ma.compressed(xMultiTrain[:,:,:,i])
-		#xMultiTestC[:,i]=np.ma.compressed(xMultiTest[:,:,:,i])
-		print i
-	
-	tmp=np.ma.compressed(xMultiTest[0,:,:,0])
-	xMultiTestC2016=np.zeros(shape=(len(tmp),len(indices)))
-	xMultiTestC2017=np.zeros(shape=(len(tmp),len(indices)))
-	xMultiTestC2018=np.zeros(shape=(len(tmp),len(indices)))
-	xMultiTestC2019=np.zeros(shape=(len(tmp),len(indices)))
-	xMultiTestC2020=np.zeros(shape=(len(tmp),len(indices)))
-	xMultiTestC2021=np.zeros(shape=(len(tmp),len(indices)))
-	for i in range(len(indices)):
-		xMultiTestC2016[:,i]=np.ma.compressed(xMultiTest[0,:,:,i])
-		xMultiTestC2017[:,i]=np.ma.compressed(xMultiTest[1,:,:,i])
-		xMultiTestC2018[:,i]=np.ma.compressed(xMultiTest[2,:,:,i])
-		xMultiTestC2019[:,i]=np.ma.compressed(xMultiTest[3,:,:,i])
-		xMultiTestC2020[:,i]=np.ma.compressed(xMultiTest[4,:,:,i])
-		xMultiTestC2021[:,i]=np.ma.compressed(xMultiTest[5,:,:,i])
-		print i
-	
-	print 'fitting'
-	##############################
-	clf=RandomForestRegressor()
-	clf.fit(xMultiTrainC,ydata)
-	##############################
-	
-	pickle.dump(clf, open(wdvars+'randomForest_trained1999-2014all', 'wb'))
-	
-	#malPred2016=clf.predict(xMultiTestC2016)
-	#malPred2017=clf.predict(xMultiTestC2017)
-	#malPred2018=clf.predict(xMultiTestC2018)
-	#malPred2019=clf.predict(xMultiTestC2019)
-	#malPred2020=clf.predict(xMultiTestC2020)
-	#malPred2021=clf.predict(xMultiTestC2021)
-	
-	### Plot
-	imageMask2=np.load(wdvars+'imageMask2.npy')
-	imageMask2_1year=imageMask2[0]
-	imageMask2=np.zeros(shape=(nyears,len(latm),len(lonm)))
-	for y in range(nyears):
-		imageMask2[y]=imageMask2_1year
-	
-	malAll = np.zeros(shape=(nyears,len(latm),len(lonm)))
-	malAll[:nyearsT]=mal
-	
-	year = 2015
-	for y in range(6):
-		year+=1
-		#xMultiPlot=np.ma.array(xMultiTest[y])
+	yearList = ['2000','2001','2002','2003','2004','2005','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015']
+	for y in range(7,16):
+		year = yearList[y]
+		xMultiTrain=np.ma.masked_array(xMulti[:y], xMultiMask[:y]) # train on 2000 -- triainingYear-1
+		xMultiTest=np.ma.masked_array(xMulti[y], xMultiMask[y]) # predict trainingYear
+		ydata=np.ma.compressed(mal[:y])
+		ydataTest = np.ma.compressed(mal[y])
+		baseline = np.ma.compressed(mal[y-1])
+		
+		tmp=np.ma.compressed(xMultiTrain[:,:,:,0])
+		xMultiTrainC=np.zeros(shape=(len(tmp),len(indices)))
+		tmp=np.ma.compressed(xMultiTest[:,:,0])
+		xMultiTestC=np.zeros(shape=(len(tmp),len(indices)))
+		for i in range(len(indices)):
+			xMultiTrainC[:,i]=np.ma.compressed(xMultiTrain[:,:,:,i])
+			xMultiTestC[:,i]=np.ma.compressed(xMultiTest[:,:,i])
+			print i
+		
+		print 'fitting'
+		##############################
+		clf=RandomForestRegressor(n_estimators=numTrees,n_jobs=-1,verbose=2)
+		clf.fit(xMultiTrainC,ydata)
+		malPred=clf.predict(xMultiTestC)
+		##############################
+
+		if not os.path.exists(wdfigs+'eachYear_forest/'+year):
+			os.makedirs(wdfigs+'eachYear_forest/'+year)
+		Corr=corr(malPred,ydataTest)
+		CorrBaseline=corr(baseline,ydataTest)
+		print Corr
+		error = 100*(abs(malPred-ydataTest))/ydataTest
+		errorBaseline = 100*(abs(baseline-ydataTest))/ydataTest
+		difference = 100*abs(malPred-ydataTest)
+		differenceBaseline = 100*abs(baseline-ydataTest)
+		np.save(wdfigs+'eachYear_forest/'+year+'/error.npy',error)
+		np.save(wdfigs+'eachYear_forest/'+year+'/difference.npy',difference)
+
+		widths=[0.4,0.4]
+		fig.clear()
+		plt.cla()
+		plt.close()
+		plt.clf()
+		plt.figure(25,figsize=(7,3))
+		ax = plt.subplot(1,1,1)
+		ax.set_position([.22,.15,.70,.75])
+		ax.set_aspect(5)
+		ax.boxplot([error,errorBaseline], 0, '', vert=0, widths=widths, whis=[12.5,87.5])
+		plt.title('Prediction Errors: '+year)
+		plt.yticks([1,2],['Prediction','Baseline'])
+		plt.xlabel('Percent Error')
+		plt.grid(axis='x')
+		plt.savefig(wdfigs+'eachYear_forest/'+year+'/box_wisker_error.pdf')
+		
+		widths=[0.4,0.4]
+		fig.clear()
+		plt.cla()
+		plt.close()
+		plt.clf()
+		fig = plt.figure(figsize=(7, 3))
+		ax = plt.subplot(1,1,1)
+		ax.set_position([.22,.15,.70,.75])
+		ax.set_aspect(0.5)
+		plt.boxplot([difference,differenceBaseline], 0, '', vert=0, widths=widths, whis=[12.5,87.5])
+		plt.title('Prediction Difference: '+year)
+		plt.yticks([1,2],['Prediction','Baseline'])
+		plt.xlabel('Difference in Prevalence')
+		plt.grid(axis='x')
+		plt.savefig(wdfigs+'eachYear_forest/'+year+'/box_wisker_difference.pdf')
+			
+		##### Heatmap
+		x,ydata=ydataTest*100,malPred*100
+		slope,b=np.polyfit(x,ydata,1)
+		yfit=slope*x+b
+		heatmap, xedges, yedges = np.histogram2d(x, ydata, bins=(200,200),normed=True)
+		extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+		heatmap = heatmap.T
+		
+		plt.clf()
+		fig = plt.figure(figsize=(7, 5))
+		ax = fig.add_subplot(111, title='Accuracy of '+year+' Predicted Malnutrition, Corr = '+str(round(Corr,2))+', Avg Error ='+str(round(np.mean(error),2))+'%')
+		plt.plot([0,100],[0,100],'k-',linewidth = 0.5)
+		X, Y = np.meshgrid(xedges, yedges)
+		ax.pcolormesh(X, Y, heatmap,cmap=cm.terrain_r)
+		plt.xlabel('Actual Malnutrition, % population')
+		plt.ylabel('Predicted Malnutrition, % population')
+		ax.set_xlim([0,25])
+		ax.set_ylim([0,25])
+		plt.savefig(wdfigs+'eachYear_forest/'+year+'/accuracy_predictions_heatmap.pdf') 
+
+		importances=clf.feature_importances_
+		importanceOrder=np.argsort(importances)
+		importances = importances[importanceOrder][::-1]
+		indexNames=np.array(indexNames)
+		importanceVars=indexNames[importanceOrder][::-1]
+		np.savetxt(wdfigs+'eachYear_forest/'+year+'/importances.csv',[importanceVars, importances], delimiter=',',fmt='%s')
+		VarsNames = indexTitles[importanceOrder][::-1]
+		
+		##### Cumulative Importances #####
+		cumulative_importances = np.cumsum(importances)
+		
+		x=np.arange(len(importances))
+		
+		fig = plt.figure(figsize=(6, 7))
+		plt.clf()
+		plt.plot(x,cumulative_importances,'g*-')
+		plt.hlines(y = 0.97, xmin=0, xmax=len(x), color = 'r', linestyles = 'dashed')
+		plt.title('Cumalative Importances: '+year)
+		plt.grid(True,linestyle=':')
+		plt.xticks(x,VarsNames,rotation='vertical')
+		plt.gcf().subplots_adjust(bottom=0.2)
+		plt.ylim([0,1.05])
+		plt.savefig(wdfigs+'eachYear_forest/'+year+'/cumulative_importances.pdf')
+		
+		### Geospatial
+		imageMask2=np.load(wdvars+'imageMask2.npy')
+		imageMask2_1year=imageMask2[0]
+		imageMask2=np.zeros(shape=(nyears,len(latm),len(lonm)))
+		for y1 in range(nyears):
+			imageMask2[y1]=imageMask2_1year
+		
+		xMultiPlot=np.ma.array(xMultiTest)
+		
+		malPred=np.zeros(shape=(len(latm),len(lonm)))
+		malPred=np.ma.masked_array(malPred,imageMask2[y])
+		malPredMask=np.zeros(shape=(len(latm),len(lonm)),dtype=bool)
+		
+		for i in range(len(latm)):
+			if np.amin(imageMask2[y,i,:])!=1:
+				xplot=np.zeros(shape=(len(np.ma.compressed(xMultiPlot[i,:,0])),len(indices)))
+				for k in range(len(indices)):
+					xplot[:,k]=np.ma.compressed(xMultiPlot[i,:,k])
+				malPred[i][imageMask2[y,i]==0]=clf.predict(xplot)
+		
+		plt.clf()
+		plt.imshow(malPred,cmap=cm.jet,vmin=0,vmax=0.3)
+		plt.colorbar()
+		plt.yticks([])
+		plt.xticks([])
+		plt.title(str(year)+' Predicted Malnutrition, % of Population')
+		plt.savefig(wdfigs+'eachYear_forest/'+year+'/malPred_Africa',dpi=700)
+		
+		plt.clf()
+		plt.imshow(mal[y],cmap=cm.jet,vmin=0,vmax=0.3)
+		plt.colorbar()
+		plt.yticks([])
+		plt.xticks([])
+		plt.title(str(year)+' Actual Malnutrition, % of Population')
+		plt.savefig(wdfigs+'eachYear_forest/'+year+'/mal_Africa',dpi=700)
+
+		############################
+		## Sum for Country for country caseload
+		############################
+		#malCountryAll=np.zeros(shape=(len(indexedcodes),nyears))
+		#j=-1
+		#for i in indexedcodes:
+		#	j+=1
+		#	for y in range(nyears):
+		#		popWhole=np.sum(population[y,nations==i])
+		#		poptmp=np.ma.masked_array(population[y],nations!=i)
+		#		maltmp=np.ma.masked_array(malAll[y],nations!=i)
+		#		malnumtmp=maltmp*poptmp
+		#		malCountryAll[j,y]=np.sum(malnumtmp)/popWhole
+		#malCountryAll=malCountryAll*100
 		#
-		#malPred=np.zeros(shape=(len(latm),len(lonm)))
-		#malPred=np.ma.masked_array(malPred,imageMask2[y])
-		#malPredMask=np.zeros(shape=(len(latm),len(lonm)),dtype=bool)
+		#SAMcountry = np.zeros(shape=(3,len(malCountryAll),nyears))
+		#MAMcountry = np.zeros(shape=(3,len(malCountryAll),nyears))
+		#for i in range(len(malCountryAll)):
+		#	for y in range(nyears):
+		#		x=malCountryAll[i,y]
+		#		SAMcountry[1,i,y]=SAMa*x**2 + SAMb*x + SAMc
+		#		MAMcountry[1,i,y]=MAMa*x**2 + MAMb*x + MAMc
 		#
-		#for i in range(len(latm)):
-		#	if np.amin(imageMask2[y,i,:])!=1:
-		#		xplot=np.zeros(shape=(len(np.ma.compressed(xMultiPlot[i,:,0])),len(indices)))
-		#		for k in range(len(indices)):
-		#			xplot[:,k]=np.ma.compressed(xMultiPlot[i,:,k])
-		#		malPred[i][imageMask2[y,i]==0]=clf.predict(xplot)
-	
-		#vars()['malPred'+str(year)] = malPred
-		#malAll[y+16]=malPred
-		malPred=np.load(wdvars+'stuffForFinalPrediction/malPred'+str(year))
-		malAll[y+16]=malPred
-		##vars()['malPred'+str(year)].dump(wdvars+'stuffForFinalPrediction/malPred'+str(year))
-	
-		#plt.clf()
-		#plt.imshow(malPred,cmap=cm.jet,vmin=0,vmax=0.3)
-		#plt.colorbar()
-		#plt.yticks([])
-		#plt.xticks([])
-		#plt.title(str(year)+' Predicted Malnutrition, % of Population')
-		#plt.savefig(wdfigs+'malPred_Africa'+str(year),dpi=700)
-	
-	malAll=np.ma.masked_array(malAll,imageMask2)
-	
-	###########################
-	# Sum for Country for country caseload
-	###########################
-	malCountryAll=np.zeros(shape=(len(indexedcodes),nyears))
-	j=-1
-	for i in indexedcodes:
-		j+=1
-		for y in range(nyears):
-			popWhole=np.sum(population[y,nations==i])
-			poptmp=np.ma.masked_array(population[y],nations!=i)
-			maltmp=np.ma.masked_array(malAll[y],nations!=i)
-			malnumtmp=maltmp*poptmp
-			malCountryAll[j,y]=np.sum(malnumtmp)/popWhole
-	malCountryAll=malCountryAll*100
-	
-	SAMcountry = np.zeros(shape=(3,len(malCountryAll),nyears))
-	MAMcountry = np.zeros(shape=(3,len(malCountryAll),nyears))
-	for i in range(len(malCountryAll)):
-		for y in range(nyears):
-			x=malCountryAll[i,y]
-			SAMcountry[1,i,y]=SAMa*x**2 + SAMb*x + SAMc
-			MAMcountry[1,i,y]=MAMa*x**2 + MAMb*x + MAMc
-	
-			SAMcountry[0,i,y]=np.amax([SAMcountry[1,i,y]-SAMstdDev,0.0])
-			MAMcountry[0,i,y]=np.amax([MAMcountry[1,i,y]-MAMstdDev,0.0])
-	
-			SAMcountry[2,i,y]=SAMcountry[1,i,y]+SAMstdDev
-			MAMcountry[2,i,y]=MAMcountry[1,i,y]+MAMstdDev
-	
-	f=open(wddata+'country_indices/country_population.csv','r')
-	i=-2
-	countries=[]
-	countryPop=np.zeros(shape=(len(africanCountries),nyears))
-	for line in f:
-		i+=1
-		if i==-1:
-			continue
-		line=line[:-2]
-		line=line.replace('"','')
-		tmp=np.array(line.split(','))
-		country=tmp[0]
-		if np.amax(country==np.array(africanCountries[:]))==0:
-			continue
-		countries.append(country)
-		icountry=int(countryToi[country])
-		j=43 # 1998
-		for y in range(19):
-			j+=1
-			try:
-				countryPop[icountry,y]=float(tmp[j])
-			except:
-				print country
-				continue
-	
-		p1=countryPop[icountry,0]
-		for y in range(nyears):
-			if countryPop[icountry,y+1]==0.:
-				p2=countryPop[icountry,y]
-				j=y
-				break
-		diff=p2-p1
-		years=j-0
-		for k in range(j+1,nyears):
-			countryPop[icountry,k]=diff/years+countryPop[icountry,k-1]
-	
-	MAMburden=np.zeros(shape=(MAMcountry.shape))
-	SAMburden=np.zeros(shape=(SAMcountry.shape))
-	for i in range(3):
-		MAMburden[i,:,:]=(MAMcountry[i]/100.)*countryPop
-		SAMburden[i,:,:]=(SAMcountry[i]/100.)*countryPop
-	
-	np.save(wdvars+'MAMcountry.npy',MAMcountry)
-	np.save(wdvars+'SAMcountry.npy',SAMcountry)
-	np.save(wdvars+'MAMburden.npy',MAMburden)
-	np.save(wdvars+'SAMburden.npy',SAMburden)
+		#		SAMcountry[0,i,y]=np.amax([SAMcountry[1,i,y]-SAMstdDev,0.0])
+		#		MAMcountry[0,i,y]=np.amax([MAMcountry[1,i,y]-MAMstdDev,0.0])
+		#
+		#		SAMcountry[2,i,y]=SAMcountry[1,i,y]+SAMstdDev
+		#		MAMcountry[2,i,y]=MAMcountry[1,i,y]+MAMstdDev
+		#
+		#f=open(wddata+'country_indices/country_population.csv','r')
+		#i=-2
+		#countries=[]
+		#countryPop=np.zeros(shape=(len(africanCountries),nyears))
+		#for line in f:
+		#	i+=1
+		#	if i==-1:
+		#		continue
+		#	line=line[:-2]
+		#	line=line.replace('"','')
+		#	tmp=np.array(line.split(','))
+		#	country=tmp[0]
+		#	if np.amax(country==np.array(africanCountries[:]))==0:
+		#		continue
+		#	countries.append(country)
+		#	icountry=int(countryToi[country])
+		#	j=43 # 1998
+		#	for y in range(19):
+		#		j+=1
+		#		try:
+		#			countryPop[icountry,y]=float(tmp[j])
+		#		except:
+		#			print country
+		#			continue
+		#
+		#	p1=countryPop[icountry,0]
+		#	for y in range(nyears):
+		#		if countryPop[icountry,y+1]==0.:
+		#			p2=countryPop[icountry,y]
+		#			j=y
+		#			break
+		#	diff=p2-p1
+		#	years=j-0
+		#	for k in range(j+1,nyears):
+		#		countryPop[icountry,k]=diff/years+countryPop[icountry,k-1]
+		#
+		#MAMburden=np.zeros(shape=(MAMcountry.shape))
+		#SAMburden=np.zeros(shape=(SAMcountry.shape))
+		#for i in range(3):
+		#	MAMburden[i,:,:]=(MAMcountry[i]/100.)*countryPop
+		#	SAMburden[i,:,:]=(SAMcountry[i]/100.)*countryPop
+		#
+		#np.save(wdvars+'MAMcountry.npy',MAMcountry)
+		#np.save(wdvars+'SAMcountry.npy',SAMcountry)
+		#np.save(wdvars+'MAMburden.npy',MAMburden)
+		#np.save(wdvars+'SAMburden.npy',SAMburden)
 
 ######################################
 # Remove Boxes (20%), then predict
@@ -2692,12 +2830,12 @@ if Boxes:
 	plt.imshow(boxesGrid[:,:,0])
 	plt.title('Latitude Boxes')
 	plt.colorbar()
-	plt.savefig(wdfigs+'latboxes.pdf')
+	plt.savefig(wdfigs+'boxes_forest/latboxes.pdf')
 	plt.clf()
 	plt.imshow(boxesGrid[:,:,1])
 	plt.title('Longitude Boxes')
 	plt.colorbar()
-	plt.savefig(wdfigs+'lonboxes.pdf')
+	plt.savefig(wdfigs+'boxes_forest/lonboxes.pdf')
 	
 	boxes=np.zeros(shape=(len(latm),len(lonm)))
 	k=-1
@@ -2731,9 +2869,9 @@ if Boxes:
 	trainPixelsAll=[boxes==testNums[i] for i in range(len(testNums))] 
 	trainPixels1year=np.sum(trainPixelsAll,axis=0)
 	
-	trainPixels=np.zeros(shape=(nyears,len(latm),len(lonm)))
-	testPixels=np.zeros(shape=(nyears,len(latm),len(lonm)))
-	for y in range(nyears):
+	trainPixels=np.zeros(shape=(nyearsT,len(latm),len(lonm)))
+	testPixels=np.zeros(shape=(nyearsT,len(latm),len(lonm)))
+	for y in range(nyearsT):
 		trainPixels[y]=trainPixels1year
 		testPixels[y]=testPixels1year
 	
@@ -2742,16 +2880,23 @@ if Boxes:
 	maltest=np.ma.array(mal)
 	maltest=np.ma.masked_array(maltest,testPixels)
 	
+	#fig.clear()
+	plt.cla()
+	plt.close()
 	plt.clf()
 	plt.imshow(maltrain[4],cmap=cm.jet,vmax=0.3)
 	plt.title('Train Pixels')
 	plt.colorbar()
-	plt.savefig(wdfigs+'maltrain.png',dpi=700)
+	plt.xticks([])
+	plt.yticks([])
+	plt.savefig(wdfigs+'boxes_forest/maltrain.png',dpi=700)
 	plt.clf()
 	plt.imshow(maltest[4],cmap=cm.jet,vmax=0.3)
 	plt.title('Test Pixels')
 	plt.colorbar()
-	plt.savefig(wdfigs+'maltest.png',dpi=700)
+	plt.xticks([])
+	plt.yticks([])
+	plt.savefig(wdfigs+'boxes_forest/maltest.png',dpi=700)
 	
 	if MakePlots:
 		boxMask=np.ma.masked_array(boxMask,testPixels)
@@ -2759,25 +2904,25 @@ if Boxes:
 		plt.imshow(boxMask,cmap=cm.seismic)
 		plt.title('Boxes')
 		plt.colorbar()
-		plt.savefig(wdfigs+'trainboxes.png',dpi=700)
+		plt.savefig(wdfigs+'boxes_forest/trainboxes.png',dpi=700)
 		
 		plt.clf()
 		plt.imshow(boxes,cmap=cm.seismic)
 		plt.title('Boxes')
 		plt.colorbar()
-		plt.savefig(wdfigs+'boxes.png',dpi=700)
+		plt.savefig(wdfigs+'boxes_forest/boxes.png',dpi=700)
 	
 	trainMask=np.ma.getmask(maltrain)
 	testMask=np.ma.getmask(maltest)
-	trainMask3=np.zeros(shape=(nyears,len(latm),len(lonm),len(indices)),dtype=bool)
-	testMask3=np.zeros(shape=(nyears,len(latm),len(lonm),len(indices)),dtype=bool)
+	trainMask3=np.zeros(shape=(nyearsT,len(latm),len(lonm),len(indices)),dtype=bool)
+	testMask3=np.zeros(shape=(nyearsT,len(latm),len(lonm),len(indices)),dtype=bool)
 	for i in range(len(indices)):
 		trainMask3[:,:,:,i]=trainMask
 		testMask3[:,:,:,i]=testMask
 		print i
 	
-	xMultiTest=np.ma.masked_array(xMulti, testMask3)
-	xMultiTrain=np.ma.masked_array(xMulti, trainMask3)
+	xMultiTest=np.ma.masked_array(xMulti[:nyearsT], testMask3)
+	xMultiTrain=np.ma.masked_array(xMulti[:nyearsT], trainMask3)
 	
 	xMultiTrainC=np.zeros(shape=(len(np.ma.compressed(xMultiTrain[:,:,:,0])),len(indices)))
 	xMultiTestC=np.zeros(shape=(len(np.ma.compressed(xMultiTest[:,:,:,0])),len(indices)))
@@ -2788,10 +2933,10 @@ if Boxes:
 	ydataTrain=np.ma.compressed(maltrain)
 	ydataTest=np.ma.compressed(maltest)
 	
-	exit()
 	print 'fitting'
+	print xMultiTrainC.shape, ydataTrain.shape
 	##############################
-	clf=RandomForestRegressor()
+	clf=RandomForestRegressor(n_estimators=numTrees,n_jobs=-1,verbose=2)
 	clf.fit(xMultiTrainC,ydataTrain)
 	malPred=clf.predict(xMultiTestC)
 	
@@ -2802,34 +2947,88 @@ if Boxes:
 	
 	Corr=corr(malPred,ydataTest)
 	print Corr
+	error = 100*(abs(malPred-ydataTest))/ydataTest
+	difference = 100*abs(malPred-ydataTest)
+	np.save(wdfigs+'boxes_forest/error.npy',error)
+	np.save(wdfigs+'boxes_forest/difference.npy',difference)
+
+	widths=[0.4]
+	#fig.clear()
+	plt.cla()
+	plt.close()
+	plt.clf()
+	fig = plt.figure(figsize=(7, 3))
+	ax = plt.subplot(1,1,1)
+	ax.set_position([.22,.15,.70,.75])
+	ax.set_aspect(5)
+	ax.boxplot(error, 0, '', vert=0, widths=widths, whis=[12.5,87.5])
+	plt.title('Prediction Errors: Boxes')
+	plt.yticks([])
+	plt.xlabel('Percent Error')
+	plt.grid(axis='x')
+	plt.savefig(wdfigs+'boxes_forest/box_wisker_error.pdf')
 	
+	widths=[0.4]
+	fig.clear()
+	plt.cla()
+	plt.close()
+	plt.clf()
+	fig = plt.figure(figsize=(7, 3))
+	ax = plt.subplot(1,1,1)
+	ax.set_position([.22,.15,.70,.75])
+	ax.set_aspect(0.5)
+	plt.boxplot(difference, 0, '', vert=0, widths=widths, whis=[12.5,87.5])
+	plt.title('Prediction Difference: Boxes')
+	plt.yticks([])
+	plt.xlabel('Difference in Prevalence')
+	plt.grid(axis='x')
+	plt.savefig(wdfigs+'boxes_forest/box_wisker_difference.pdf')
+		
 	x,y=ydataTest*100,malPred*100
 	slope,b=np.polyfit(x,y,1)
 	yfit=slope*x+b
-	error=np.mean((y-x)/x)*100
 	heatmap, xedges, yedges = np.histogram2d(x, y, bins=(200,200),normed=True)
 	extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
 	heatmap = heatmap.T
 	
 	plt.clf()
 	fig = plt.figure(figsize=(7, 5))
-	ax = fig.add_subplot(111, title='Accuracy of Predicted Malnutrition, Corr = '+str(round(Corr,2))+', Avg Error ='+str(round(error,2))+'%')
+	ax = fig.add_subplot(111, title='Accuracy of Predicted Malnutrition, Corr = '+str(round(Corr,2))+', Avg Error ='+str(round(np.mean(error),2))+'%')
+	plt.plot([0,100],[0,100],'k-',linewidth = 0.5)
 	X, Y = np.meshgrid(xedges, yedges)
 	ax.pcolormesh(X, Y, heatmap,cmap=cm.terrain_r)
 	plt.xlabel('Actual Malnutrition, % population')
 	plt.ylabel('Predicted Malnutrition, % population')
-	ax.set_xlim([0,30])
-	ax.set_ylim([0,30])
-	plt.savefig(wdfigs+'accuracy_predictions_heatmap_multivariate.pdf') 
-	exit()
-	
+	ax.set_xlim([0,25])
+	ax.set_ylim([0,25])
+	plt.savefig(wdfigs+'boxes_forest/accuracy_predictions_heatmap.pdf') 
+
 	importances=clf.feature_importances_
 	importanceOrder=np.argsort(importances)
+	importances = importances[importanceOrder][::-1]
 	indexNames=np.array(indexNames)
 	importanceVars=indexNames[importanceOrder][::-1]
-	exit()
+	np.savetxt(wdfigs+'boxes_forest/importances.csv',[importanceVars, importances], delimiter=',',fmt='%s')
+	indexTitles=np.array(indexTitles)
+	VarsNames = indexTitles[importanceOrder][::-1]
 	
-	y=15
+	##### Cumulative Importances #####
+	cumulative_importances = np.cumsum(importances)
+	
+	x=np.arange(len(importances))
+	
+	fig = plt.figure(figsize=(6, 7))
+	plt.clf()
+	plt.plot(x,cumulative_importances,'g*-')
+	plt.hlines(y = 0.97, xmin=0, xmax=len(x), color = 'r', linestyles = 'dashed')
+	plt.title('Cumalative Importances: Boxes')
+	plt.grid(True,linestyle=':')
+	plt.xticks(x,VarsNames,rotation='vertical')
+	plt.gcf().subplots_adjust(bottom=0.2)
+	plt.ylim([0,1.05])
+	plt.savefig(wdfigs+'boxes_forest/cumulative_importances.pdf')
+	
+	y=14
 	
 	imageMask2=np.load(wdvars+'imageMask2.npy')
 	traintmp=imageMask2[y]==testMask[y]
@@ -2864,7 +3063,7 @@ if Boxes:
 	plt.yticks([])
 	plt.xticks([])
 	plt.title('Predicted Malnutrition, Percent of Population')
-	plt.savefig(wdfigs+'malPred_Africa',dpi=700)
+	plt.savefig(wdfigs+'boxes_forest/malPred_Africa',dpi=700)
 	
 	plt.clf()
 	plt.imshow(maltrain[y],cmap=cm.jet,vmin=0,vmax=0.3)
@@ -2872,9 +3071,8 @@ if Boxes:
 	plt.yticks([])
 	plt.xticks([])
 	plt.title('Malnutrition Prevalence, Percent of Population')
-	plt.savefig(wdfigs+'maltrain_Africa',dpi=700)
-	
-	Corr=corr(np.ma.compressed(malPred),np.ma.compressed(mal))
+	plt.savefig(wdfigs+'boxes_forest/maltrain_Africa',dpi=700)
+	exit()
 
 ######################################
 # Read in saved variables for plots
@@ -2918,44 +3116,4 @@ if ReadInOldStuff:
 	plt.yticks([])
 	plt.text(350,1000,'13.7 Million Total Cases',horizontalalignment='center')
 	plt.savefig(wdfigs+'caseload2021',dpi=500)
-
-##### Cumulative Importances #####
-importanceFeatures = np.array([2.12895248e-01, 1.12601057e-01, 1.05469409e-01, 9.43688153e-02,
-	9.23087680e-02, 4.95771212e-02, 4.23943519e-02, 3.61953854e-02,
-	3.27294215e-02, 3.11185332e-02, 2.46663775e-02, 2.22328767e-02,
-	1.82461598e-02, 1.74786279e-02, 1.60173590e-02, 1.48560204e-02,
-	1.24862063e-02, 1.17096587e-02, 9.15986782e-03, 8.19675788e-03,
-	6.32461801e-03, 6.21580069e-03, 4.62931701e-03, 4.30932704e-03,
-	4.25359055e-03, 3.42862371e-03, 2.95242086e-03, 1.77709203e-03,
-	3.86442364e-04, 3.40666157e-04, 3.27804270e-04, 2.31377000e-04,
-	1.14898036e-04])
-
-importanceVars = np.array(['female_education', 'mean_annual_precip', 'forest', 'enrollment',
-	'stability_violence', 'distToInlandCoastsi', 'YieldGrid',
-	'crop_prod', 'electricityGrid', 'distToCoasts', 'elevation',
-	'girlEdGrid', 'ag_pct_gdp', 'assistance',
-	'government_effectiveness', 'grid_gdp', 'imports_percap',
-	'MPconflicts', 'grid_hdi', 'nutritiondiversity', 'pop5km',
-	'iqGrid', 'population', 'roughness', 'bare', 'fieldsize',
-	'market_dist', 'ndvi', 'irrig_aai', 'low_settle', 'irrig_aei',
-	'builtup', 'high_settle'])
-
-cumulative_importances = np.cumsum(importances)
-
-x=np.arange(len(importances))
-
-fig = plt.figure(figsize=(6, 7))
-plt.clf()
-plt.plot(x,cumulative_importances,'g*-')
-plt.hlines(y = 0.97, xmin=0, xmax=len(x), color = 'r', linestyles = 'dashed')
-plt.title('Cumalative Importances')
-plt.grid(True,linestyle=':')
-plt.xticks(x,variables,rotation='vertical')
-plt.gcf().subplots_adjust(bottom=0.2)
-plt.savefig(wdfigs+'cumulative_importances.pdf')
-
-
-
-
-
 

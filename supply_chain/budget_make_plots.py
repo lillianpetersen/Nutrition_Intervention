@@ -162,7 +162,7 @@ for L in range(len(optiLevel)):
       factorySizeAll=np.zeros(shape=(2,shp,33))
       factorySizeAllMask=np.ones(shape=(2,shp,33),dtype=bool)
       
-      factoryPct1=np.zeros(shape=(2,shp,len(countrycosted)))
+      factoryPct1=np.zeros(shape=(2,len(countrycosted),shp))
       factoryPct=np.zeros(shape=(2,len(countrycosted),shp))
       factoryPctOne=np.zeros(shape=(2,len(countrycosted)))
       capacityOne=np.zeros(shape=2)
@@ -227,7 +227,7 @@ for L in range(len(optiLevel)):
                     capacity[iAM]+=float(tmp[1])
                     
                     if AM[iAM]=='SAM':
-                        factoryPct1[iAM,i,c]=float(tmp[1])
+                        factoryPct1[iAM,c,i]=float(tmp[1])
                         packets[iAM,L,V,i]+=float(tmp[1])
                         if s==1:
                            if V==0:
@@ -242,7 +242,7 @@ for L in range(len(optiLevel)):
                            pctLocal[L,V,i,iAM]+=float(tmp[1])
 
                     if AM[iAM]=='MAM':
-                        factoryPct1[iAM,i,c]=float(tmp[2])
+                        factoryPct1[iAM,c,i]=float(tmp[2])
                         packets[iAM,L,V,i]+=float(tmp[2])
                         if s==1:
                            if V==0:
@@ -274,7 +274,6 @@ for L in range(len(optiLevel)):
       totalCapacity = np.zeros(shape=(2,len(factorySizeAll[0])))
       totalCapacity[0] = np.sum(factorySizeAll[0],axis=1)
       totalCapacity[1] = np.sum(factorySizeAll[1],axis=1)
-      factoryPct1 = np.swapaxes(factoryPct1,1,2)
       for p in range(33):
           for q in range(10):
               factoryPct[0,p,q] = 100*factoryPct1[0,p,q]/totalCapacity[0,q]
@@ -385,15 +384,17 @@ for L in range(len(optiLevel)):
           if MakeStackedBarPlots:
              Dcolors = ['firebrick','m','darkorange','crimson','yellow','indianred','goldenrod','mediumpurple','navajowhite','peru','tomato','magenta','deeppink','lightcoral','lemonchiffon','sandybrown','r','gold','moccasin','peachpuff','orangered','orange','rosybrown','papayawhip']
              Icolors = ['navy','lawngreen','darkgreen','deepskyblue','darkslategray','mediumseagreen','lightseagreen','powderblue','midnightblue','forestgreen']
-             if Vtitles[V]=='shipping' or Vtitles[V]=='tariff':
-                 width = 7
-                 plt.bar(100,26,width=width+4,color='k')
-             if Vtitles[V]=='starup':
-                 width = 22
-                 plt.bar(100,26,width=width+14,color='k')
-             if Vtitles[V]=='importexport':
-                 width = 10
-                 plt.bar(100,26,width=width+4,color='k')
+             #if Vtitles[V]=='shipping' or Vtitles[V]=='tariff':
+             #    width = 7
+             #    plt.bar(100,26,width=width+4,color='k')
+             #if Vtitles[V]=='starup':
+             #    width = 22
+             #    plt.bar(100,26,width=width+14,color='k')
+             #if Vtitles[V]=='importexport':
+             #    width = 10
+             #    plt.bar(100,26,width=width+4,color='k')
+             width = 10
+             plt.bar(100,17,width=width+6,color='k')
              if Vtitles[V]=='budget':
                  if AM[g]=='SAM':
                      width=15
@@ -432,15 +433,15 @@ for L in range(len(optiLevel)):
              plt.ylabel('% of '+AM[g]+' Cases Treated')
              #plt.text(100,-1,'Today',horizontalalignment='center')
              if AM[g]=='SAM':
-                 plt.xlim([0,915])
-                 plt.xticks([100,200,400,600,800],['Today',200,400,600,800])
-                 plt.plot([0,915],[100,100],'k-',linewidth=3)
+                 #plt.xlim([0,915])
+                 #plt.xticks([100,200,400,600,800],['Today',200,400,600,800])
+                 #plt.plot([0,915],[100,100],'k-',linewidth=3)
                  ax.legend((pvars[::-1]),(Otitles[::-1]),bbox_to_anchor=(1, 0.26),prop=fontP)
              if AM[g]=='MAM':
-                 plt.xlim([0,270])
-                 plt.xticks([50,100,150,200,250],[50,'Today',150,200,250])
-                 plt.plot([0,270],[100,100],'k-',linewidth=3)
-                 #ax.legend((pvars[::-1]),(Otitles[::-1]),bbox_to_anchor=(1, 0.4),prop=fontP)
+                 #plt.xlim([0,270])
+                 #plt.xticks([50,100,150,200,250],[50,'Today',150,200,250])
+                 #plt.plot([0,270],[100,100],'k-',linewidth=3)
+                 ax.legend((pvars[::-1]),(Otitles[::-1]),bbox_to_anchor=(1, 0.4),prop=fontP)
              plt.grid(True,linestyle=':')
              plt.savefig(wdfigs+Ltitles[L]+'/'+Vtitles[V]+'/FactorySize_vs_'+Vtitles[V]+'_'+AM[g]+'.pdf')
 
@@ -495,20 +496,14 @@ for L in range(len(optiLevel)):
              
              for country in shpreader.Reader(countries_shp).records():
                 cName=country.attributes['NAME_LONG']
-                if cName[-6:]=='Ivoire':
-                   cName="Ivory Coast"
-                if cName=='Democratic Republic of the Congo':
-                   cName='DRC'
-                if cName=='Republic of the Congo':
-                   cName='Congo'
-                if cName=='eSwatini':
-                   cName='Swaziland'
-                if cName=='The Gambia':
-                   cName='Gambia'
-                if cName=='Somaliland':
-                   cName='Somalia'
-                if np.amax(cName==subsaharancountry)==0:
-                   continue
+                if cName[-6:]=='Ivoire': cName="Ivory Coast"
+                if cName=='Democratic Republic of the Congo': cName='DRC'
+                if cName=='Republic of the Congo': cName='Congo'
+                if cName=='eSwatini': cName='Swaziland'
+                if cName=='The Gambia': cName='Gambia'
+                if cName=='Somaliland': cName='Somalia'
+                cName = str(cName)
+                if np.amax(cName==subsaharancountry)==0: continue
                 if np.amax(cName==countrycosted)==0:
                    x=0
                    y=y1+(y2-y1)/(cmax-cmin)*(x-cmin)
@@ -574,20 +569,14 @@ for L in range(len(optiLevel)):
 
       for country in shpreader.Reader(countries_shp).records():
              cName=country.attributes['NAME_LONG']
-             if cName[-6:]=='Ivoire':
-                cName="Ivory Coast"
-             if cName=='Democratic Republic of the Congo':
-                cName='DRC'
-             if cName=='Republic of the Congo':
-                cName='Congo'
-             if cName=='eSwatini':
-                cName='Swaziland'
-             if cName=='The Gambia':
-                cName='Gambia'
-             if cName=='Somaliland':
-                cName='Somalia'
-             if np.amax(cName==subsaharancountry)==0:
-                continue
+             if cName[-6:]=='Ivoire': cName="Ivory Coast"
+             if cName=='Democratic Republic of the Congo': cName='DRC'
+             if cName=='Republic of the Congo': cName='Congo'
+             if cName=='eSwatini': cName='Swaziland'
+             if cName=='The Gambia': cName='Gambia'
+             if cName=='Somaliland': cName='Somalia'
+             cName = str(cName)
+             if np.amax(cName==subsaharancountry)==0: continue
              if np.amax(cName==countrycosted)!=0:
                 c=np.where(cName==countrycosted)[0][0]
                 lon1=capitalLatLon[1,c]
@@ -611,20 +600,14 @@ for L in range(len(optiLevel)):
 
       for country in shpreader.Reader(countries_shp).records():
              cName=country.attributes['NAME_LONG']
-             if cName[-6:]=='Ivoire':
-                cName="Ivory Coast"
-             if cName=='Democratic Republic of the Congo':
-                cName='DRC'
-             if cName=='Republic of the Congo':
-                cName='Congo'
-             if cName=='eSwatini':
-                cName='Swaziland'
-             if cName=='The Gambia':
-                cName='Gambia'
-             if cName=='Somaliland':
-                cName='Somalia'
-             if np.amax(cName==subsaharancountry)==0:
-                continue
+             if cName[-6:]=='Ivoire': cName="Ivory Coast"
+             if cName=='Democratic Republic of the Congo': cName='DRC'
+             if cName=='Republic of the Congo': cName='Congo'
+             if cName=='eSwatini': cName='Swaziland'
+             if cName=='The Gambia': cName='Gambia'
+             if cName=='Somaliland': cName='Somalia'
+             cName = str(cName) 
+             if np.amax(cName==subsaharancountry)==0: continue
              if np.amax(cName==countrycosted)==0:
                 ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black',
                    facecolor='lightgray')
@@ -647,7 +630,7 @@ for L in range(len(optiLevel)):
    # Supply Zones
    ###########################
    if MakeExportPlots:
-      ruftitles=['rutf','rusf']
+      ruftitles=['rutf','rutf']
       for g in range(2):
           productarray = np.load(wddata+'results/budget/'+str(AM[g])+'/example/'+optiLevel[L]+'/RN'+ruftitles[g]+'array.npy')
           Rcountrycosted1=np.load(wddata+'results/budget/'+str(AM[g])+'/'+'example/'+optiLevel[L]+'/RNcountry.npy')
@@ -711,20 +694,14 @@ for L in range(len(optiLevel)):
           ## Colors
           for country in shpreader.Reader(countries_shp).records():
              cName=country.attributes['NAME_LONG']
-             if cName[-6:]=='Ivoire':
-                cName="Ivory Coast"
-             if cName=='Democratic Republic of the Congo':
-                cName='DRC'
-             if cName=='Republic of the Congo':
-                cName='Congo'
-             if cName=='eSwatini':
-                cName='Swaziland'
-             if cName=='The Gambia':
-                cName='Gambia'
-             if cName=='Somaliland':
-                cName='Somalia'
-             if np.amax(cName==Rsubsaharancountry)==0:
-                continue
+             if cName[-6:]=='Ivoire': cName="Ivory Coast"
+             if cName=='Democratic Republic of the Congo': cName='DRC'
+             if cName=='Republic of the Congo': cName='Congo'
+             if cName=='eSwatini': cName='Swaziland'
+             if cName=='The Gambia': cName='Gambia'
+             if cName=='Somaliland': cName='Somalia'
+             cName = str(cName)
+             if np.amax(cName==Rsubsaharancountry)==0: continue
              else:
                 poz=np.where(cName==Rsubsaharancountry)[0][0]
                 c=np.where(productarray[:,poz]==np.amax(productarray[:,poz]))[0][0]
@@ -741,20 +718,14 @@ for L in range(len(optiLevel)):
           ## Arrows
           for country in shpreader.Reader(countries_shp).records():
              cName=country.attributes['NAME_LONG']
-             if cName[-6:]=='Ivoire':
-                cName="Ivory Coast"
-             if cName=='Democratic Republic of the Congo':
-                cName='DRC'
-             if cName=='Republic of the Congo':
-                cName='Congo'
-             if cName=='eSwatini':
-                cName='Swaziland'
-             if cName=='The Gambia':
-                cName='Gambia'
-             if cName=='Somaliland':
-                cName='Somalia'
-             if np.amax(cName==Rsubsaharancountry)==0:
-                continue
+             if cName[-6:]=='Ivoire': cName="Ivory Coast"
+             if cName=='Democratic Republic of the Congo': cName='DRC'
+             if cName=='Republic of the Congo': cName='Congo'
+             if cName=='eSwatini': cName='Swaziland'
+             if cName=='The Gambia': cName='Gambia'
+             if cName=='Somaliland': cName='Somalia'
+             cName = str(cName)
+             if np.amax(cName==Rsubsaharancountry)==0: continue
              else:
                 poz=np.where(cName==Rsubsaharancountry)[0][0] # index of country
                 c=np.where(productarray[:,poz]==np.amax(productarray[:,poz]))[0][0] # index of country's main supplier
@@ -896,20 +867,14 @@ for L in range(len(optiLevel)):
           ## Colors
           for country in shpreader.Reader(countries_shp).records():
              cName=country.attributes['NAME_LONG']
-             if cName[-6:]=='Ivoire':
-                cName="Ivory Coast"
-             if cName=='Democratic Republic of the Congo':
-                cName='DRC'
-             if cName=='Republic of the Congo':
-                cName='Congo'
-             if cName=='eSwatini':
-                cName='Swaziland'
-             if cName=='The Gambia':
-                cName='Gambia'
-             if cName=='Somaliland':
-                cName='Somalia'
-             if np.amax(cName==Rsubsaharancountry)==0:
-                continue
+             if cName[-6:]=='Ivoire': cName="Ivory Coast"
+             if cName=='Democratic Republic of the Congo': cName='DRC'
+             if cName=='Republic of the Congo': cName='Congo'
+             if cName=='eSwatini': cName='Swaziland'
+             if cName=='The Gambia': cName='Gambia'
+             if cName=='Somaliland': cName='Somalia'
+             cName = str(cName)
+             if np.amax(cName==Rsubsaharancountry)==0: continue
              else:
                 poz=np.where(cName==Rsubsaharancountry)[0][0]
                 treatment=np.sum(productarray[:,poz])
@@ -1124,9 +1089,9 @@ for g in range(len(AM)):
     plt.ylabel('% of '+AM[g]+' Cases Treated')
     plt.ylim([-3,103])
     if g==0:
-        plt.xlim([-0.1,1800])
+        plt.xlim([-0.1,775])
     if g==1:
-        plt.xlim([-0.1,500.1])
+        plt.xlim([-0.1,1200])
     plt.grid(True)
     plt.legend(loc='lower right')
     plt.savefig(wdfigs+'summary/line_totalCost_vs_'+Vtitles[V]+'_'+AM[g]+'.pdf')

@@ -145,25 +145,22 @@ Ltitles = ['UNICEF']
 Vtitles = ['tariff']
 loopvar = ['tariff']
 
-mins= np.array([0.2, 0.2, 0.2, 0])
-factor = np.array([0.2, 0.2, 0.2, 0.05])
-maxs = np.array([5.01, 5.01, 5.01, 0.4])
-#LTitles = ['All Optimized','Local Optimized','Local Producing Optimized International with Tariff','Local Producing International with Tariff','Local Optimized with Tariff','All Optimized with Tariff','Local Producing Optimized International']
-#optiLevel = ['AllarOpti','LocalOpti', 'AllIntl_opti_trf', 'AllIntl_trf', 'LocalOpti_trf', 'AllarOpti_trf', 'AllIntl_opti']
+mins= np.array([0])
+factor = np.array([0.05])
+maxs = np.array([0.4])
 
-#[AllOpti,LocalOpti,AllIntl,AllIntlOpti] , [Trf,NoTrf] , [Shipcost,imexp,strtup,truckfactor] , [scenarios]
-cost=np.zeros(shape=(len(optiLevel),len(loopvar),25)) 
+cost=np.zeros(shape=(len(optiLevel),len(loopvar),8)) 
 costOneAll=np.zeros(shape=(len(optiLevel))) 
-Mask=np.ones(shape=(len(optiLevel),len(loopvar),25),dtype=bool) 
-factoryNum=np.zeros(shape=(len(optiLevel),len(loopvar),25))
+Mask=np.ones(shape=(len(optiLevel),len(loopvar),8),dtype=bool) 
+factoryNum=np.zeros(shape=(len(optiLevel),len(loopvar),8))
 factoryNumOneAll=np.zeros(shape=(len(optiLevel)))
 portNumOneAll=np.zeros(shape=(len(optiLevel)))
-pctLocal=np.zeros(shape=(len(optiLevel),len(loopvar),25))
+pctLocal=np.zeros(shape=(len(optiLevel),len(loopvar),8))
 pctLocalOneAll=np.zeros(shape=(len(optiLevel))) #optiLevel
 
 for L in range(len(optiLevel)):
     for V in range(len(loopvar)):
-        File =optiLevel[L]+'_'+loopvar[V]
+        File ='current_'+loopvar[V]
         print optiLevel[L],loopvar[V]
     
         shp=len(np.arange(mins[V],maxs[V],factor[V]))
@@ -194,7 +191,7 @@ for L in range(len(optiLevel)):
             capacity=np.zeros(shape=1)
         
             try:
-                f = open(wddata+'results/current/'+str(File)+'/'+str(File)+str(s)+'.csv')
+                f = open(wddata+'results/UNICEF/'+str(File)+'/'+str(File)+str(s)+'.csv')
             except:
                 continue
             k=-1
@@ -300,58 +297,6 @@ for L in range(len(optiLevel)):
             plt.grid(True)
             plt.savefig(wdfigs+'cost_optimization/'+Ltitles[L]+'/'+Vtitles[V]+'/'+Ltitles[L]+'__totalCost_vs_'+Vtitles[V]+'.pdf')
         
-           # #### factoryNum ####
-           # ydata=np.ma.compressed(np.ma.masked_array(factoryNum[L,V,:],Mask[L,V,:]))
-           # plt.clf()
-           # plt.plot(x,ydata,'b*-')
-           # plt.title(LTitles[L]+': Effect of '+VTitles[V]+' Number of Factories')
-           # plt.xlabel(VTitles[V]+' Cost, % of Today')
-           # plt.ylabel('Number of Factories')
-           # plt.grid(True)
-           # plt.savefig(wdfigs+'cost_optimization/'+Ltitles[L]+'/'+Vtitles[V]+'/'+Ltitles[L]+'__factoryNum_vs_'+Vtitles[V]+'.pdf')
-           # 
-           # #### factorySize ####
-           # plt.clf()
-           # plt.plot(x,sizeAvg[0],'b*-')
-           # plt.plot(x,sizeAvg[0]-sizeStdDev[0],'b*--')
-           # plt.plot(x,sizeAvg[0]+sizeStdDev[0],'b*--')
-           # plt.plot(x,sizeAvg[1],'g*-')
-           # plt.plot(x,sizeAvg[1]-sizeStdDev[1],'g*--')
-           # plt.plot(x,sizeAvg[1]+sizeStdDev[1],'g*--')
-           # plt.title(LTitles[L]+': Avg Factory Size by '+VTitles[V]+' Cost')
-           # plt.xlabel(VTitles[V]+' Cost, % of Today')
-           # plt.ylabel('Avg Factory Size')
-           # plt.grid(True)
-           # plt.savefig(wdfigs+'cost_optimization/'+Ltitles[L]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factorySize_vs_'+Vtitles[V]+'.pdf')
-           # 
-           # #### factorySizeAll ####
-           # for g in range(2):
-           #     plt.clf()
-           #     plt.plot(x,factorySizeAll[g],'b*')
-           #     plt.title(LTitles[L]+': Factory Size by '+VTitles[V]+' Cost')
-           #     plt.xlabel(''+VTitles[V]+' Cost, % of Today')
-           #     plt.ylabel('Factory Size')
-           #     plt.grid(True)
-           #     plt.savefig(wdfigs+'cost_optimization/'+Ltitles[L]+'/'+Vtitles[V]+'/'+Ltitles[L]+'factorySize'+str(g)+'_vs_'+Vtitles[V]+'Cost.pdf')
-           # 
-           # #### PctTrans ####
-           # plt.clf()
-           # plt.plot(x,pctTrans*100,'b*-')
-           # plt.title(LTitles[L]+': % Cost that is Transport by '+VTitles[V]+' Cost')
-           # plt.xlabel(''+VTitles[V]+' Cost, % of Today')
-           # plt.ylabel('% of Total Cost that is Transport')
-           # plt.grid(True)
-           # plt.savefig(wdfigs+'cost_optimization/'+Ltitles[L]+'/'+Vtitles[V]+'/'+Ltitles[L]+'pctTrans_vs_'+Vtitles[V]+'Cost.pdf')
-           # 
-           # #### PctIngredient ####
-           # plt.clf()
-           # plt.plot(x,pctIngredient*100,'b*-')
-           # plt.title(LTitles[L]+': % Cost that is Ingredient by '+VTitles[V]+' Cost')
-           # plt.xlabel(VTitles[V]+' Cost, % of Today')
-           # plt.ylabel('% of Total Cost that is Ingredient')
-           # plt.grid(True)
-           # plt.savefig(wdfigs+'cost_optimization/'+Ltitles[L]+'/'+Vtitles[V]+'/'+Ltitles[L]+'pctIngredient_vs_'+Vtitles[V]+'Cost.pdf')
-
         ###############################################
         # Plot Map for every Tariff
         ###############################################
@@ -360,9 +305,9 @@ for L in range(len(optiLevel)):
             for s in np.arange(mins[V],maxs[V],factor[V]):
                 i+=1
                 s = np.round(s,2)
-                productarray = np.load(wddata+'results/current/current_'+loopvar[V]+'/RNrutfsupplyarraycurrent_'+loopvar[V]+str(s)+'.npy')
-                Rcountrycosted1=np.load(wddata+'results/current/current_'+loopvar[V]+'/RNcountrycostedcurrent_'+loopvar[V]+str(s)+'.npy')
-                Rsubsaharancountry1=np.load(wddata+'results/current/current_'+loopvar[V]+'/RNsubsaharancountrycurrent_'+loopvar[V]+str(s)+'.npy')
+                productarray = np.load(wddata+'results/UNICEF/current_'+loopvar[V]+'/RNrutfsupplyarraycurrent_'+loopvar[V]+str(s)+'.npy')
+                Rcountrycosted1=np.load(wddata+'results/UNICEF/current_'+loopvar[V]+'/RNcountrycostedcurrent_'+loopvar[V]+str(s)+'.npy')
+                Rsubsaharancountry1=np.load(wddata+'results/UNICEF/current_'+loopvar[V]+'/RNsubsaharancountrycurrent_'+loopvar[V]+str(s)+'.npy')
                 productarray = productarray[:-2]
                 Rcountrycosted1 = Rcountrycosted1[:-2]
         
@@ -432,10 +377,14 @@ for L in range(len(optiLevel)):
                     else:
                         poz=np.where(cName==Rsubsaharancountry)[0][0]
                         c=np.where(productarray[:,poz]==np.amax(productarray[:,poz]))[0][0]
+                    if productarray[c,poz]==0:
+                        facecolor=[1,1,1]
+                    if productarray[c,poz]>0:
                         y=y1+(y2-y1)/(cmax-cmin)*(c-cmin)
                         icmap=min(255,int(round(y,1)))
                         icmap=max(0,int(round(icmap,1)))
-                        ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black', facecolor=[cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]],label=cName)
+                        facecolor = [cmapArray[icmap,0],cmapArray[icmap,1],cmapArray[icmap,2]]
+                    ax.add_geometries(country.geometry, ccrs.PlateCarree(), edgecolor='black', facecolor=facecolor,label=cName)
                 
                 # Plot Arrows
                 for country in shpreader.Reader(countries_shp).records():
@@ -450,21 +399,23 @@ for L in range(len(optiLevel)):
                     else:
                         poz=np.where(cName==Rsubsaharancountry)[0][0]
                         c=np.where(productarray[:,poz]==np.amax(productarray[:,poz]))[0][0]
-                        width=0.3+((1.2*productarray[c,poz])/np.amax(productarray))
+                    if productarray[c,poz]<1:
+                        continue
+                    width=0.3+((1.2*productarray[c,poz])/np.amax(productarray))
                 
-                        p = np.where(cName==Rsubsaharancountry)[0][0]
-                        lat2=SScapitalLatLon[0,p]
-                        lon2=SScapitalLatLon[1,p]
+                    p = np.where(cName==Rsubsaharancountry)[0][0]
+                    lat2=SScapitalLatLon[0,p]
+                    lon2=SScapitalLatLon[1,p]
                 
-                        supplier=Rcountrycosted[c].replace(' ','_')
-                        p2=np.where(supplier==countrycosted)[0][0]
-                        lat1=capitalLatLon[0,p2]
-                        lon1=capitalLatLon[1,p2]
+                    supplier=Rcountrycosted[c].replace(' ','_')
+                    p2=np.where(supplier==countrycosted)[0][0]
+                    lat1=capitalLatLon[0,p2]
+                    lon1=capitalLatLon[1,p2]
                 
-                        dlat=lat2-lat1
-                        dlon=lon2-lon1
-                        if dlat!=0:
-                            plt.arrow(lon1, lat1, dlon, dlat, facecolor='w', edgecolor='k', linestyle='-', width=width, head_width=2.5*width, head_length=width*2, length_includes_head=True, transform=ccrs.PlateCarree() )
+                    dlat=lat2-lat1
+                    dlon=lon2-lon1
+                    if dlat!=0:
+                        plt.arrow(lon1, lat1, dlon, dlat, facecolor='k', edgecolor='w', linestyle='-', width=width, head_width=2.5*width, head_length=width*2, length_includes_head=True, transform=ccrs.PlateCarree() )
                 
                 # Plot Ports
                 for f in range(len(Rcountrycosted)):
@@ -811,9 +762,9 @@ for L in range(len(optiLevel)):
     if MakeExportPlots:
         ruftitles=['rutf','rusf']
         g=0
-        productarrayrutf = np.load(wddata+'results/current/example/'+optiLevel[L]+'/RN'+ruftitles[g]+'array.npy')
-        Rcountrycosted1=np.load(wddata+'results/current/example/'+optiLevel[L]+'/RNcountry.npy')
-        Rsubsaharancountry1=np.load(wddata+'results/current/example/'+optiLevel[L]+'/RNsubsaharancountry.npy')
+        productarrayrutf = np.load(wddata+'results/validation/current/RN'+ruftitles[g]+'array.npy')
+        Rcountrycosted1=np.load(wddata+'results/validation/current/RNcountry.npy')
+        Rsubsaharancountry1=np.load(wddata+'results/validation/current/RNsubsaharancountry.npy')
         Rcountrycosted1[Rcountrycosted1=='I_Guinea_Bissau']='I_Guinea-Bissau'
 
         Rcountrycosted=[]
@@ -982,9 +933,9 @@ for L in range(len(optiLevel)):
     ###########################
     if MakeByFactoryPlots:
         for g in range(2):
-            productarray = np.load(wddata+'results/current/example/'+optiLevel[L]+'/RN'+ruftitles[g]+'array.npy')
-            Rcountrycosted1=np.load(wddata+'results/current/example/'+optiLevel[L]+'/RNcountry.npy')
-            Rsubsaharancountry1=np.load(wddata+'results/current/example/'+optiLevel[L]+'/Rsubsaharancountry.npy')
+            productarray = np.load(wddata+'results/validation/'+optiLevel[L]+'/RN'+ruftitles[g]+'array.npy')
+            Rcountrycosted1=np.load(wddata+'results/validation/'+optiLevel[L]+'/RNcountry.npy')
+            Rsubsaharancountry1=np.load(wddata+'results/validation/'+optiLevel[L]+'/Rsubsaharancountry.npy')
             Rcountrycosted=[]
             for i in range(len(Rcountrycosted1)):
                 country=Rcountrycosted1[i]
@@ -1126,7 +1077,7 @@ plt.bar(x,ydata,color=colors,tick_label=['Current'])
 plt.ylabel('Total Cost of Procurement for 1 Year (Billion USD)')
 plt.title('Total Modeled Cost',fontsize=18)
 plt.grid(True,linestyle=':')
-plt.savefig(wdfigs+'cost_optimization/current/summary/barchart_cost.pdf')
+plt.savefig(wdfigs+'cost_optimization/UNICEF/summary/barchart_cost.pdf')
 
 ## % local barchart ##
 fig = plt.figure(figsize=(6, 5))
@@ -1139,7 +1090,7 @@ plt.bar(x,ydata,color=colors,tick_label=['Current'])
 plt.ylabel('% Treatment Produced Locally')
 plt.title('Percent Produced Locally',fontsize=18)
 plt.grid(True,linestyle=':')
-plt.savefig(wdfigs+'cost_optimization/current/summary/barchart_pctLocal.pdf')
+plt.savefig(wdfigs+'cost_optimization/UNICEF/summary/barchart_pctLocal.pdf')
 
 ## factoryNum barchart ##
 fig = plt.figure(figsize=(6, 5))
@@ -1166,12 +1117,12 @@ plt.text(3.12,0.4,'Ports',size=8)
 plt.ylabel('Number of Factories or Ports')
 plt.title('Number of Factories and Ports',fontsize=18)
 plt.grid(True,linestyle=':')
-plt.savefig(wdfigs+'cost_optimization/current/summary/barchart_factoryNum.pdf')
+plt.savefig(wdfigs+'cost_optimization/UNICEF/summary/barchart_factoryNum.pdf')
 
 
 
 fig = plt.figure(figsize=(7, 4))
-LTitles = ['Current']
+LTitles = ['UNICEF']
 
 cost1=cost/1e9
 for V in range(len(loopvar)):
@@ -1188,7 +1139,7 @@ for V in range(len(loopvar)):
     plt.ylim([0.5,1.35])
     plt.grid(True)
     plt.legend(loc='lower right')
-    plt.savefig(wdfigs+'cost_optimization/current/summary/line_totalCost_vs_'+Vtitles[V]+'.pdf')
+    plt.savefig(wdfigs+'cost_optimization/UNICEF/summary/line_totalCost_vs_'+Vtitles[V]+'.pdf')
 
 for V in range(len(loopvar)):
     x = np.arange(mins[V],maxs[V],factor[V])
@@ -1205,7 +1156,7 @@ for V in range(len(loopvar)):
     #plt.ylim([0,2e9])
     plt.grid(True)
     plt.legend()
-    plt.savefig(wdfigs+'cost_optimization/current/summary/line_factoryNum_vs_'+Vtitles[V]+'.pdf')
+    plt.savefig(wdfigs+'cost_optimization/UNICEF/summary/line_factoryNum_vs_'+Vtitles[V]+'.pdf')
 
 for V in range(len(loopvar)):
     x = np.arange(mins[V],maxs[V],factor[V])
@@ -1224,7 +1175,7 @@ for V in range(len(loopvar)):
     plt.ylim([0,101])
     plt.grid(True)
     plt.legend()
-    plt.savefig(wdfigs+'cost_optimization/current/summary/line_0pctLocal_vs_'+Vtitles[V]+'.pdf')
+    plt.savefig(wdfigs+'cost_optimization/UNICEF/summary/line_0pctLocal_vs_'+Vtitles[V]+'.pdf')
 
 for V in range(len(loopvar)):
     x = np.arange(mins[V],maxs[V],factor[V])
@@ -1243,4 +1194,4 @@ for V in range(len(loopvar)):
     plt.ylim([0,101])
     plt.grid(True)
     plt.legend()
-    plt.savefig(wdfigs+'cost_optimization/current/summary/line_1pctLocal_vs_'+Vtitles[V]+'.pdf')
+    plt.savefig(wdfigs+'cost_optimization/UNICEF/summary/line_1pctLocal_vs_'+Vtitles[V]+'.pdf')
