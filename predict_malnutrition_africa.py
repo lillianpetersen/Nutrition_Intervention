@@ -91,41 +91,44 @@ def checkIfInPolygon(lon, lat,polygon):
 	point = Point(lon, lat)
 	return polygon.contains(point)
 
-def findGridDataLays(shapePoints,gridMid):
+def findGridDataLays(shapePoints,gridMid,Lines):
 	'''Convert Vector To Raster'''
-	griddedHits=np.zeros(shape=(len(gridMid[:,0]),len(gridMid[0,:])))
-	stepsize=np.zeros(shape=(len(shapePoints)))
+	griddedHits=np.zeros(shape=(len(gridMid[:,0]),len(gridMid[0,:]))) # Array of hits
 	for i in range(len(shapePoints)-1):
+		##### Retrieve two consecutive pixels #####
 		x1,y1=shapePoints[i]
 		x2,y2=shapePoints[i+1]
-		#if geopy.distance.distance([x1,y1],[x2,y2]).km<2:
 		##### Find Grid Cell of Midpoint #####
 		linePoints=np.array([(x1,y1),((x1+x2)/2.,(y1+y2)/2.),(x2,y2)])
-		#else:
-		#	dist=geopy.distance.distance([x1,y1],[x2,y2]).km+1e-6 # lat lon
-		#	if dist>50:
-		#		continue
-		#	if x2<x1:
-		#		step=abs(x2-x1)/(2*dist)
-		#		if step==0:
-		#			step==0.004
-		#		x=np.arange(x2,x1,step)
-		#	else:
-		#		if x2==x1:
-		#			x2=x1+1e-4
-		#		step=abs(x2-x1)/(2*dist)
-		#		if step==0:
-		#			step==0.004
-		#		x=np.arange(x1,x2,step)
-		#	stepsize[i]=abs(x2-x1)/(2*dist)
-		#	slope,bInt=np.polyfit([x1,x2],[y1,y2],1)
-		#	yfit=slope*np.array(x)+bInt
-		#	linePoints=np.zeros(shape=(len(yfit),2))
-		#	for j in range(len(yfit)):
-		#		linePoints[j,:]=x[j],yfit[j]
+		##### Fill in each point between 2 consecutive pixels #####
+		if Lines:
+			if geopy.distance.distance([x1,y1],[x2,y2]).km<2:
+				linePoints=np.array([(x1,y1),((x1+x2)/2.,(y1+y2)/2.),(x2,y2)])
+			else:
+				dist=geopy.distance.distance([x1,y1],[x2,y2]).km+1e-6 # lat lon
+				if dist>50:
+					continue
+				if x2<x1:
+					step=abs(x2-x1)/(2*dist)
+					if step==0:
+						step==0.004
+					x=np.arange(x2,x1,step) # generate points between 2 pixels
+				else:
+					if x2==x1:
+						x2=x1+1e-4
+					step=abs(x2-x1)/(2*dist)
+					if step==0:
+						step==0.004
+					x=np.arange(x1,x2,step) # generate points between 2 pixels
+				slope,bInt=np.polyfit([x1,x2],[y1,y2],1)
+				yfit=slope*np.array(x)+bInt # line between 2 pixels
+				linePoints=np.zeros(shape=(len(yfit),2))
+				for j in range(len(yfit)):
+					linePoints[j,:]=x[j],yfit[j]
+		##### Fill the closest pixel to each point #####
 		for j in range(len(linePoints)):
 			midPoint=linePoints[j]
-			yClosestL=min(gridMid[0,:,1], key=lambda i:abs(i-midPoint[1]))
+			yClosestL=min(gridMid[0,:,1], key=lambda i:abs(i-midPoint[1])) 
 			xClosestL=min(gridMid[:,0,0], key=lambda i:abs(i-midPoint[0]))
 			xClosestGrid=np.where(gridMid[:,0,0]==xClosestL)[0][0]
 			yClosestGrid=np.where(gridMid[0,:,1]==yClosestL)[0][0]
@@ -135,9 +138,10 @@ def findGridDataLays(shapePoints,gridMid):
 		
 def findGridAndDistance(shapePoints,gridMid):
 	''' Give it a list of points in a road, will length of road in each pixel'''
-	midpointHits=np.zeros(shape=(len(shapePoints)-1,2))
-	dist=np.zeros(shape=(len(shapePoints)-1))
+	midpointHits=np.zeros(shape=(len(shapePoints)-1,2)) # array of which pixels have roads
+	dist=np.zeros(shape=(len(shapePoints)-1)) # array of road dist in San Diego 
 	for i in range(len(shapePoints)-1):
+		##### Retrieve two consecutive pixels #####
 		x1,y1=shapePoints[i]
 		x2,y2=shapePoints[i+1]
 		##### Find Grid Cell of Midpoint #####
@@ -150,7 +154,7 @@ def findGridAndDistance(shapePoints,gridMid):
 		yClosestGrid=np.where(gridMid[0,:,1]==yClosestL)[0][0]
 		midpointHits[i]=xClosestGrid,yClosestGrid
 
-		### Convert radians to meters ###
+		##### Distance between 2 pixels #####
 		R = 6373.0 # Earth's radius
 		coord1=x1,y1
 		coord2=x2,y2
@@ -176,24 +180,33 @@ def findNearest(cityLonLat,gridMid,imageMask1):
 	2. which index of cityLonLat is closest
 	'''
 	lenLon,lenLat=len(gridMid[:,0,0]),len(gridMid[0,:,0])
-	closestDist=10000*np.ones(shape=(lenLon,lenLat))
-	iclosestDist=np.zeros(shape=(lenLon,lenLat),dtype=int)
+	closestDist=10000*np.ones(shape=(lenLon,lenLat)) # closest distance
+	iclosestDist=np.zeros(shape=(lenLon,lenLat),dtype=int) # index of point with closest dist
 	R = 6373.0 #earth's radius
-	for ilon in range(lenLon):
+	for ilon in range(lenLon): # loop through pixels
 		for ilat in range(lenLat):
 			if imageMask1[ilon,ilat]==True:
 				continue
-			distances=np.sqrt((gridMid[ilon,ilat,0]-cityLonLat[:,0])**2+(gridMid[ilon,ilat,1]-cityLonLat[:,1])**2)
-			leastDist=np.amin(distances)
-			iclosestDist[ilon,ilat]=np.where(distances==leastDist)[0][0]
-			closestDist[ilon,ilat]=geopy.distance.distance([gridMid[ilon,ilat,1],gridMid[ilon,ilat,0]],[cityLonLat[iclosestDist[ilon,ilat],1],cityLonLat[iclosestDist[ilon,ilat],0]]).km
+			##### find closest distance #####
+			distances = np.sqrt((gridMid[ilon,ilat,0]-cityLonLat[:,0])**2+(gridMid[ilon,ilat,1]-cityLonLat[:,1])**2)
+			leastDist = np.amin(distances)
+			iclosestDist[ilon,ilat] = np.where(distances==leastDist)[0][0] # index of closest dist
+			closestDist[ilon,ilat] = geopy.distance.distance([gridMid[ilon,ilat,1],gridMid[ilon,ilat,0]],[cityLonLat[iclosestDist[ilon,ilat],1],cityLonLat[iclosestDist[ilon,ilat],0]]).km # closest dist
 		print np.round(100*ilon/float(lenLon),2),'%'
 
-	closestDistM=np.ma.masked_array(closestDist,imageMask1)
-	iclosestDistM=np.ma.masked_array(iclosestDist,imageMask1)
+	closestDistM=np.ma.masked_array(closestDist,imageMask1) # mask array
+	iclosestDistM=np.ma.masked_array(iclosestDist,imageMask1) # mask array
 	return closestDistM,iclosestDistM
 
 def findNearestThree(cityLonLat,gridMid,imageMask1):
+	'''Give it:
+	1. longitude latitude points
+	2. array of the mid points of pixels on a map
+	3. mask for the map
+	Will return:
+	1. an array of the three closest distances from each pixel to the lat lon points
+	2. the three indices of the closest lat lon points 
+	'''
 	lenLon,lenLat=len(gridMid[:,0,0]),len(gridMid[0,:,0])
 	closestDist=10000*np.ones(shape=(lenLon,lenLat))
 	closestDistDeg=100*np.ones(shape=(lenLon,lenLat,3))
@@ -202,11 +215,12 @@ def findNearestThree(cityLonLat,gridMid,imageMask1):
 	for i in range(3):
 		imageMask4[:,:,i]=imageMask1
 	R = 6373.0 #earth's radius
-	for ilon in range(lenLon):
+	for ilon in range(lenLon): # loop through pixels
 		for ilat in range(lenLat):
 			if imageMask1[ilon,ilat]==True:
 				continue
 			lon,lat=gridMid[ilon,0,0],gridMid[0,ilat,1]
+			##### find closest 3 distances #####
 			for city in range(len(cityLonLat[:,0])):
 				clon,clat=cityLonLat[city,0],cityLonLat[city,1]
 				dist=sqrt((clon-lon)**2+(clat-lat)**2)
@@ -229,8 +243,9 @@ def findNearestThree(cityLonLat,gridMid,imageMask1):
 			
 			coord1=[lat,lon]
 			coord2=[clatBest,clonBest]
-			closestDist[ilon,ilat]=geopy.distance.distance(coord1,coord2).km
-		print np.round(100*ilon/float(len(gridMid[:,0,0])),2),'%'
+			closestDist[ilon,ilat] = geopy.distance.distance(coord1,coord2).km
+		print np.round(100*ilon/float(len(gridMid[:,0,0])),2),'%' # print progress
+	##### Mask arrays #####
 	closestDistM=np.ma.masked_array(closestDist,imageMask1)
 	closestDistDegM=np.ma.masked_array(closestDistDeg,imageMask4)
 	iclosestDistM=np.ma.masked_array(iclosestDist,imageMask4)
@@ -791,7 +806,7 @@ except:
 					plt.colorbar()
 					plt.savefig(wdfigs+'popUnder5',dpi=900)
 				
-				##### rect sphere bivariate spline #####
+				##### bivariate spline interpolation #####
 				latl=np.radians(latp[::-1])+1.2
 				lonl=np.radians(lonp)+1.2
 				lutpop=RectSphereBivariateSpline(latl, lonl, pop)
@@ -852,6 +867,7 @@ except:
 	# Countries
 	######################################
 	print 'Nations'
+	# Read in map of national identifier grids by ISO 3166-1 numeric codes
 	try:
 		nations=np.load(wdvars+'nations_unmasked')
 		nationsM=np.load(wdvars+'nations')
@@ -878,7 +894,7 @@ except:
 		latc=latc[::-1]
 		
 		nations=ds.ReadAsArray()
-		##### Scale to Africa #####
+		##### Keep only pixels in Africa #####
 		nations=nations[latc<np.amax(latm)+pixelsize]
 		latc=latc[latc<np.amax(latm)+pixelsize]
 		nations=nations[latc>np.amin(latm)]
@@ -889,6 +905,7 @@ except:
 		nations=nations[:,lonc>np.amin(lonm)]
 		lonc=lonc[lonc>np.amin(lonm)]
 		
+		##### Fill in the Lakes and Oceans to get rid of bad values #####
 		for ilat in range(len(nations[:,0])):
 			print 100*np.round(ilat/float(len(nations[:,0])),3),'%'
 			for ilon in range(len(nations[0,:])):
@@ -901,7 +918,7 @@ except:
 				if nations[ilat,ilon]==32767:
 					nations[ilat,ilon]=nations[ilat,ilon+1]
 			
-		##### Scale to 5km #####
+		##### Interpolate to 5km #####
 		latl=np.radians(latc[::-1])+1.2
 		lonl=np.radians(lonc)+1.2
 		lut=RectSphereBivariateSpline(latl, lonl, nations)
@@ -910,10 +927,12 @@ except:
 		nations=lut.ev(newLats.ravel(),newLons.ravel()).reshape((len(lonm),len(latm))).T
 		nations=np.round(nations,0)
 		nations.dump(wdvars+'nations_unmasked')
+		##############################
 		
 		nationsM=np.ma.masked_array(nations,imageMask2[0])
 		nationsM=np.round(nationsM,0)
 		nationsMask=np.ma.getmask(nationsM)
+		## Mask bad values
 		nationsMask[nationsM==818]=True #Egypt
 		nationsMask[nationsM==32767]=True #Bad
 		nationsM=np.ma.masked_array(nationsM,nationsMask)
@@ -937,6 +956,13 @@ except:
 		plt.colorbar()
 		plt.savefig(wdfigs +'nations',dpi=700)
 		
+	# african Countries
+	f=open(wddata+'boundaries/africanCountries.csv','r')
+	africanCountries=[]
+	for line in f:
+		africanCountries.append(line[:-1])
+	
+	# Conversion from ISO 3166-1 numeric codes to country names
 	f=open(wddata+'boundaries/countries_countryCodes.csv')
 	code=np.zeros(shape=(247),dtype=int)
 	countryNames=[]
@@ -947,14 +973,9 @@ except:
 		code[i]=int(tmp[3])
 		countryNames.append(tmp[0])
 	
-	f=open(wddata+'boundaries/africanCountries.csv','r')
-	africanCountries=[]
-	for line in f:
-		africanCountries.append(line[:-1])
-	
-	#indexing the country codes
-	countryToIndex={}
-	indexToCountry={}
+	# Indexing the ISO 3166-1 numeric codes from the national identifyer grid
+	countryToIndex={} # country name to ISO 3166-1 numeric codes
+	indexToCountry={} # ISO 3166-1 numeric codes to country name
 	indexedcodes=np.zeros(shape=len(africanCountries))
 	for i in range(len(africanCountries)):
 		j=np.where(africanCountries[i]==np.array(countryNames))[0][0]
@@ -964,8 +985,9 @@ except:
 		if len(np.where(nationsM==indexedcodes[i])[0])==0:
 			print africanCountries[i],'has a bad mask'
 	
-	countryToi={}
-	iToCountry={}
+	# Dictionaries of country indices
+	countryToi={} # country name to country index
+	iToCountry={} # country name to country index
 	for i in range(len(indexedcodes)):
 		index=indexedcodes[i]
 		country=indexToCountry[index]
@@ -1921,9 +1943,9 @@ except:
 	#plt.ylim([0,27])
 	#plt.savefig(wdfigs+'world_bank_malnutrition_predictions.pdf')
 	
-	indices=[GDPperCap,girlEd,electricity,Yield,MAPprevalence,muslim,christian,animism,war,openDefecation,refugeesSum,maternalMortality,corruption,mortality5]
-	indexNames=['GDPperCap','girlEd','electricity','Yield','MAPprevalence','muslim','christian','animism','war','openDefecation','refugeesSum','maternalMortality','Corruption','Mortality5']
-	titles=['GDP per cap','% Females with Secondary School Education','% Population with Access to Electricity','Cereal Yield','MAP prevalence','Muslim','Christian','Animism','War','Open Defecation','Refugees Sum', 'Maternal Mortality','Corruption','Under 5 Mortality']
+	indices=[GDPperCap,girlEd,electricity,Yield,MAPprevalence,muslim,christian,animism,war,openDefecation,refugeesSum,maternalMortality,corruption,mortality5,fertility]
+	indexNames=['GDPperCap','girlEd','electricity','Yield','MAPprevalence','muslim','christian','animism','war','openDefecation','refugeesSum','maternalMortality','corruption','mortality5','fertility']
+	titles=['GDP per cap','% Females with Secondary School Education','% Population with Access to Electricity','Cereal Yield','MAP prevalence','Muslim','Christian','Animism','War','Open Defecation','Refugees Sum', 'Maternal Mortality','Corruption','Under 5 Mortality','Mortality 5','Fertility']
 	
 	for j in range(len(indices)):
 		try:
@@ -1939,20 +1961,18 @@ except:
 					vars()[indexNames[j]+'Grid'][y,nations==i]=indices[j][k,y]
 			
 			vars()[indexNames[j]+'Grid'] = np.ma.masked_array(vars()[indexNames[j]+'Grid'], imageMask2)
-			if indexNames[j]!='war':
-				vars()[indexNames[j]+'Grid'][vars()[indexNames[j]+'Grid'] == 0] = np.mean(vars()[indexNames[j]+'Grid'])
 				
 			#if MakePlots:
 			
 			vars()[indexNames[j]+'Grid'].dump(wdvars+indexNames[j]+'Grid_1999-2020')
 	
-	for j in range(11,12):
+	for j in range(12,15):
 		plt.clf()
 		plt.imshow(vars()[indexNames[j]+'Grid'][14],cmap=cm.jet)
 		plt.colorbar()
 		plt.yticks([])
 		plt.xticks([])
-		plt.title(titles[j]+', 2015')
+		plt.title('2015 '+titles[j])
 		plt.savefig(wdfigs+indexNames[j]+'2015.png',dpi=700)
 	###########################################
 	
@@ -2124,7 +2144,6 @@ except:
 	
 	MPconflicts=np.ma.masked_array(MPconflicts,MPconflicts==0)
 	
-	'''
 	######################################
 	# Travel Time
 	######################################
@@ -2192,7 +2211,6 @@ except:
 	plt.xticks([])
 	plt.yticks([])
 	plt.savefig(wdfigs+'travel',dpi=700)
-	'''
 	
 	######################################
 	# Coast Lines
@@ -2277,30 +2295,13 @@ except:
 ######################################
 # Machine learning 
 ######################################
-exit()
 plt.clf()
-plt.imshow(irrig_aei[15],cmap=cm.terrain_r,vmax=0.1)
-plt.colorbar()
-plt.xticks([])
+plt.imshow(mortality5Grid[15],cmap=cm.jet)
+plt.colorbar(label = 'deaths per 1000 live births')
 plt.yticks([])
-plt.title('Area Equipped for Irrigated')
-plt.savefig(wdfigs+'irrig_aei_2015.png',dpi=500)
-
-plt.clf()
-plt.imshow(muslimGrid[15],cmap=cm.Purples,vmin=0,vmax=0.95)
-plt.colorbar(label = 'Percent of Population')
 plt.xticks([])
-plt.yticks([])
-plt.title('2015 Islam')
-plt.savefig(wdfigs+'muslim_2015.png',dpi=500)
-
-plt.clf()
-plt.imshow(animismGrid[15],cmap=cm.Purples,vmin=0,vmax=0.95)
-plt.colorbar(label = 'Percent of Population')
-plt.xticks([])
-plt.yticks([])
-plt.title('2015 Animism')
-plt.savefig(wdfigs+'animism_2015.png',dpi=500)
+plt.title('2015 Morality in Children Under 5')
+plt.savefig(wdfigs+'mortality5_2015.png',dpi=700)
 
 print 'Machine Learning'
 
@@ -2308,6 +2309,7 @@ RemoveCountries = False
 TrainOnAll = False
 Boxes = True
 ReadInOldStuff = False
+Use40Features = False
 
 UseNationalPrevalence=False
 
@@ -2328,7 +2330,35 @@ if UseNationalPrevalence:
 		girlEdGrid, ag_pct_gdp, assistance,
 		government_effectiveness, grid_gdp, imports_percap,
 		MPconflicts, grid_hdi, nutritiondiversity, pop5km, MAPprevalenceGrid]
-else:
+if Use40Features:
+	indexNames = ['female_education', 'mean_annual_precip', 'forest', 'enrollment',
+		'stability_violence', 'distToInlandCoasts', 'YieldGrid',
+		'crop_prod', 'electricityGrid', 'distToCoasts', 'elevation',
+		'girlEdGrid', 'ag_pct_gdp', 'assistance', 'bare',
+		'government_effectiveness', 'grid_gdp', 'imports_percap',
+		'MPconflicts', 'grid_hdi', 'nutritiondiversity', 'pop5km',
+		'animismGrid', 'muslimGrid', 'christianGrid','warGrid','maternalMortalityGrid',
+		'refugeesSumGrid','openDefecationGrid','travel','low_settle','high_settle','builtup','mortality5Grid',
+		'fertilityGrid','corruptionGrid','roughness','ndvi','irrig_aei','irrig_aai']
+	indexTitles = ['Female Ed', 'Precipitation', 'Forest Cover', 'Enrollment',
+		'Stability Violence', 'Dist To Inland Coasts', 'Yield',
+		'Crop Production', 'Electricity', 'Dist To Coasts', 'Elevation',
+		'Girl Ed', 'Agriculture GDP', 'Assistance', 'Bare Ground',
+		'Gov Effectiveness', 'GDP', 'Imports Percap',
+		'Conflicts', 'HDI', 'Nutrition', 'Population',
+		'Animism','Muslim','Christian','War','Maternal Mortality',
+		'Refugees','Open Defecation','Travel Time','Low Settle','High Settle','Built Up','Mortality 5',
+		'Fertility','Corruption','Roughness','NDVI','Irrigated (2)','Irrigated (1)']
+	indices = [female_education, mean_annual_precip, forest, enrollment,
+		stability_violence, distToCoasts[:,1,:,:], YieldGrid,
+		crop_prod, electricityGrid, distToCoasts[:,0,:,:], elevation,
+		girlEdGrid, ag_pct_gdp, assistance, bare,
+		government_effectiveness, grid_gdp, imports_percap,
+		MPconflicts, grid_hdi, nutritiondiversity, pop5km,
+		animismGrid, muslimGrid, christianGrid,warGrid,maternalMortalityGrid,
+		refugeesSumGrid,openDefecationGrid,travel,low_settle,high_settle,builtup,mortality5Grid,
+		fertilityGrid,corruptionGrid,roughness,ndvi,irrig_aei,irrig_aai]
+if Boxes:
 	indexNames = ['female_education', 'mean_annual_precip', 'forest', 'enrollment',
 		'stability_violence', 'distToInlandCoastsi', 'YieldGrid',
 		'crop_prod', 'electricityGrid', 'distToCoasts', 'elevation',
@@ -2353,22 +2383,23 @@ else:
 		MPconflicts, grid_hdi, nutritiondiversity, pop5km,
 		animismGrid, muslimGrid, christianGrid,warGrid,maternalMortalityGrid,
 		refugeesSumGrid,openDefecationGrid]
+if RemoveCountries:
 	# 19 featueres
-	#indexNames = ['female_education', 'mean_annual_precip', 'forest', 'bare',
-	#	'electricityGrid', 'distToCoasts', 'elevation',
-	#	'girlEdGrid', 'ag_pct_gdp',	'grid_gdp',
-	#	'MPconflicts', 'grid_hdi', 'nutritiondiversity', 'pop5km',
-	#	'muslimGrid','christianGrid','warGrid','refugeesSumGrid','openDefecationGrid']
-	#indexTitles= np.array(['Female Ed', 'Precipitation', 'Forest Cover', 'Bare Ground',
-	#	'Electricity', 'Dist To Coasts', 'Elevation',
-	#	'Girl Ed', 'Agriculture GDP', 'GDP',
-	#	'Conflicts', 'HDI', 'Nutrition', 'Population',
-	#	'Muslim','Christian','War','Refugees','Open Defecation'])
-	#indices = [female_education, mean_annual_precip, forest, bare,
-	#	electricityGrid, distToCoasts[:,0], elevation,
-	#	girlEdGrid, ag_pct_gdp,	grid_gdp,
-	#	MPconflicts, grid_hdi, nutritiondiversity, pop5km,
-	#	muslimGrid,christianGrid,warGrid,refugeesSumGrid,openDefecationGrid]
+	indexNames = ['female_education', 'mean_annual_precip', 'forest', 'bare',
+		'electricityGrid', 'distToCoasts', 'elevation',
+		'girlEdGrid', 'ag_pct_gdp',	'grid_gdp',
+		'MPconflicts', 'grid_hdi', 'nutritiondiversity', 'pop5km',
+		'muslimGrid','christianGrid','warGrid','refugeesSumGrid','openDefecationGrid']
+	indexTitles= np.array(['Female Ed', 'Precipitation', 'Forest Cover', 'Bare Ground',
+		'Electricity', 'Dist To Coasts', 'Elevation',
+		'Girl Ed', 'Agriculture GDP', 'GDP',
+		'Conflicts', 'HDI', 'Nutrition', 'Population',
+		'Muslim','Christian','War','Refugees','Open Defecation'])
+	indices = [female_education, mean_annual_precip, forest, bare,
+		electricityGrid, distToCoasts[:,0], elevation,
+		girlEdGrid, ag_pct_gdp,	grid_gdp,
+		MPconflicts, grid_hdi, nutritiondiversity, pop5km,
+		muslimGrid,christianGrid,warGrid,refugeesSumGrid,openDefecationGrid]
 
 #indices = [ag_pct_gdp,assistance,bare,builtup,crop_prod,elevation,enrollment,fieldsize,forest,government_effectiveness,grid_gdp,grid_hdi,high_settle,low_settle,imports_percap,irrig_aai,irrig_aei,market_dist,mean_annual_precip,ndvi,nutritiondiversity,population,roughness,stability_violence,female_education,pop5km,distToCoasts[:,0,:,:],distToCoasts[:,1,:,:],MPconflicts,girlEdGrid,electricityGrid,YieldGrid,iqGrid]
 
@@ -2378,14 +2409,15 @@ try: # see if they are read in
 	print 'xMultiMask =',xMultiMask.shape
 except:
 	try:
-		#if UseNationalPrevalence:
-		#	xMulti = np.load(wdvars+'stuffForFinalPrediction/xMulti_22indices.npy')
-		#	xMultiMask = np.load(wdvars+'stuffForFinalPrediction/xMultiMask_22indices.npy')
-		if not UseNationalPrevalence:
+		if UseNationalPrevalence:
+			xMulti = np.load(wdvars+'stuffForFinalPrediction/xMulti_22indices.npy')
+			xMultiMask = np.load(wdvars+'stuffForFinalPrediction/xMultiMask_22indices.npy')
+		if Boxes:
 			xMulti = np.load(wdvars+'stuffForFinalPrediction/xMulti_29indices_180419.npy')
 			xMultiMask = np.load(wdvars+'stuffForFinalPrediction/xMultiMask_29indices_180419.npy')
-			#xMulti = np.load(wdvars+'stuffForFinalPrediction/xMulti_19indices.npy')
-			#xMultiMask = np.load(wdvars+'stuffForFinalPrediction/xMultiMask_19indices.npy')
+		if RemoveCountries:
+			xMulti = np.load(wdvars+'stuffForFinalPrediction/xMulti_19indices.npy')
+			xMultiMask = np.load(wdvars+'stuffForFinalPrediction/xMultiMask_19indices.npy')
 	except:
 		print 'calculating xMulti'
 		xMulti=np.zeros(shape=(nyears,len(latm),len(lonm),len(indices)))
@@ -2407,8 +2439,10 @@ except:
 			print i
 		xMultiMask=np.array(xMultiMask,dtype=bool)
 		
-		np.save(wdvars+'stuffForFinalPrediction/xMulti_29indices_180419.npy',xMulti)
-		np.save(wdvars+'stuffForFinalPrediction/xMultiMask_29indices_180419.npy',xMultiMask)
+		np.save(wdvars+'stuffForFinalPrediction/xMulti_40indices.npy',xMulti)
+		np.save(wdvars+'stuffForFinalPrediction/xMultiMask_40indices.npy',xMultiMask)
+
+print xMulti.shape
 			
 ######################################
 # Remove Countries, then predict
@@ -2580,7 +2614,7 @@ if RemoveCountries:
 ######################################
 if TrainOnAll:
 	yearList = ['2000','2001','2002','2003','2004','2005','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015']
-	for y in range(7,16):
+	for y in range(15,16):
 		year = yearList[y]
 		xMultiTrain=np.ma.masked_array(xMulti[:y], xMultiMask[:y]) # train on 2000 -- triainingYear-1
 		xMultiTest=np.ma.masked_array(xMulti[y], xMultiMask[y]) # predict trainingYear
@@ -3028,7 +3062,7 @@ if Boxes:
 	plt.ylim([0,1.05])
 	plt.savefig(wdfigs+'boxes_forest/cumulative_importances.pdf')
 	
-	y=14
+	y=15
 	
 	imageMask2=np.load(wdvars+'imageMask2.npy')
 	traintmp=imageMask2[y]==testMask[y]
